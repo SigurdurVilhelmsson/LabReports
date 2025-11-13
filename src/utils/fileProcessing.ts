@@ -2,8 +2,10 @@ import * as mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
 import { FileContent } from '@/types';
 
-// Configure PDF.js worker - use unpkg.com which reliably hosts npm packages
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js`;
+// Configure PDF.js worker - import from node_modules and let Vite handle it
+// This ensures the worker is bundled and served from the same domain
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 /**
  * Convert a file to base64 string
