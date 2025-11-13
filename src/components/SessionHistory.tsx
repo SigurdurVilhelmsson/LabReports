@@ -1,5 +1,5 @@
 import React from 'react';
-<parameter name="content">import { Trash2, GraduationCap, BookOpen } from 'lucide-react';
+import { Trash2, GraduationCap, BookOpen } from 'lucide-react';
 import { GradingSession } from '@/types';
 import { experimentConfigs } from '@/config/experiments';
 
