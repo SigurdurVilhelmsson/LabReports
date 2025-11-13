@@ -9,6 +9,8 @@ interface FileUploadProps {
   onProcess: () => void;
   processing: boolean;
   processingStatus: ProcessingStatus;
+  acceptedFileTypes?: string;
+  mode?: 'teacher' | 'student';
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -17,24 +19,31 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   onProcess,
   processing,
   processingStatus,
+  acceptedFileTypes = '.docx,.pdf,image/*',
+  mode = 'teacher',
 }) => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
     onFilesSelected(selectedFiles);
   };
 
+  const isStudentMode = mode === 'student';
+  const title = isStudentMode ? 'Veldu skrá' : 'Hladdu upp skýrslum';
+  const description = isStudentMode
+    ? 'Word skjal (.docx) eða mynd (JPEG, PNG)'
+    : 'Word skjöl (.docx), PDF skrár (.pdf) eða myndir - margar í einu';
+  const buttonText = isStudentMode ? 'Fá endurgjöf á drögin' : 'Greina skýrslur';
+
   return (
     <>
       <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center mb-6">
         <Upload className="mx-auto mb-4 text-slate-600" size={48} />
-        <h3 className="text-lg font-semibold text-slate-800 mb-2">Hladdu upp skýrslum</h3>
-        <p className="text-sm text-slate-600 mb-4">
-          Word skjöl (.docx), PDF skrár (.pdf) eða myndir - margar í einu
-        </p>
+        <h3 className="text-lg font-semibold text-slate-800 mb-2">{title}</h3>
+        <p className="text-sm text-slate-600 mb-4">{description}</p>
         <input
           type="file"
-          accept=".docx,.pdf,image/*"
-          multiple
+          accept={acceptedFileTypes}
+          multiple={!isStudentMode}
           onChange={handleFileChange}
           className="hidden"
           id="file-upload"
@@ -43,7 +52,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           htmlFor="file-upload"
           className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition cursor-pointer inline-block"
         >
-          Velja skrár
+          Velja skrá{isStudentMode ? '' : 'r'}
         </label>
       </div>
 
@@ -83,7 +92,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             ) : (
               <>
                 <CheckCircle size={24} />
-                Greina skýrslur
+                {buttonText}
               </>
             )}
           </button>

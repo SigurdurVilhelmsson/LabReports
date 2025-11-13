@@ -67,6 +67,9 @@ export const analyzeWithClaude = async (
 
   const messageContent = buildMessageContent(content);
 
+  // Student mode needs more tokens for detailed feedback
+  const maxTokens = mode === 'student' ? 4000 : 2000;
+
   const endpoint = import.meta.env.VITE_API_ENDPOINT || 'https://api.anthropic.com/v1/messages';
   const useDirectAPI = !import.meta.env.VITE_API_ENDPOINT;
 
@@ -86,7 +89,7 @@ export const analyzeWithClaude = async (
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        max_tokens: maxTokens,
         system: systemPrompt,
         messages: [
           {
