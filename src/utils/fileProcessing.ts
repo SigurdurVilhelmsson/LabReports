@@ -2,8 +2,8 @@ import * as mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
 import { FileContent } from '@/types';
 
-// Configure PDF.js worker - use specific stable version
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js`;
+// Configure PDF.js worker - use unpkg.com which reliably hosts npm packages
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js`;
 
 /**
  * Convert a file to base64 string
