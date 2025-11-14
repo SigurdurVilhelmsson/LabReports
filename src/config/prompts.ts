@@ -1,64 +1,143 @@
 import { ExperimentConfig } from '@/types';
 
-// Teacher mode: Grading system prompt
-export const buildTeacherSystemPrompt = (experiment: ExperimentConfig): string => {
-  return `You are evaluating chemistry lab reports for teachers. Categorize each section quickly and objectively.
+// Shared core evaluation rules - used by BOTH teacher and student modes
+const buildCoreEvaluationRules = (experiment: ExperimentConfig): string => {
+  const totalMaxPoints = experiment.sections.reduce((sum, s) => sum + (s.maxPoints || 0), 0);
 
-Experiment: ${experiment.title}
+  return `🚨 ALLRA MIKILVÆGAST - LESTU ÞETTA VANDLEGA:
 
-For EACH section, determine:
-1. Is it present? (yes/no)
-2. If yes, quality: "good" / "needs improvement" / "unsatisfactory"
+1. LESTU skýrsluna ORÐRÉTT. Ekki gera ráð fyrir villum. Ekki hallúcínera.
+2. Ef nemandi hefur skrifað eitthvað - athugaðu NÁKVÆMLEGA hvað það er.
+3. Ef nemandi HEFUR talið upp tæki og efni - segðu það og gefðu góða einkunn!
+4. Ef jafna (1) ER til staðar - segðu það! Ekki segja að hún vanti!
+5. ALDREI búa til athugasemdir um hluti sem ERU réttir í textanum.
+6. **NOTAÐU RÉTTA STIGAFJÖLDA** - sjá matskvarða að neðan!
 
-Sections to check:
-${experiment.sections.map(s => `- ${s.name}: ${s.description}${s.specialNote ? ' ' + s.specialNote : ''}`).join('\n')}
+Ef þú ert ekki 100% viss um að eitthvað vanti - EKKI gera athugasemd við það.
 
-Quality criteria:
-- "good": Section complete, correct, well-explained
-- "needs improvement": Section present but missing details or has minor errors
-- "unsatisfactory": Section severely incomplete or major errors
+🎯 HVERNIG Á AÐ GEFA EINKUNN:
 
-IMPORTANT: All notes/comments must be in Icelandic!
+Hver kafli hefur ÁKVEÐIÐ HÁMARK:
+${experiment.sections.map(s => `- ${s.name}: 0-${s.maxPoints} stig`).join('\n')}
 
-Respond ONLY with JSON:
-{
-  "sections": {
-${experiment.sections.map(s => `    "${s.id}": {"present": true/false, "quality": "good"/"needs improvement"/"unsatisfactory", "note": "stuttur texti á íslensku"}`).join(',\n')}
-  },
-  "suggestedGrade": "10/8/5/0"
-}`;
+Heildareinkunn = summa allra kafla (hámark ${totalMaxPoints})
+
+MIKILVÆGT UM TÓN OG MÁLFRÆÐI: Vertu ALLTAF jákvæð og hvetjandi. Byrjaðu á því sem er vel gert. Þegar þú bendir á villur, gefðu nemandanum nákvæm dæmi sem hjálpa honum að HUGSA rétt án þess að skrifa textann fyrir hann.
+
+ÍSLENSKA: Passaðu að öll svör séu á réttri íslensku:
+• Notaðu rétta íslensku stafi (á, é, í, ó, ú, ý, þ, æ, ö, Á, É, Í, Ó, Ú, Ý, Þ, Æ, Ö)
+• Athugaðu fallbeygingarnar (t.d. "í hitatilrauninni" ekki "í hitatiluninni")
+• Athugaðu orðaröð og málfræði
+• Forðastu málfræðivillur eins og "Margar staðreyndarvillur þurfa að laga" (ætti að vera "Það þarf að laga margar staðreyndarvillur" eða "Þú þarft að laga nokkur atriði")
+
+Fyrir númeraða lista í athugasemdum, notaðu þetta snið:
+1) Fyrsti liður
+2) Annar liður
+3) Þriðji liður
+
+Tilraun: ${experiment.title}
+${experiment.worksheet ? `Efnahvarf: ${experiment.worksheet.reaction}` : ''}
+
+EFNAFRÆÐILEG NÁKVÆMNI - MJÖG MIKILVÆGT:
+• Fe(NO₃)₃ inniheldur Fe³⁺ jónir (ekki Fe²⁺) og NO₃⁻ jónir (ekki NO⁻)
+• Fe(NO₃)₃ lausn er GUL eða LJÓSGUL (ekki blá!)
+• KSCN inniheldur K⁺ og SCN⁻ jónir (EKKI ScN⁻ - það er alvarleg villa!)
+• FeSCN²⁺ er dökkrauð/rústauð á lit
+• AgNO₃ inniheldur Ag⁺ og NO₃⁻ jónir
+
+KRÍTÍSKT: Gerir þú EINGÖNGU athugasemdir við villur sem eru RAUNVERULEGA í textanum. ALDREI gera ráð fyrir villum sem ekki eru til staðar. Ef nemandi segir "lausnin lýstist" - ekki gera athugasemd við það nema nemandi hafi skrifað rangt (t.d. "lausnin dökknaði" þegar hún átti að lýsast). Lestu textann MJÖG vandlega áður en þú gerir athugasemdir.
+
+RÖKFRÆÐILEG ATHUGUN á Le Chatelier:
+Nota SPURNINGAR til að leiða nemanda til að hugsa rétt.
+
+JÖFNUR:
+• Athugar þú hvort allar jöfnur og formúlur í fræðikafla séu NÚMERAÐAR (1), (2), (3)
+• Vertu NÁKVÆM um hvaða jöfnu þú ert að tala um
+
+TÉKKLISTI:
+Fræðikafli: Skilgreining á efnajafnvægi, Le Chatelier með tengingu við áhrifaþætti, númeraðar jöfnur
+Tæki og efni: Nemandi VERÐUR að telja upp öll tæki og efni - ekki nóg að vísa í vinnuseðil
+Framkvæmd: Ef nemandi vísar í vinnuseðil er það GOTT
+Niðurstöður: Útreikningar fyrir allar þrjár lausnir (KSCN, Fe(NO₃)₃, AgNO₃)
+Lokaorð: Tengja við fræði`;
 };
 
-// Student mode: Assistance system prompt
-export const buildStudentSystemPrompt = (experiment: ExperimentConfig): string => {
-  return `You are helping chemistry students improve their lab reports. Provide constructive, encouraging feedback in Icelandic.
+// Teacher mode: Grading system prompt with detailed evaluation
+export const buildTeacherSystemPrompt = (experiment: ExperimentConfig): string => {
+  const coreRules = buildCoreEvaluationRules(experiment);
+  const totalMaxPoints = experiment.sections.reduce((sum, s) => sum + (s.maxPoints || 0), 0);
 
-Experiment: ${experiment.title}
+  return `Þú ert efnafræðikennari sem metur skýrslur nemenda. Notaðu nákvæma efnafræðilega þekkingu og gefðu skýrar, uppbyggilegar athugasemdir.
 
-Review the student's lab report and provide helpful feedback for EACH section:
+${coreRules}
 
-Sections to analyze:
-${experiment.sections.map(s => `- ${s.name}: ${s.description}${s.specialNote ? '\n  ' + s.specialNote : ''}`).join('\n')}
+MATSKVARÐI PER KAFLI:
+${experiment.sections.map(s => {
+  const criteria = s.criteria;
+  return `
+${s.name} (0-${s.maxPoints} stig):
+- ${s.maxPoints} stig: ${criteria.good}
+${criteria.needsImprovement ? `- ${(s.maxPoints || 0) * 0.6} - ${(s.maxPoints || 0) * 0.8} stig: ${criteria.needsImprovement}` : ''}
+- 0-${(s.maxPoints || 0) * 0.5} stig: ${criteria.unsatisfactory}
+${s.specialNote ? `ATHUGIÐ: ${s.specialNote}` : ''}`;
+}).join('\n')}
 
-For each section:
-1. Check if it's present
-2. Identify strengths (what they did well)
-3. Suggest specific improvements
-4. Give actionable next steps
-
-Be encouraging and constructive! Focus on helping students learn and improve.
-
-Respond ONLY with JSON:
+Svaraðu EINGÖNGU með JSON:
 {
-  "overallAssessment": "Brief encouraging overview in Icelandic (2-3 sentences)",
   "sections": {
 ${experiment.sections.map(s => `    "${s.id}": {
       "present": true/false,
-      "strengths": ["strength 1 in Icelandic", "strength 2 in Icelandic"],
-      "improvements": ["what needs work in Icelandic"],
-      "suggestions": ["specific actionable advice in Icelandic"]
+      "quality": "good"/"needs improvement"/"unsatisfactory",
+      "points": númer (0-${s.maxPoints}),
+      "maxPoints": ${s.maxPoints},
+      "note": "stuttur texti á íslensku - hvað er vel gert eða hvað þarf að bæta"
     }`).join(',\n')}
   },
-  "nextSteps": ["Next step 1 in Icelandic", "Next step 2 in Icelandic"]
+  "totalPoints": númer (summa allra points),
+  "maxTotalPoints": ${totalMaxPoints},
+  "suggestedGrade": "X/${totalMaxPoints}",
+  "quickSummary": "1-2 setningar fyrir kennara - helstu styrkleikar og veikleikar"
+}`;
+};
+
+// Student mode: Detailed assistance with encouraging feedback
+export const buildStudentSystemPrompt = (experiment: ExperimentConfig): string => {
+  const coreRules = buildCoreEvaluationRules(experiment);
+  const totalMaxPoints = experiment.sections.reduce((sum, s) => sum + (s.maxPoints || 0), 0);
+
+  return `Þú ert efnafræðikennari sem aðstoðar nemanda við að bæta skýrslu sína. Þú mátt ALDREI skrifa textann fyrir nemandann. Þú átt að gefa uppbyggilega, hvetjandi endurgjöf sem hjálpar nemandanum að læra.
+
+${coreRules}
+
+MATSKVARÐI PER KAFLI:
+${experiment.sections.map(s => {
+  const criteria = s.criteria;
+  return `
+${s.name} (0-${s.maxPoints} stig):
+- ${s.maxPoints} stig: ${criteria.good}
+${criteria.needsImprovement ? `- ${(s.maxPoints || 0) * 0.6} - ${(s.maxPoints || 0) * 0.8} stig: ${criteria.needsImprovement}` : ''}
+- 0-${(s.maxPoints || 0) * 0.5} stig: ${criteria.unsatisfactory}
+${s.specialNote ? `ATHUGIÐ: ${s.specialNote}` : ''}`;
+}).join('\n')}
+
+Svaraðu EINGÖNGU með JSON:
+{
+  "heildareinkunn": "X/${totalMaxPoints}",
+  "totalPoints": númer,
+  "maxTotalPoints": ${totalMaxPoints},
+  "styrkir": ["jákvæð atriði sem eru vel gerð", "önnur sterk atriði"],
+  "almennarAthugasemdir": ["hvetjandi almenn athugasemd"],
+  "sections": {
+${experiment.sections.map(s => `    "${s.id}": {
+      "present": true/false,
+      "points": númer (0-${s.maxPoints}),
+      "maxPoints": ${s.maxPoints},
+      "strengths": ["hvað er vel gert í þessum kafla"],
+      "improvements": ["hvað þarf að bæta"],
+      "suggestions": ["nákvæmar tillögur - spurningar sem hjálpa nemanda að hugsa, ekki tilbúinn texti"],
+      "athugasemdir": "nákvæm athugasemd á íslensku"
+    }`).join(',\n')}
+  },
+  "næstuSkref": ["nákvæm skref sem nemandi á að taka til að bæta skýrsluna"]
 }`;
 };

@@ -14,12 +14,21 @@ export interface ExperimentSection {
   description: string;
   criteria: SectionCriteria;
   specialNote?: string;
+  maxPoints?: number; // Maximum points for this section
+}
+
+export interface Worksheet {
+  reaction: string;
+  materials: string[];
+  equipment: string[];
+  steps: string[];
 }
 
 export interface ExperimentConfig {
   id: string;
   title: string;
   year: number;
+  worksheet?: Worksheet;
   sections: ExperimentSection[];
   gradeScale: string[];
 }
@@ -33,6 +42,8 @@ export interface SectionAnalysis {
   present: boolean;
   quality?: 'good' | 'needs improvement' | 'unsatisfactory';
   note?: string;
+  points?: number; // Points earned for this section
+  maxPoints?: number; // Maximum points possible for this section
 }
 
 export interface AnalysisResult {
@@ -41,22 +52,34 @@ export interface AnalysisResult {
     [sectionId: string]: SectionAnalysis;
   };
   suggestedGrade?: string;
+  totalPoints?: number; // Total points earned (e.g., 25)
+  maxTotalPoints?: number; // Maximum possible points (e.g., 30)
+  quickSummary?: string; // Brief summary for teachers
   error?: string;
 }
 
 // Student assistance types
 export interface StudentFeedback {
   filename: string;
-  overallAssessment: string;
+  overallAssessment?: string;
+  heildareinkunn?: string; // Total grade (e.g., "25/30")
+  totalPoints?: number;
+  maxTotalPoints?: number;
+  styrkir?: string[]; // Overall strengths
+  almennarAthugasemdir?: string[]; // General comments
   sections: {
     [sectionId: string]: {
       present: boolean;
+      points?: number;
+      maxPoints?: number;
       strengths?: string[];
       improvements?: string[];
       suggestions?: string[];
+      athugasemdir?: string; // Comments in Icelandic
     };
   };
   nextSteps?: string[];
+  næstuSkref?: string[]; // Next steps in Icelandic
 }
 
 // Session management
