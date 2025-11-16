@@ -117,12 +117,3 @@ export interface ProcessingStatus {
   total: number;
   currentFile: string;
 }
-
-// Storage interface
-export interface StorageResult {
-  keys: string[];
-}
-
-export interface StorageValue {
-  value: string;
-}
