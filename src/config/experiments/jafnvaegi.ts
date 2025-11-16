@@ -2,7 +2,7 @@ import { ExperimentConfig } from '@/types';
 
 /**
  * Jafnvægi í efnahvörfum (Chemical Equilibrium)
- * 3rd year chemistry experiment
+ * 3rd year chemistry experiment - CORRECTED VERSION
  *
  * This experiment explores Le Chatelier's principle by observing
  * how an equilibrium system (Fe³⁺ + SCN⁻ ↔ FeSCN²⁺) responds to
@@ -27,84 +27,87 @@ export const jafnvaegi: ExperimentConfig = {
       'dropateljarar',
     ],
     steps: [
-      'Búa til 100 mL af þremur lausnum með réttum mólstyrk',
-      'Skoða KSCN lausn (litur og jónir)',
-      'Blanda Fe(NO₃)₃ við KSCN - sjá litabreytingu',
-      'Prófa 5 tilraunir með mismunandi breytingum:',
-      '  1. Viðmið',
-      '  2. Bæta við föstu KSCN',
-      '  3. Bæta við Fe(NO₃)₃ lausn',
-      '  4. Bæta við AgNO₃ lausn',
-      '  5. Hita í 50°C vatni',
+      'Reikna út hvernig blanda skal lausnir (100 mL af hverri)',
+      'Athuga KSCN lausn (litur og jónir)',
+      'Kennari bætir Fe(NO₃)₃ við KSCN - sjá litabreytingu',
+      'Blanda sett í 5 tilraunaglös (glas 1 = viðmið)',
+      'Tilraun 2: Bæta við föstu KSCN → útskýra breytingu',
+      'Tilraun 3: Bæta við Fe(NO₃)₃ lausn → útskýra breytingu',
+      'Tilraun 4: Bæta við AgNO₃ lausn → útskýra breytingu',
+      'Tilraun 5: Hita lausn í 50°C vatni → útskýra breytingu og hvort hvarfið sé inn- eða útvermið',
     ],
   },
   sections: [
     {
       id: 'tilgangur',
       name: 'Tilgangur',
-      description: '1-2 sentences about goals',
+      description: 'Clear 1-2 sentence statement of experiment goals',
       maxPoints: 3,
       criteria: {
-        good: 'Skýr lýsing á markmiðum tilraunarinnar',
-        needsImprovement: 'Tilgangur til staðar en vantar smáatriði',
+        good: 'Skýr lýsing á markmiðum: skoða áhrif breytinga á jafnvægisstöðu hvarfsins',
+        needsImprovement: 'Tilgangur til staðar en vantar smáatriði um Le Chatelier eða jafnvægið',
         unsatisfactory: 'Mjög óljós eða vantar alveg',
       },
     },
     {
       id: 'fraedi',
       name: 'Fræðikafli',
-      description: "Definitions, Le Chatelier's law, numbered equations",
+      description: 'Theory: equilibrium definition, Le Chatelier law, factors affecting equilibrium',
       maxPoints: 7.5,
       criteria: {
-        good: 'Skilgreiningar, Le Chatelier lögmál og númeraðar jöfnur',
-        needsImprovement: 'Fræðin til staðar en eitthvað vantar',
-        unsatisfactory: 'Vantar mikilvæga fræðilega þætti',
+        good: 'Skilgreining á efnajafnvægi, Le Chatelier lögmál útskýrt, umfjöllun um þætti sem hafa áhrif (styrkur, hitastig, þrýstingur), jöfnur númeraðar',
+        needsImprovement: 'Fræðin til staðar en vantar annað hvort skilgreiningu, lögmálið eða umfjöllun um áhrifaþætti',
+        unsatisfactory: 'Vantar mikilvæga fræðilega þætti eða er mjög ófullkomið',
       },
+      specialNote: 'Must include: (1) definition of chemical equilibrium, (2) Le Chatelier\'s principle explanation, (3) factors affecting equilibrium (concentration, temperature, pressure)',
     },
     {
       id: 'taeki',
       name: 'Tæki og efni',
-      description: 'Complete list of equipment and materials',
+      description: 'Complete list matching worksheet',
       maxPoints: 1.5,
       criteria: {
-        good: 'Fullkominn listi yfir tæki og efni',
-        needsImprovement: 'Listi til staðar en eitthvað vantar',
-        unsatisfactory: 'Mjög ófullkominn eða vantar',
+        good: 'Fullkominn listi sem passar við vinnuseðil: KSCN(s), KSCN lausn, Fe(NO₃)₃, AgNO₃, bikarglös, tilraunaglös, glasastandur, dropateljarar',
+        needsImprovement: 'Listi til staðar en vantar eitt eða tvö atriði',
+        unsatisfactory: 'Mjög ófullkominn listi eða vantar mörg atriði',
       },
+      specialNote: 'Compare against the materials and equipment listed in the "Efni" and "Áhöld" sections of the worksheet',
     },
     {
       id: 'framkvamd',
       name: 'Framkvæmd',
-      description: 'Should reference worksheet ("Sjá vinnuseðil") + brief 1-2 sentence description',
+      description: 'Should reference specific worksheet with brief description',
       maxPoints: 3,
       criteria: {
-        good: 'Vísar í vinnuseðil og stuttur lýsing á framkvæmd - þetta er rétt!',
-        needsImprovement: 'Annaðhvort vinnuseðilsvísun eða lýsing vantar',
-        unsatisfactory: 'Vantar eða of ítarleg (nemendur eiga EKKI að skrifa ítarlegar leiðbeiningar)',
+        good: 'Vísar í vinnuseðilinn "Jafnvægi í efnahvörfum" OG gefur stutta lýsingu (1-2 setningar) á aðalþáttum tilraunarinnar - þetta er RÉTT!',
+        needsImprovement: 'Annaðhvort vinnuseðilsvísun eða stuttlýsing vantar',
+        unsatisfactory: 'Vantar eða of ítarleg endurskrift á vinnuseðli (nemendur eiga EKKI að skrifa allt út)',
       },
-      specialNote: 'Students should NOT write detailed procedures - referencing worksheet is GOOD!',
+      specialNote: 'IMPORTANT: Students should reference the specific worksheet "Jafnvægi í efnahvörfum" (or similar specific reference), NOT just write out detailed procedures. Referencing worksheet + brief summary is GOOD practice.',
     },
     {
       id: 'nidurstodur',
       name: 'Niðurstöður',
-      description: 'All calculations (KSCN, Fe(NO₃)₃, AgNO₃), observations, explanations',
-      maxPoints: 7.5,
+      description: 'All calculations, observations, answers to worksheet questions',
+      maxPoints: 10.5,
       criteria: {
-        good: 'Allar útreikningar, athuganir og skýringar til staðar',
-        needsImprovement: 'Flest til staðar en vantar smáatriði',
-        unsatisfactory: 'Vantar mikilvæga útreikninga eða skýringar',
+        good: 'Allir þrír útreikningar réttir (KSCN, Fe(NO₃)₃ með kristallvatni, AgNO₃), allar athuganir skráðar (litabreytingar), útskýringar með Le Chatelier fyrir ALLAR 5 tilraunir, greining á átt jafnvægis, útskýring á hvort hvarfið sé inn- eða útvermið, öll svör við spurningum í vinnuseðli',
+        needsImprovement: 'Flestar niðurstöður til staðar: útreikningar að mestu réttir, flestar athuganir skráðar, en vantar 1-2 útskýringar eða svör',
+        unsatisfactory: 'Vantar marga útreikninga, athuganir eða útskýringar; útskýringar ekki tengdar við Le Chatelier',
       },
+      specialNote: 'This section must include: (1) All three solution calculations (100 mL each, check Fe(NO₃)₃ accounts for crystal water), (2) Observations and color changes for all 5 test tubes, (3) Le Chatelier explanations for each test showing direction of equilibrium shift, (4) Determination of exo/endothermic nature from test 5, (5) Answers to ALL questions on the worksheet',
     },
     {
       id: 'lokaord',
       name: 'Lokaorð',
-      description: 'Summary, connection to theory',
-      maxPoints: 6,
+      description: 'Summary with connection to theory',
+      maxPoints: 4.5,
       criteria: {
-        good: 'Gott samantekt og tengsl við fræðin',
-        needsImprovement: 'Samantekt til staðar en gæti verið betri',
-        unsatisfactory: 'Mjög veik samantekt eða vantar',
+        good: 'Góð samantekt á helstu niðurstöðum, tengsl við fræðikafla eru skýr, sýnir að niðurstöður samræmast Le Chatelier lögmálinu',
+        needsImprovement: 'Samantekt til staðar en tengsl við fræðin gætu verið skýrari',
+        unsatisfactory: 'Mjög veik samantekt, vantar tengsl við fræðikafla eða vantar alveg',
       },
+      specialNote: 'Conclusions must connect back to theory section and show that results align with Le Chatelier\'s principle',
     },
     {
       id: 'undirskrift',
@@ -116,6 +119,19 @@ export const jafnvaegi: ExperimentConfig = {
         unsatisfactory: 'Vantar undirskrift',
       },
     },
+    {
+      id: 'samhengi',
+      name: 'Heildarsamhengi',
+      description: 'Overall coherence between sections',
+      maxPoints: 1.5,
+      criteria: {
+        good: 'Góð tengsl milli kafla, lítur út fyrir að nemandi hafi lesið yfir skýrsluna',
+        needsImprovement: 'Þokkalegt samhengi en gæti verið betra',
+        unsatisfactory: 'Lítið samhengi milli kafla, virðist ekki lesið yfir',
+      },
+      specialNote: 'Check if report sections flow logically and reference each other appropriately',
+    },
   ],
-  gradeScale: ['10', '8', '5', '0'],
+  gradeScale: ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1', '0'],
 };
+
