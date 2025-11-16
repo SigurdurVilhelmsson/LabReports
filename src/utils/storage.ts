@@ -1,4 +1,4 @@
-import { GradingSession, StorageResult, StorageValue } from '@/types';
+import { GradingSession } from '@/types';
 
 // Storage key prefix
 const SESSION_PREFIX = 'grading_session:';
@@ -8,7 +8,14 @@ const SESSION_PREFIX = 'grading_session:';
  */
 const isStorageAvailable = (): boolean => {
   try {
-    return typeof window !== 'undefined' && 'storage' in window;
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return false;
+    }
+    // Test if we can actually use localStorage
+    const test = '__storage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
   } catch {
     return false;
   }
@@ -24,22 +31,22 @@ export const loadSavedSessions = async (): Promise<GradingSession[]> => {
   }
 
   try {
-    const result = (await (window as any).storage.list(SESSION_PREFIX)) as StorageResult;
-
-    if (!result || !result.keys || !Array.isArray(result.keys)) {
-      return [];
-    }
-
     const sessions: GradingSession[] = [];
 
-    for (const key of result.keys) {
-      try {
-        const data = (await (window as any).storage.get(key)) as StorageValue;
-        if (data && data.value) {
-          sessions.push(JSON.parse(data.value));
+    // Iterate through all localStorage keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+
+      // Only process keys with our prefix
+      if (key && key.startsWith(SESSION_PREFIX)) {
+        try {
+          const value = localStorage.getItem(key);
+          if (value) {
+            sessions.push(JSON.parse(value));
+          }
+        } catch (e) {
+          console.log('Failed to load session:', key);
         }
-      } catch (e) {
-        console.log('Failed to load session:', key);
       }
     }
 
@@ -60,7 +67,7 @@ export const saveSession = async (session: GradingSession): Promise<void> => {
   }
 
   try {
-    await (window as any).storage.set(`${SESSION_PREFIX}${session.id}`, JSON.stringify(session));
+    localStorage.setItem(`${SESSION_PREFIX}${session.id}`, JSON.stringify(session));
   } catch (error) {
     console.error('Error saving session:', error);
     throw error;
@@ -76,9 +83,9 @@ export const loadSession = async (sessionId: string): Promise<GradingSession | n
   }
 
   try {
-    const data = (await (window as any).storage.get(`${SESSION_PREFIX}${sessionId}`)) as StorageValue;
-    if (data && data.value) {
-      return JSON.parse(data.value);
+    const value = localStorage.getItem(`${SESSION_PREFIX}${sessionId}`);
+    if (value) {
+      return JSON.parse(value);
     }
     return null;
   } catch (error) {
@@ -96,7 +103,7 @@ export const deleteSession = async (sessionId: string): Promise<void> => {
   }
 
   try {
-    await (window as any).storage.delete(`${SESSION_PREFIX}${sessionId}`);
+    localStorage.removeItem(`${SESSION_PREFIX}${sessionId}`);
   } catch (error) {
     console.error('Error deleting session:', error);
     throw error;
