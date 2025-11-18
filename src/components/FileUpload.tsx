@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Upload, CheckCircle, RotateCcw } from 'lucide-react';
 import { ProcessingStatus } from '@/types';
 import { getFileTypeDescription } from '@/utils/fileProcessing';
@@ -22,9 +22,57 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   acceptedFileTypes = '.docx,.pdf,image/*',
   mode = 'teacher',
 }) => {
+  const [isDragging, setIsDragging] = useState(false);
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
     onFilesSelected(selectedFiles);
+  };
+
+  const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    // Only set dragging to false if leaving the drop zone itself
+    if (event.currentTarget === event.target) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFiles = Array.from(event.dataTransfer.files);
+
+    // Filter files based on accepted types
+    const validFiles = droppedFiles.filter(file => {
+      if (acceptedFileTypes.includes('image/*') && file.type.startsWith('image/')) {
+        return true;
+      }
+      if (acceptedFileTypes.includes('.docx') && file.name.endsWith('.docx')) {
+        return true;
+      }
+      if (acceptedFileTypes.includes('.pdf') && file.name.endsWith('.pdf')) {
+        return true;
+      }
+      return false;
+    });
+
+    if (validFiles.length > 0) {
+      onFilesSelected(validFiles);
+    }
   };
 
   const isStudentMode = mode === 'student';
@@ -36,9 +84,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   return (
     <>
-      <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center mb-6">
-        <Upload className="mx-auto mb-4 text-slate-600" size={48} />
-        <h3 className="text-lg font-semibold text-slate-800 mb-2">{title}</h3>
+      <div
+        className={`border-2 border-dashed rounded-lg p-8 text-center mb-6 transition-colors ${
+          isDragging
+            ? 'border-indigo-500 bg-indigo-50'
+            : 'border-slate-300 bg-white'
+        }`}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <Upload
+          className={`mx-auto mb-4 ${isDragging ? 'text-indigo-600' : 'text-slate-600'}`}
+          size={48}
+        />
+        <h3 className="text-lg font-semibold text-slate-800 mb-2">
+          {isDragging ? 'Slepptu skrá' + (isStudentMode ? '' : 'm') + ' hér' : title}
+        </h3>
         <p className="text-sm text-slate-600 mb-4">{description}</p>
         <input
           type="file"
