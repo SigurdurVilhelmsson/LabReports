@@ -12,18 +12,34 @@ interface AnalyzeRequest {
 }
 
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
-  // CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  };
+  // CORS headers with domain whitelist for security
+  const allowedOrigins = [
+    'https://lab-reports-assistant.vercel.app',
+    'https://lab-reports.netlify.app',
+    process.env.URL, // Netlify auto-provides this
+    process.env.DEPLOY_PRIME_URL, // Netlify deploy previews
+    process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : null,
+    process.env.NODE_ENV === 'development' ? 'http://localhost:4173' : null,
+  ].filter(Boolean) as string[];
+
+  const origin = event.headers.origin || '';
+  const corsHeaders = allowedOrigins.includes(origin)
+    ? {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Credentials': 'true',
+      }
+    : {
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      };
 
   // Handle preflight request
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers,
+      headers: corsHeaders,
       body: '',
     };
   }
@@ -32,7 +48,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers,
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
@@ -40,12 +56,28 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   try {
     const { content, systemPrompt, mode } = JSON.parse(event.body || '{}') as AnalyzeRequest;
 
-    // Validate request
+    // Validate request with type checking
     if (!content || !systemPrompt || !mode) {
       return {
         statusCode: 400,
-        headers,
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Missing required fields' }),
+      };
+    }
+
+    if (mode !== 'teacher' && mode !== 'student') {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Invalid mode. Must be "teacher" or "student"' }),
+      };
+    }
+
+    if (typeof systemPrompt !== 'string' || systemPrompt.length > 50000) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Invalid systemPrompt' }),
       };
     }
 
@@ -55,53 +87,73 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       console.error('ANTHROPIC_API_KEY not configured');
       return {
         statusCode: 500,
-        headers,
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'API key not configured' }),
       };
     }
 
-    // Call Anthropic API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        system: systemPrompt,
-        messages: [
-          {
-            role: 'user',
-            content: content,
-          },
-        ],
-      }),
-    });
+    // Call Anthropic API with timeout protection (55s, leaving buffer for Netlify timeout)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 55000);
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Anthropic API error:', error);
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: mode === 'student' ? 4000 : 2000,
+          system: systemPrompt,
+          messages: [
+            {
+              role: 'user',
+              content: content,
+            },
+          ],
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Anthropic API error:', error);
+        return {
+          statusCode: response.status,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: error.error?.message || 'API request failed' }),
+        };
+      }
+
+      const data = await response.json();
       return {
-        statusCode: response.status,
-        headers,
-        body: JSON.stringify({ error: error.error?.message || 'API request failed' }),
+        statusCode: 200,
+        headers: corsHeaders,
+        body: JSON.stringify(data),
       };
-    }
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
 
-    const data = await response.json();
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(data),
-    };
+      if (fetchError.name === 'AbortError') {
+        console.error('Request timeout');
+        return {
+          statusCode: 504,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'Request timeout - greining tók of langan tíma' }),
+        };
+      }
+      throw fetchError;
+    }
   } catch (error) {
     console.error('Server error:', error);
     return {
       statusCode: 500,
-      headers,
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
