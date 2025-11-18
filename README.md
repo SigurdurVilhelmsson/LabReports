@@ -92,43 +92,61 @@ An AI-powered web application for chemistry teachers and students to grade and i
 
 ```
 LabReports/
-├── api/                          # Serverless API functions
-│   └── analyze.ts               # Vercel serverless function
-├── netlify/functions/           # Netlify serverless functions
-│   └── analyze.ts              # Netlify function
+├── api/                              # Serverless API functions
+│   └── analyze.ts                   # Vercel serverless function
+├── netlify/functions/               # Netlify serverless functions
+│   └── analyze.ts                  # Netlify function
 ├── src/
-│   ├── components/              # React components
-│   │   ├── FileUpload.tsx      # File upload component
-│   │   ├── Modal.tsx           # Modal dialogs
-│   │   ├── SessionHistory.tsx  # Session management UI
-│   │   ├── StudentFeedback.tsx # Student feedback display
-│   │   ├── TeacherResults.tsx  # Teacher results display
-│   │   └── Toast.tsx           # Toast notifications
-│   ├── config/                  # Configuration files
-│   │   ├── experiments.ts      # Experiment definitions
-│   │   └── prompts.ts          # AI system prompts
-│   ├── types/                   # TypeScript type definitions
-│   │   └── index.ts            # All type definitions
-│   ├── utils/                   # Utility functions
-│   │   ├── api.ts              # API communication
-│   │   ├── export.ts           # CSV export
-│   │   ├── fileProcessing.ts   # File parsing (docx, pdf, images)
-│   │   └── storage.ts          # Browser storage management
-│   ├── App.tsx                  # Main application component
-│   ├── main.tsx                # Application entry point
-│   └── index.css               # Global styles
-├── .env.example                 # Environment variables template
-├── .gitignore                  # Git ignore rules
-├── DEPLOYMENT.md               # Deployment guide
-├── index.html                  # HTML template
-├── netlify.toml                # Netlify configuration
-├── package.json                # Dependencies and scripts
-├── postcss.config.js           # PostCSS configuration
-├── tailwind.config.js          # Tailwind CSS configuration
-├── tsconfig.json               # TypeScript configuration
-├── tsconfig.node.json          # TypeScript Node configuration
-├── vercel.json                 # Vercel configuration
-└── vite.config.ts              # Vite build configuration
+│   ├── components/                  # React components
+│   │   ├── FileUpload.tsx          # File upload with drag-and-drop
+│   │   ├── Landing.tsx             # Landing page component
+│   │   ├── Modal.tsx               # SaveDialog, ConfirmDialog components
+│   │   ├── SessionHistory.tsx      # Session management UI
+│   │   ├── StudentFeedback.tsx     # Student feedback display
+│   │   ├── StudentHome.tsx         # Student home page
+│   │   ├── TeacherResults.tsx      # Teacher results table
+│   │   ├── Toast.tsx               # Toast notifications
+│   │   └── WorksheetView.tsx       # Worksheet viewer
+│   ├── config/
+│   │   ├── experiments/            # Experiment definitions (MODULAR)
+│   │   │   ├── index.ts           # Exports all experiments
+│   │   │   ├── jafnvaegi.ts       # Equilibrium experiment
+│   │   │   ├── _template.ts       # Template for new experiments
+│   │   │   └── README.md          # Experiment creation guide
+│   │   └── prompts.ts             # System prompts for Claude
+│   ├── pages/
+│   │   ├── StudentPage.tsx        # Student mode page
+│   │   └── TeacherPage.tsx        # Teacher mode page
+│   ├── types/                       # TypeScript type definitions
+│   │   └── index.ts                # All type definitions
+│   ├── utils/                       # Utility functions
+│   │   ├── api.ts                  # Claude API communication
+│   │   ├── export.ts               # CSV export functionality
+│   │   ├── fileProcessing.ts       # File parsing (docx, pdf, images)
+│   │   └── storage.ts              # Browser localStorage management
+│   ├── App.tsx                      # Main application component
+│   ├── main.tsx                    # Application entry point
+│   ├── index.css                   # Global styles + Tailwind
+│   └── vite-env.d.ts               # Vite environment types
+├── chemistry-report-helper.tsx      # LEGACY: v1 single-file student version
+├── teacher-report-grader-v3.tsx     # LEGACY: v2 single-file teacher version
+├── .env.example                     # Environment variables template
+├── .eslintrc.cjs                    # ESLint configuration
+├── .gitignore                      # Git ignore rules
+├── CLAUDE.md                       # AI assistant guide
+├── DEPENDENCY_UPDATE_PLAN.md       # Dependency upgrade strategy
+├── DEPLOYMENT.md                   # Deployment guide
+├── MIGRATION.md                    # v2 to v3 migration guide
+├── README.md                       # User-facing documentation (this file)
+├── index.html                      # HTML entry point
+├── netlify.toml                    # Netlify deployment config
+├── package.json                    # Dependencies and scripts
+├── postcss.config.js               # PostCSS configuration
+├── tailwind.config.js              # Tailwind configuration
+├── tsconfig.json                   # TypeScript configuration
+├── tsconfig.node.json              # TypeScript Node configuration
+├── vite.config.ts                  # Vite build configuration
+└── vercel.json                     # Vercel deployment config
 ```
 
 ## Configuration
@@ -143,32 +161,63 @@ Configure in `.env`:
 
 ### Adding New Experiments
 
-Edit `src/config/experiments.ts`:
+The project uses a **modular experiment structure** where each experiment is defined in its own file.
+
+**Step 1:** Create a new experiment file in `src/config/experiments/`:
+
+```bash
+# Use the template as a starting point
+cp src/config/experiments/_template.ts src/config/experiments/my-experiment.ts
+```
+
+**Step 2:** Define your experiment in the new file:
 
 ```typescript
-export const experimentConfigs = {
-  // ... existing experiments
-  newExperiment: {
-    id: 'newExperiment',
-    title: 'New Experiment Title',
-    year: 3,
-    sections: [
-      {
-        id: 'section1',
-        name: 'Section Name',
-        description: 'What to look for',
-        criteria: {
-          good: 'Criteria for good',
-          needsImprovement: 'Criteria for needs improvement',
-          unsatisfactory: 'Criteria for unsatisfactory',
-        },
-      },
-      // ... more sections
-    ],
-    gradeScale: ['10', '8', '5', '0'],
+import type { ExperimentConfig } from '../../types';
+
+export const myExperiment: ExperimentConfig = {
+  id: 'myExperiment',
+  title: 'My Experiment Title',
+  year: 3,
+  worksheet: {
+    // Optional: Include worksheet information
+    title: 'Worksheet Title',
+    sections: [...],
   },
+  sections: [
+    {
+      id: 'section1',
+      name: 'Section Name',
+      description: 'What to look for',
+      maxPoints: 5,  // Points for this section
+      criteria: {
+        good: 'Criteria for excellent work',
+        needsImprovement: 'Criteria for acceptable work',
+        unsatisfactory: 'Criteria for poor work',
+      },
+    },
+    // ... more sections
+  ],
+  gradeScale: ['10', '8', '5', '0'],
 };
 ```
+
+**Step 3:** Register the experiment in `src/config/experiments/index.ts`:
+
+```typescript
+import { myExperiment } from './my-experiment';
+
+export const experimentConfigs: ExperimentConfigs = {
+  jafnvaegi,
+  myExperiment,  // Add your experiment here
+};
+```
+
+**For detailed guidance**, see `src/config/experiments/README.md` which includes:
+- Complete experiment structure explanation
+- Section configuration best practices
+- Point distribution guidelines
+- Chemical accuracy validation tips
 
 ## Development
 
@@ -262,6 +311,35 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for:
 - Check browser allows local storage
 - Try different browser
 
+## Documentation
+
+This project includes comprehensive documentation for different audiences:
+
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| **README.md** (this file) | User guide, quick start, general usage | End users, new developers |
+| **CLAUDE.md** | AI assistant guide, architecture details, code conventions | AI assistants, maintainers |
+| **DEPLOYMENT.md** | Platform-specific deployment instructions | DevOps, deployment |
+| **MIGRATION.md** | v2 to v3 upgrade guide | Existing users migrating |
+| **DEPENDENCY_UPDATE_PLAN.md** | Strategy for updating dependencies | Developers updating packages |
+| **src/config/experiments/README.md** | Guide for creating experiments | Content creators |
+
+### Legacy Files
+
+The project includes legacy single-file versions for reference:
+
+- **chemistry-report-helper.tsx** - Original v1 student-only version (823 lines)
+- **teacher-report-grader-v3.tsx** - Original v2 teacher-only version (824 lines)
+
+**Note:** These files are kept for migration reference only. All new development happens in the modular `src/` directory structure.
+
+### Migration from v2
+
+If you're upgrading from the v2 single-file version, see **MIGRATION.md** for:
+- Step-by-step migration guide
+- Breaking changes and compatibility notes
+- Data migration instructions for saved sessions
+
 ## Contributing
 
 1. Fork the repository
@@ -269,6 +347,8 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+**For AI assistants and detailed code conventions**, see **CLAUDE.md**.
 
 ## License
 
@@ -284,9 +364,13 @@ This project is provided as-is for educational purposes.
 ## Support
 
 For issues and questions:
-- Check [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment help
-- Review this README for usage instructions
-- Open an issue on GitHub
+- **General usage** - Review this README
+- **Deployment issues** - See [DEPLOYMENT.md](./DEPLOYMENT.md)
+- **Adding experiments** - See [src/config/experiments/README.md](./src/config/experiments/README.md)
+- **Code contributions** - See [CLAUDE.md](./CLAUDE.md)
+- **Migrating from v2** - See [MIGRATION.md](./MIGRATION.md)
+- **Updating dependencies** - See [DEPENDENCY_UPDATE_PLAN.md](./DEPENDENCY_UPDATE_PLAN.md)
+- Open an issue on GitHub for bug reports or feature requests
 
 ---
 
