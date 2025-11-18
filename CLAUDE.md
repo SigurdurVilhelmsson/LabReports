@@ -2,9 +2,13 @@
 
 This document provides guidance for AI assistants working with the Lab Report Assistant codebase.
 
+**Repository**: [SigurdurVilhelmsson/LabReports](https://github.com/SigurdurVilhelmsson/LabReports)
+
 ## Project Overview
 
 **Lab Report Assistant** is an AI-powered web application for chemistry teachers and students in Iceland to grade and improve lab reports. It uses Claude AI (Anthropic) to provide structured evaluation and feedback on chemistry lab reports.
+
+**Current Version**: v3.0.0 (Actively maintained)
 
 **Tech Stack:**
 - Frontend: React 18 + TypeScript + Vite
@@ -692,30 +696,40 @@ VITE_API_ENDPOINT         # API endpoint (production)
 ANTHROPIC_API_KEY         # Server-side API key (production)
 ```
 
-## Recent Improvements
+## Recent Improvements (November 2025)
 
-### File Upload Enhancements (Nov 2025)
-- **Drag and Drop**: Full drag-and-drop support for file uploads (`FileUpload.tsx`)
-- **PDF Support for Students**: Students can now upload PDF files (previously teacher-only)
+The project received significant enhancements throughout November 2025:
+
+### File Upload Enhancements (Nov 16-18)
+- **Drag and Drop**: Full drag-and-drop support for file uploads (`FileUpload.tsx`, PR #18)
+- **PDF Support for Students**: Students can now upload PDF files (previously teacher-only, PR #19)
+- **Equation Extraction**: Automatic conversion of .docx files to images to capture equations (PR #17)
 - **Visual Feedback**: Improved upload states and error handling
 - **Multi-file Support**: Better handling of multiple file uploads
 
-### Teacher Mode Enhancements (Nov 2025)
-- **Points Display**: Added points and detailed reasoning in teacher analysis results
+### Teacher Mode Enhancements (Nov 18)
+- **Points Display**: Added points and detailed reasoning in teacher analysis results (PR #16)
 - **Better Tables**: Improved result display with clearer point breakdown
 - **Export Improvements**: Enhanced CSV export with all data fields
 
-### Storage Enhancements (Nov 2025)
+### Storage & Production Enhancements (Nov 16-18)
 - Added robust storage availability checking with `isStorageAvailable()`
 - Better error handling for browser storage edge cases
 - Graceful fallback when localStorage is unavailable
-- Fixed timeout issues for production deployment
+- Fixed timeout issues for production deployment (PR #11)
+- CORS fixes for www.kvenno.app domain
 
-### Configuration Updates (Nov 2025)
+### Configuration & Quality Updates (Nov 16-18)
 - Vercel function timeout set to 60 seconds (`vercel.json`)
-- Enhanced jafnvaegi experiment evaluation criteria
+- Enhanced jafnvaegi experiment evaluation criteria (PR #12)
 - Improved Icelandic language precision in prompts
 - Better chemical accuracy validation (Fe³⁺, SCN⁻, etc.)
+- Memory leak and type safety fixes (PR #20)
+
+### Documentation (Nov 16-18)
+- Comprehensive CLAUDE.md guide for AI assistants (PR #22)
+- Updated README.md to reflect current repository structure (PR #23)
+- Added DEPENDENCY_UPDATE_PLAN.md for dependency management
 
 ### API Changes
 - Model version: `claude-sonnet-4-20250514` (current)
@@ -767,12 +781,40 @@ npm audit                   # Check for security issues
 
 ## Version History
 
-- **v3.0.0** - Current version with modular experiments and unified evaluation
-  - Modular experiment architecture (`src/config/experiments/`)
-  - Points-based grading system with detailed criteria
-  - Enhanced storage with error handling
-  - Improved chemical accuracy validation
-- **v2.x** - Legacy version (see git history)
+### v3.0.0 (Current - November 2025)
+
+**Status**: Actively maintained
+**Repository**: [SigurdurVilhelmsson/LabReports](https://github.com/SigurdurVilhelmsson/LabReports)
+
+**Major Features**:
+- Modular experiment architecture (`src/config/experiments/`)
+- Points-based grading system with detailed criteria
+- Drag-and-drop file upload with PDF support for students
+- Automatic equation extraction from documents
+- Enhanced storage with robust error handling
+- Production-ready deployment with serverless functions
+- Comprehensive documentation for developers and AI assistants
+
+**Architecture**:
+- React 18 + TypeScript + Vite
+- Tailwind CSS for styling
+- Claude Sonnet 4 (`claude-sonnet-4-20250514`)
+- Vercel/Netlify serverless functions
+- Modular codebase with TypeScript strict mode
+
+### v2.x (Legacy - November 2024)
+
+**Status**: Deprecated (kept for migration reference)
+**Files**: `teacher-report-grader-v3.tsx` (824 lines, single file)
+
+**Note**: See `MIGRATION.md` for upgrade instructions from v2 to v3.
+
+### v1.x (Legacy - 2024)
+
+**Status**: Deprecated (kept for reference)
+**Files**: `chemistry-report-helper.tsx` (823 lines, single file, student-only)
+
+**Note**: Student-only version, superseded by v2 and v3.
 
 ---
 

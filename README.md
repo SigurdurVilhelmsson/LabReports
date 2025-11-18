@@ -1,32 +1,50 @@
 # Lab Report Assistant
 
-An AI-powered web application for chemistry teachers and students to grade and improve lab reports. Built with React, TypeScript, and Claude AI (Anthropic).
+An AI-powered web application for chemistry teachers and students in Iceland to grade and improve lab reports. Built with React, TypeScript, and Claude AI (Anthropic).
+
+**Repository**: [SigurdurVilhelmsson/LabReports](https://github.com/SigurdurVilhelmsson/LabReports)
+
+## What's New (November 2025)
+
+This project has recently received significant enhancements:
+
+- **Drag & Drop File Upload** - Intuitive file upload with drag-and-drop support
+- **PDF Support for Students** - Students can now upload PDF files (previously teacher-only)
+- **Enhanced Equation Support** - Automatic conversion of .docx files to images to capture equations
+- **Points-Based Grading** - Teacher mode now shows detailed point breakdown and reasoning
+- **Improved Storage** - Robust error handling for browser storage edge cases
+- **Production Ready** - Timeout and CORS fixes for deployment
+- **Comprehensive Documentation** - Detailed guides for developers and AI assistants
 
 ## Features
 
 ### 🎓 Teacher Mode
 - **Automated Grading**: Upload multiple lab reports (.docx, .pdf, images) and get instant AI-powered analysis
-- **Structured Evaluation**: Each report section is evaluated separately (Purpose, Theory, Materials, Procedure, Results, Conclusion, Signature)
+- **Points-Based Evaluation**: Each report section is evaluated separately with detailed point breakdown
+- **Structured Feedback**: Purpose, Theory, Materials, Procedure, Results, Conclusion, and Signature sections
 - **Quality Assessment**: Three-tier quality rating (Good, Needs Improvement, Unsatisfactory)
-- **Grade Suggestions**: AI provides suggested grades based on report quality
+- **Detailed Reasoning**: AI provides specific reasoning for each grade and point allocation
 - **Batch Processing**: Analyze multiple reports simultaneously
-- **CSV Export**: Export results for record-keeping
+- **CSV Export**: Export results with full point breakdown for record-keeping
 - **Session Management**: Save and load grading sessions
 
 ### 📚 Student Mode
 - **Writing Assistance**: Get constructive feedback on lab reports
 - **Detailed Feedback**: Section-by-section analysis with strengths, improvements, and suggestions
-- **Encouragement**: Positive, supportive feedback to help students learn
+- **Encouragement**: Positive, supportive feedback in Icelandic to help students learn
 - **Actionable Advice**: Specific next steps to improve the report
-- **Multiple Format Support**: Submit reports as Word docs, PDFs, or images
+- **Multiple Format Support**: Submit reports as Word docs (.docx), PDFs (.pdf), or images (.jpg, .png, etc.)
+- **Equation Recognition**: Automatic extraction and analysis of equations from documents
 
 ### 🔧 Technical Features
+- **Drag & Drop Upload**: Intuitive file upload with drag-and-drop support
 - **PDF Support**: Full PDF parsing with image and equation extraction
 - **Dual-Mode System**: Switch between teacher and student modes
 - **Multilingual**: Icelandic UI with Icelandic feedback
 - **Responsive Design**: Works on desktop and mobile
-- **Session Persistence**: Browser storage for saving work
-- **Modular Architecture**: Clean, maintainable codebase
+- **Session Persistence**: Robust browser storage with graceful error handling
+- **Modular Architecture**: Clean, maintainable codebase with TypeScript
+- **Production Ready**: Deployed on Vercel/Netlify with serverless functions
 
 ## Quick Start
 
@@ -38,7 +56,7 @@ An AI-powered web application for chemistry teachers and students to grade and i
 
 1. **Clone the repository**:
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/SigurdurVilhelmsson/LabReports.git
    cd LabReports
    ```
 
@@ -350,9 +368,14 @@ If you're upgrading from the v2 single-file version, see **MIGRATION.md** for:
 
 **For AI assistants and detailed code conventions**, see **CLAUDE.md**.
 
-## License
+## Version & Status
 
-This project is provided as-is for educational purposes.
+- **Current Version**: 3.0.0
+- **Status**: Actively maintained
+- **Last Updated**: November 2025
+- **License**: Provided as-is for educational purposes
+
+See [MIGRATION.md](./MIGRATION.md) for information about upgrading from v2.x.
 
 ## Credits
 
