@@ -78,9 +78,20 @@ function App() {
     setSavedSessions(sessions);
   };
 
+  // Auto-hide toast after 3 seconds with proper cleanup
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => {
+        setToast({ show: false, message: '', type: 'success' });
+      }, 3000);
+
+      // Cleanup timer on unmount or when toast changes
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show]);
+
   const showToast = (message: string, type: ToastType['type'] = 'success') => {
     setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
   const handleFilesSelected = (selectedFiles: File[]) => {

@@ -63,14 +63,25 @@ export const loadSavedSessions = async (): Promise<GradingSession[]> => {
  */
 export const saveSession = async (session: GradingSession): Promise<void> => {
   if (!isStorageAvailable()) {
-    throw new Error('Storage not available');
+    throw new Error('Geymsla ekki í boði - athugaðu vafrastillingar');
   }
 
   try {
     localStorage.setItem(`${SESSION_PREFIX}${session.id}`, JSON.stringify(session));
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving session:', error);
-    throw error;
+
+    // Check for quota exceeded error
+    if (
+      error.name === 'QuotaExceededError' ||
+      error.code === 22 || // Old browsers
+      error.code === 1014 // Firefox
+    ) {
+      throw new Error('Minni fullt - reyndu að eyða gömlum greiningum til að losa pláss');
+    }
+
+    // Re-throw with more context
+    throw new Error(`Villa við að vista: ${error.message || 'Óþekkt villa'}`);
   }
 };
 
