@@ -96,7 +96,7 @@ export interface GradingSession {
 
 // File processing
 export interface FileContent {
-  type: 'text' | 'image' | 'pdf';
+  type: 'text' | 'image' | 'pdf' | 'docx';
   data: string;
   mediaType?: string;
   images?: Array<{
