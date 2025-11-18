@@ -102,7 +102,9 @@ export const analyzeWithClaude = async (
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || 'API request failed');
+      throw new Error(
+        `API request failed (${response.status} ${response.statusText}): ${error.error?.message || 'Unknown error'}`
+      );
     }
 
     return await response.json();
@@ -121,7 +123,22 @@ export const analyzeWithClaude = async (
     });
 
     if (!response.ok) {
-      throw new Error('API request failed');
+      let errorMessage = 'API request failed';
+      try {
+        const errorBody = await response.json();
+        errorMessage = errorBody.error || errorMessage;
+      } catch {
+        // If response is not JSON, use text
+        try {
+          const errorText = await response.text();
+          if (errorText) errorMessage = errorText;
+        } catch {
+          // Ignore, use default message
+        }
+      }
+      throw new Error(
+        `API request failed (${response.status} ${response.statusText}): ${errorMessage}`
+      );
     }
 
     return await response.json();

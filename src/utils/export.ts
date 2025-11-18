@@ -1,6 +1,21 @@
 import { AnalysisResult, ExperimentSection } from '@/types';
 
 /**
+ * Escape CSV cell value to handle commas, quotes, and newlines
+ */
+const escapeCSV = (value: string): string => {
+  // Convert to string if not already
+  const stringValue = String(value);
+
+  // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+  if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+
+  return stringValue;
+};
+
+/**
  * Export analysis results to CSV file
  */
 export const exportResultsToCSV = (
@@ -25,8 +40,10 @@ export const exportResultsToCSV = (
       ...sections.map((s) => r.sections?.[s.id]?.quality || 'N/A'),
     ]);
 
-    // Combine headers and rows
-    const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
+    // Combine headers and rows with proper CSV escaping
+    const csv = [headers, ...rows]
+      .map((row) => row.map(escapeCSV).join(','))
+      .join('\n');
 
     // Create blob with BOM for proper Excel encoding
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
