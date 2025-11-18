@@ -81,18 +81,22 @@ LabReports/
 | `src/config/prompts.ts` | Claude system prompts | When changing evaluation logic |
 | `src/config/experiments/index.ts` | Experiment registry | When adding new experiments |
 | `src/config/experiments/_template.ts` | Experiment template | Reference when creating experiments |
+| `src/config/experiments/README.md` | Experiment guide | Reference for experiment structure |
 | `src/utils/api.ts` | Claude API integration | When changing AI behavior |
 | `src/utils/fileProcessing.ts` | File parsing logic | When adding file format support |
+| `src/utils/storage.ts` | Session storage logic | When changing storage behavior |
 | `src/App.tsx` | Main app orchestration | When changing app-level behavior |
+| `vercel.json` | Vercel deployment config | When changing function timeouts |
 
 ## Development Workflows
 
 ### Adding a New Experiment
 
-Follow these steps carefully:
+Follow these steps carefully (also see `src/config/experiments/README.md`):
 
 1. **Create experiment file** in `src/config/experiments/[experiment-id].ts`
    - Use `_template.ts` as a reference
+   - Copy the template: `cp _template.ts surustig.ts`
    - Export the config with a descriptive variable name
 
 2. **Define experiment structure:**
@@ -112,6 +116,7 @@ Follow these steps carefully:
    - `criteria` must include: `good`, `unsatisfactory`
    - `criteria` optionally includes: `needsImprovement`
    - Use `specialNote` for important instructions to the AI
+   - Standard total: 30 points (adjust as needed)
 
 4. **Import and register** in `src/config/experiments/index.ts`:
    ```typescript
@@ -124,10 +129,12 @@ Follow these steps carefully:
    ```
 
 5. **Test thoroughly:**
+   - Run `npm run type-check` to verify types
    - Upload sample reports
-   - Verify point calculations
+   - Verify point calculations add up correctly
    - Check both teacher and student modes
-   - Ensure Icelandic text is correct
+   - Ensure Icelandic text is grammatically correct
+   - Test with various report quality levels
 
 ### Modifying Evaluation Logic
 
@@ -143,6 +150,16 @@ The evaluation logic is centralized in `src/config/prompts.ts`:
 - Keep point calculations aligned with `maxPoints` in experiments
 - Preserve the encouraging tone for student mode
 - Be precise about chemical formulas and reactions
+
+**Chemical Accuracy Validation:**
+The prompts include specific validation rules for common chemistry errors:
+- **Ion charges:** Fe³⁺ (not Fe²⁺) in Fe(NO₃)₃, NO₃⁻ (not NO⁻)
+- **Colors:** Fe(NO₃)₃ is yellow/light yellow (not blue!)
+- **Ion notation:** SCN⁻ (not ScN⁻ - critical error!)
+- **Complex ions:** FeSCN²⁺ appears dark red/rust colored
+- **Equation numbering:** All equations must be numbered (1), (2), (3)
+
+These validations help AI avoid common chemistry misconceptions when grading.
 
 ### File Processing
 
@@ -189,6 +206,19 @@ Sessions are stored in browser `localStorage`:
 - **Types:** `GradingSession` in `src/types/index.ts`
 - **Features:** Save, load, delete, list sessions
 - **Limits:** Browser storage limits (5-10MB typical)
+
+**Storage Availability Checking:**
+The app includes robust storage availability detection via `isStorageAvailable()`:
+- Checks for `window.localStorage` existence
+- Tests actual read/write capability
+- Gracefully handles private browsing mode
+- Returns empty arrays if storage unavailable
+
+**Error Handling:**
+- All storage functions wrapped in try-catch
+- Failed session loads logged but don't break the app
+- Sessions sorted by timestamp (newest first)
+- Async API for future extensibility
 
 ## Code Conventions
 
@@ -361,6 +391,7 @@ VITE_API_ENDPOINT=/api/analyze      # Use serverless function
 - Auto-deploys from GitHub
 - Serverless functions in `api/`
 - Set `ANTHROPIC_API_KEY` in dashboard
+- Function timeout: 60 seconds (configured in `vercel.json`)
 - See `DEPLOYMENT.md` for details
 
 **Netlify**:
@@ -368,6 +399,19 @@ VITE_API_ENDPOINT=/api/analyze      # Use serverless function
 - Serverless functions in `netlify/functions/`
 - Set `ANTHROPIC_API_KEY` in dashboard
 - See `DEPLOYMENT.md` for details
+
+**Important Vercel Configuration:**
+The `vercel.json` includes critical settings:
+```json
+{
+  "functions": {
+    "api/analyze.ts": {
+      "maxDuration": 60
+    }
+  }
+}
+```
+This prevents timeouts during AI analysis of complex lab reports.
 
 ### Build Process
 
@@ -429,6 +473,12 @@ Outputs to `dist/`:
 - Check file encoding (UTF-8)
 - Verify meta charset in HTML
 - Check database/storage encoding
+
+**Storage quota exceeded**
+- Browser storage limits vary (5-10MB typical)
+- Delete old sessions via Session History
+- Check browser storage settings
+- Try clearing other site data
 
 ## Best Practices
 
@@ -529,13 +579,37 @@ VITE_API_ENDPOINT         # API endpoint (production)
 ANTHROPIC_API_KEY         # Server-side API key (production)
 ```
 
+## Recent Improvements
+
+### Storage Enhancements (Nov 2025)
+- Added robust storage availability checking with `isStorageAvailable()`
+- Better error handling for browser storage edge cases
+- Graceful fallback when localStorage is unavailable
+- Fixed timeout issues for production deployment
+
+### Configuration Updates (Nov 2025)
+- Vercel function timeout set to 60 seconds (`vercel.json`)
+- Enhanced jafnvaegi experiment evaluation criteria
+- Improved Icelandic language precision in prompts
+- Better chemical accuracy validation (Fe³⁺, SCN⁻, etc.)
+
+### API Changes
+- Model version: `claude-sonnet-4-20250514` (current)
+- Direct API and serverless function modes fully supported
+- 30-second timeout per file analysis
+- Automatic JSON extraction from Claude responses
+
 ## Version History
 
 - **v3.0.0** - Current version with modular experiments and unified evaluation
+  - Modular experiment architecture (`src/config/experiments/`)
+  - Points-based grading system with detailed criteria
+  - Enhanced storage with error handling
+  - Improved chemical accuracy validation
 - **v2.x** - Legacy version (see git history)
 
 ---
 
-**Last Updated:** 2025-11-16
+**Last Updated:** 2025-11-18
 
 For questions or clarifications, refer to the README.md and DEPLOYMENT.md files, or review the git commit history for context on recent changes.
