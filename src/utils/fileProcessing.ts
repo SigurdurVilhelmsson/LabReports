@@ -1,5 +1,6 @@
 import * as mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
+import html2canvas from 'html2canvas';
 import { FileContent } from '@/types';
 
 // Configure PDF.js worker - import from node_modules and let Vite handle it
@@ -23,12 +24,84 @@ export const fileToBase64 = (file: File): Promise<string> => {
 };
 
 /**
- * Extract text from a Word document (.docx)
+ * Extract text and images from a Word document (.docx)
+ * Converts the document to HTML and renders it to images to capture all content including equations
  */
-const extractFromDocx = async (file: File): Promise<string> => {
+const extractFromDocx = async (file: File): Promise<FileContent> => {
   const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.extractRawText({ arrayBuffer });
-  return result.value;
+
+  // Convert to HTML to preserve formatting and equations
+  const htmlResult = await mammoth.convertToHtml({ arrayBuffer });
+  const htmlContent = htmlResult.value;
+
+  // Extract plain text as well for text-based analysis
+  const textResult = await mammoth.extractRawText({ arrayBuffer });
+  const plainText = textResult.value;
+
+  // Create a temporary container to render the HTML
+  const container = document.createElement('div');
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.width = '816px'; // Standard A4 width at 96 DPI (8.5 inches)
+  container.style.padding = '96px'; // 1 inch padding
+  container.style.backgroundColor = 'white';
+  container.style.fontFamily = 'Arial, sans-serif';
+  container.style.fontSize = '12pt';
+  container.style.lineHeight = '1.5';
+  container.innerHTML = htmlContent;
+
+  document.body.appendChild(container);
+
+  try {
+    const images: Array<{ data: string; mediaType: string }> = [];
+
+    // Calculate how to split into pages (approximate A4 height)
+    const pageHeight = 1056; // Standard A4 height at 96 DPI (11 inches)
+    const totalHeight = container.scrollHeight;
+    const numPages = Math.ceil(totalHeight / pageHeight);
+
+    // Split content into multiple pages if needed
+    for (let i = 0; i < numPages; i++) {
+      // Create a clone of the container for this page
+      const pageContainer = container.cloneNode(true) as HTMLElement;
+      pageContainer.style.position = 'absolute';
+      pageContainer.style.left = '-9999px';
+      pageContainer.style.top = `${-i * pageHeight}px`;
+      pageContainer.style.height = `${pageHeight}px`;
+      pageContainer.style.overflow = 'hidden';
+
+      document.body.appendChild(pageContainer);
+
+      // Render this page to canvas
+      const canvas = await html2canvas(pageContainer, {
+        scale: 2, // Higher resolution for better quality
+        logging: false,
+        useCORS: true,
+      });
+
+      // Clean up page container
+      document.body.removeChild(pageContainer);
+
+      // Convert to base64
+      const imageData = canvas.toDataURL('image/png');
+      const base64Data = imageData.split(',')[1];
+
+      images.push({
+        data: base64Data,
+        mediaType: 'image/png',
+      });
+    }
+
+    return {
+      type: 'docx',
+      data: plainText,
+      images: images,
+    };
+  } finally {
+    // Clean up: remove the temporary container
+    document.body.removeChild(container);
+  }
 };
 
 /**
@@ -110,11 +183,7 @@ export const extractTextFromFile = async (file: File): Promise<FileContent | nul
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       fileName.endsWith('.docx')
     ) {
-      const text = await extractFromDocx(file);
-      return {
-        type: 'text',
-        data: text,
-      };
+      return await extractFromDocx(file);
     }
 
     // PDF files

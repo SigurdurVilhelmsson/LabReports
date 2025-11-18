@@ -24,8 +24,8 @@ const buildMessageContent = (content: FileContent) => {
     ];
   }
 
-  if (content.type === 'pdf' && content.images && content.images.length > 0) {
-    // For PDFs with images, send both text and images to Claude
+  if ((content.type === 'pdf' || content.type === 'docx') && content.images && content.images.length > 0) {
+    // For PDFs and DOCX with images, send both text and images to Claude
     return [
       {
         type: 'text',
