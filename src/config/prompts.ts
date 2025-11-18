@@ -90,7 +90,8 @@ ${experiment.sections.map(s => `    "${s.id}": {
       "quality": "good"/"needs improvement"/"unsatisfactory",
       "points": númer (0-${s.maxPoints}),
       "maxPoints": ${s.maxPoints},
-      "note": "stuttur texti á íslensku - hvað er vel gert eða hvað þarf að bæta"
+      "note": "stuttur texti á íslensku - hvað er vel gert eða hvað þarf að bæta",
+      "reasoning": "nákvæm útskýring á íslensku fyrir hvers vegna stig eru dregin frá (ef points < maxPoints). Útskýrðu hvað vantar eða þarf að bæta. Ef full stig (points == maxPoints), skildu þetta eftir tómt eða segðu 'Allt vel gert'"
     }`).join(',\n')}
   },
   "totalPoints": númer (summa allra points),

@@ -68,10 +68,17 @@ export const TeacherResults: React.FC<TeacherResultsProps> = ({
           <div key={idx} className="border rounded-lg p-6">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-lg font-semibold text-slate-800">{result.filename}</h3>
-              {result.suggestedGrade && (
+              {(result.suggestedGrade || (result.totalPoints !== undefined && result.maxTotalPoints !== undefined)) && (
                 <div className="text-right">
                   <div className="text-sm text-slate-600">Tillaga að einkunn:</div>
-                  <div className="text-2xl font-bold text-indigo-900">{result.suggestedGrade}</div>
+                  <div className="text-2xl font-bold text-indigo-900">
+                    {result.suggestedGrade || `${result.totalPoints}/${result.maxTotalPoints}`}
+                  </div>
+                  {result.totalPoints !== undefined && result.maxTotalPoints !== undefined && (
+                    <div className="text-xs text-slate-500 mt-1">
+                      ({result.totalPoints} af {result.maxTotalPoints} stigum)
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -100,12 +107,25 @@ export const TeacherResults: React.FC<TeacherResultsProps> = ({
                           <XCircle className="text-slate-400" size={20} />
                         )}
                         <div className="flex-1">
-                          <h4 className="font-semibold text-slate-800">{section.name}</h4>
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className="font-semibold text-slate-800">{section.name}</h4>
+                            {data.points !== undefined && data.maxPoints !== undefined && (
+                              <span className="text-sm font-bold text-slate-700 bg-white/50 px-2 py-0.5 rounded">
+                                {data.points}/{data.maxPoints} stig
+                              </span>
+                            )}
+                          </div>
                           <div className="text-sm">
                             {data.present ? (
                               <>
                                 <span className="font-medium">{getQualityLabel(data.quality)}</span>
                                 {data.note && <div className="text-slate-600 mt-1">{data.note}</div>}
+                                {data.reasoning && (
+                                  <div className="mt-2 pt-2 border-t border-slate-300">
+                                    <span className="font-semibold text-slate-700">Rökstuðningur: </span>
+                                    <span className="text-slate-700">{data.reasoning}</span>
+                                  </div>
+                                )}
                               </>
                             ) : (
                               <span className="text-slate-600">Vantar</span>

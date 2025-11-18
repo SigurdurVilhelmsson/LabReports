@@ -44,6 +44,7 @@ export interface SectionAnalysis {
   note?: string;
   points?: number; // Points earned for this section
   maxPoints?: number; // Maximum points possible for this section
+  reasoning?: string; // Explanation for point deductions (teacher mode)
 }
 
 export interface AnalysisResult {
