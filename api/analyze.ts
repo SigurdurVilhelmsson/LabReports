@@ -15,6 +15,7 @@ interface AnalyzeRequest {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers with domain whitelist for security
   const allowedOrigins = [
+    'https://www.kvenno.app',
     'https://lab-reports-assistant.vercel.app',
     'https://lab-reports.netlify.app',
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
