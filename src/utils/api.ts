@@ -3,6 +3,25 @@ import { buildTeacherSystemPrompt, buildStudentSystemPrompt } from '@/config/pro
 
 const API_TIMEOUT = 30000; // 30 seconds
 
+// Anthropic API response types
+interface AnthropicTextContent {
+  type: 'text';
+  text: string;
+}
+
+interface AnthropicResponse {
+  id: string;
+  type: 'message';
+  role: 'assistant';
+  content: AnthropicTextContent[];
+  model: string;
+  stop_reason: string | null;
+  usage: {
+    input_tokens: number;
+    output_tokens: number;
+  };
+}
+
 /**
  * Build Claude API message content from file content
  */
@@ -59,7 +78,7 @@ export const analyzeWithClaude = async (
   experiment: ExperimentConfig,
   mode: AppMode,
   apiKey?: string
-): Promise<any> => {
+): Promise<AnthropicResponse> => {
   const systemPrompt =
     mode === 'teacher'
       ? buildTeacherSystemPrompt(experiment)
@@ -160,7 +179,7 @@ export const processFile = async (
 
   const processPromise = async () => {
     const data = await analyzeWithClaude(content, experiment, mode);
-    const resultText = data.content?.find((item: any) => item.type === 'text')?.text || '';
+    const resultText = data.content.find((item) => item.type === 'text')?.text || '';
 
     const jsonMatch = resultText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {

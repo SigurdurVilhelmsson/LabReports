@@ -88,7 +88,7 @@ export interface GradingSession {
   name: string;
   experiment: string;
   timestamp: string;
-  results: AnalysisResult[];
+  results: AnalysisResult[] | StudentFeedback[];
   fileCount: number;
   mode: AppMode;
 }

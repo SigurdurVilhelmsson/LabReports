@@ -173,7 +173,7 @@ function App() {
         name: name,
         experiment: selectedExperiment,
         timestamp: new Date().toISOString(),
-        results: mode === 'teacher' ? results : (studentFeedback as any),
+        results: mode === 'teacher' ? results : studentFeedback,
         fileCount: mode === 'teacher' ? results.length : studentFeedback.length,
         mode,
       };
@@ -216,9 +216,9 @@ function App() {
     if (session) {
       setMode(session.mode);
       if (session.mode === 'teacher') {
-        setResults(session.results);
+        setResults(session.results as AnalysisResult[]);
       } else {
-        setStudentFeedback(session.results as any);
+        setStudentFeedback(session.results as StudentFeedback[]);
       }
       setSelectedExperiment(session.experiment);
       setCurrentSessionName(session.name);

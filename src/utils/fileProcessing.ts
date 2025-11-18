@@ -7,6 +7,16 @@ import { FileContent } from '@/types';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+// PDF.js types for text content items
+interface PDFTextItem {
+  str: string;
+  dir?: string;
+  width?: number;
+  height?: number;
+  transform?: number[];
+  fontName?: string;
+}
+
 /**
  * Convert a file to base64 string
  */
@@ -49,7 +59,7 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
     // Extract text content
     const textContent = await page.getTextContent();
     const pageText = textContent.items
-      .map((item: any) => item.str)
+      .map((item) => (item as PDFTextItem).str)
       .join(' ');
     fullText += pageText + '\n\n';
 
@@ -76,6 +86,10 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
       data: base64Data,
       mediaType: 'image/png',
     });
+
+    // Clean up canvas to free memory
+    canvas.width = 0;
+    canvas.height = 0;
   }
 
   return {
