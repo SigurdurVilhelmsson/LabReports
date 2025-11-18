@@ -13,9 +13,21 @@ interface AnalyzeRequest {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS headers with domain whitelist for security
+  const allowedOrigins = [
+    'https://lab-reports-assistant.vercel.app',
+    'https://lab-reports.netlify.app',
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+    process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : null,
+    process.env.NODE_ENV === 'development' ? 'http://localhost:4173' : null,
+  ].filter(Boolean) as string[];
+
+  const origin = req.headers.origin || '';
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -36,9 +48,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { content, systemPrompt, mode } = req.body as AnalyzeRequest;
 
-    // Validate request
+    // Validate request with type checking
     if (!content || !systemPrompt || !mode) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (mode !== 'teacher' && mode !== 'student') {
+      return res.status(400).json({ error: 'Invalid mode. Must be "teacher" or "student"' });
+    }
+
+    if (typeof systemPrompt !== 'string' || systemPrompt.length > 50000) {
+      return res.status(400).json({ error: 'Invalid systemPrompt' });
     }
 
     // Get API key from environment
@@ -48,35 +68,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
-    // Call Anthropic API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: mode === 'student' ? 4000 : 2000,
-        system: systemPrompt,
-        messages: [
-          {
-            role: 'user',
-            content: content,
-          },
-        ],
-      }),
-    });
+    // Call Anthropic API with timeout protection (55s, leaving 5s buffer for Vercel's 60s limit)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 55000);
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Anthropic API error:', error);
-      return res.status(response.status).json({ error: error.error?.message || 'API request failed' });
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: mode === 'student' ? 4000 : 2000,
+          system: systemPrompt,
+          messages: [
+            {
+              role: 'user',
+              content: content,
+            },
+          ],
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Anthropic API error:', error);
+        return res.status(response.status).json({ error: error.error?.message || 'API request failed' });
+      }
+
+      const data = await response.json();
+      return res.status(200).json(data);
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+
+      if (fetchError.name === 'AbortError') {
+        console.error('Request timeout');
+        return res.status(504).json({ error: 'Request timeout - greining tók of langan tíma' });
+      }
+      throw fetchError;
     }
-
-    const data = await response.json();
-    return res.status(200).json(data);
   } catch (error) {
     console.error('Server error:', error);
     return res.status(500).json({ error: 'Internal server error' });
