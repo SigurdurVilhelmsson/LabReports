@@ -78,7 +78,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const isStudentMode = mode === 'student';
   const title = isStudentMode ? 'Veldu skrá' : 'Hladdu upp skýrslum';
   const description = isStudentMode
-    ? 'Word skjal (.docx) eða mynd (JPEG, PNG)'
+    ? 'Word skjal (.docx), PDF skrá (.pdf) eða mynd (JPEG, PNG)'
     : 'Word skjöl (.docx), PDF skrár (.pdf) eða myndir - margar í einu';
   const buttonText = isStudentMode ? 'Fá endurgjöf á drögin' : 'Greina skýrslur';
 

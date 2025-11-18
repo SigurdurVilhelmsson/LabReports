@@ -261,7 +261,7 @@ export function StudentPage() {
               onProcess={processReports}
               processing={processing}
               processingStatus={processingStatus}
-              acceptedFileTypes=".docx,image/*"
+              acceptedFileTypes=".docx,.pdf,image/*"
               mode="student"
             />
           </div>
