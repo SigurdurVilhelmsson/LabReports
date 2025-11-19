@@ -148,6 +148,101 @@ Cloudflare Pages offers excellent global CDN and edge functions.
 
 ---
 
+### 5. Linode / Traditional Linux Server
+
+For traditional Linux servers (Ubuntu, Debian, etc.) with nginx. Provides full control and is ideal for production deployments.
+
+**Note:** This requires setting up a Node.js backend server, as serverless functions don't work on traditional servers.
+
+#### Prerequisites:
+- Ubuntu 24.04 (or similar Linux distribution)
+- Node.js 18+ installed
+- nginx installed
+- pandoc installed (`sudo apt install pandoc`)
+- Root or sudo access
+
+#### Quick Setup:
+
+See the detailed guide in **[server/README.md](server/README.md)** for complete instructions.
+
+**Summary:**
+
+1. **Deploy application:**
+   ```bash
+   sudo mkdir -p /var/www/labreports
+   sudo git clone <your-repo> /var/www/labreports
+   sudo chown -R www-data:www-data /var/www/labreports
+   ```
+
+2. **Build frontend:**
+   ```bash
+   cd /var/www/labreports
+   sudo -u www-data npm install
+   sudo -u www-data npm run build
+   ```
+
+3. **Setup backend server:**
+   ```bash
+   cd /var/www/labreports/server
+   sudo -u www-data npm install
+   sudo -u www-data cp .env.example .env
+   sudo nano .env  # Add your ANTHROPIC_API_KEY
+   ```
+
+4. **Configure nginx:**
+   ```bash
+   sudo cp nginx-site.conf /etc/nginx/sites-available/labreports
+   sudo ln -s /etc/nginx/sites-available/labreports /etc/nginx/sites-enabled/
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
+
+5. **Setup systemd service:**
+   ```bash
+   sudo cp labreports.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl enable labreports
+   sudo systemctl start labreports
+   ```
+
+6. **Setup SSL (recommended):**
+   ```bash
+   sudo apt install certbot python3-certbot-nginx
+   sudo certbot --nginx -d yourdomain.com
+   ```
+
+#### Architecture:
+
+```
+Browser → nginx (80/443) → Express.js (3001) → Anthropic API
+          ↓ Static files (dist/)
+```
+
+#### Advantages:
+- Full control over server
+- No serverless function limits
+- Cost-effective for high traffic
+- Easy to debug and monitor
+
+#### Troubleshooting:
+
+**405 Method Not Allowed error:**
+- This means the API endpoints aren't configured correctly
+- Check that the backend server is running: `sudo systemctl status labreports`
+- Check nginx is proxying: `sudo nginx -t`
+- Check logs: `sudo journalctl -u labreports -n 50`
+
+**Pandoc not found:**
+```bash
+sudo apt update
+sudo apt install pandoc
+sudo systemctl restart labreports
+```
+
+See **[server/README.md](server/README.md)** for complete troubleshooting guide.
+
+---
+
 ## Environment Variables
 
 All platforms require the following environment variable:
