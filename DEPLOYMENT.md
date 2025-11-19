@@ -2,10 +2,21 @@
 
 This application can be deployed to multiple platforms. Choose the one that best fits your needs.
 
+## Important: Pandoc Requirement
+
+**This application requires pandoc to process .docx files.** See **[PANDOC_SETUP.md](PANDOC_SETUP.md)** for detailed setup instructions for each deployment platform.
+
+Quick overview:
+- **Local Development**: Install pandoc via `brew install pandoc` (macOS) or `apt install pandoc` (Linux)
+- **Vercel Hobby**: Use `pandoc-lambda` package or bundle static binary
+- **Netlify**: Use build plugin or install during build
+- **Linode Production**: Install via `apt install pandoc` on Ubuntu 24.04
+
 ## Prerequisites
 
 - An Anthropic API key ([Get one here](https://console.anthropic.com/))
 - Node.js 18+ installed locally (for development)
+- **Pandoc** installed (see [PANDOC_SETUP.md](PANDOC_SETUP.md) for details)
 
 ## Platform-Specific Deployment
 
