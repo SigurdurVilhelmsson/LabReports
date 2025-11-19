@@ -2,11 +2,17 @@ import { ExperimentConfig } from '@/types';
 
 /**
  * Jafnvægi í efnahvörfum (Chemical Equilibrium)
- * 3rd year chemistry experiment - CORRECTED VERSION
+ * 3rd year chemistry experiment - BALANCED VERSION v3
  *
  * This experiment explores Le Chatelier's principle by observing
  * how an equilibrium system (Fe³⁺ + SCN⁻ ↔ FeSCN²⁺) responds to
  * changes in concentration and temperature.
+ *
+ * GRADING PHILOSOPHY:
+ * - LENIENT on STYLE: Accept informal/colloquial language if conceptually correct
+ * - STRICT on STRUCTURE: Content must be in correct sections
+ * - STRICT on COMPLETENESS: All required elements must be present
+ * - STRICT on DEPTH: Must explain concepts, not just list them
  */
 export const jafnvaegi: ExperimentConfig = {
   id: 'jafnvaegi',
@@ -55,11 +61,11 @@ export const jafnvaegi: ExperimentConfig = {
       description: 'Theory: equilibrium definition, Le Chatelier law, factors affecting equilibrium',
       maxPoints: 7.5,
       criteria: {
-        good: 'Skilgreining á efnajafnvægi, Le Chatelier lögmál útskýrt með SKÝRUM dæmum um hvernig áhrifaþættir (styrkur, hitastig, þrýstingur) hafa áhrif á jafnvægi, ALMENNUR texti (ekki tilteknar niðurstöður úr þessari tilraun). Kc jafna er valkvæð ef kennari lagði ekki áherslu á hana.',
-        needsImprovement: 'Fræðin til staðar en útskýringar á áhrifaþáttum gætu verið skýrari, eða of miklar tilvísanir í tilraunina sjálfa',
-        unsatisfactory: 'Vantar mikilvæga skilgreiningu á efnajafnvægi eða Le Chatelier lögmál, eða útskýrir ekki hvernig áhrifaþættir virka',
+        good: 'Skilgreining á efnajafnvægi, Le Chatelier lögmál ÚTSKÝRT (ekki bara nefnt) með dæmum um HVERNIG áhrifaþættir (styrkur, hitastig, þrýstingur) breyta jafnvægi, ALMENNUR texti með almennum dæmum (ekki lýsing á litunum eða niðurstöðum ÚR ÞESSARI tilraun). Orðalag má vera daglegt.',
+        needsImprovement: 'Nefnir þætti en ÚTSKÝRIR EKKI hvernig þeir virka, eða hefur of miklar tilvísanir í tiltekna tilraun (t.d. liti efna í ÞESSARI tilraun)',
+        unsatisfactory: 'Vantar skilgreiningu á efnajafnvægi eða Le Chatelier útskýringu, eða bara telur upp þætti án þess að útskýra',
       },
-      specialNote: 'IMPORTANT: (1) Must define equilibrium and explain Le Chatelier\'s principle. (2) Must explain how concentration, temperature, and pressure affect equilibrium - examples are sufficient, doesn\'t need to be in separate paragraphs. (3) Kc equation is OPTIONAL unless teacher specifically emphasized it - don\'t deduct heavily if missing. (4) Theory should be general, not specific to this experiment. (5) Colloquial phrases like "hvarfið vill laga breytinguna" are ACCEPTABLE if conceptually correct - focus on understanding, not perfect formal terminology.',
+      specialNote: 'CRITICAL DISTINCTION - Check for DEPTH: (1) GOOD: "Ef við bætum við efni A, þá færist hvarfið til vinstri til að minnka A" (explains HOW with example). (2) BAD: "Þættirnir eru styrkur, hitastig og þrýstingur" (just lists, doesn\'t explain). (3) Theory must use GENERAL examples (A+B↔C) not specific colors/observations from THIS experiment. (4) DEDUCT if theory includes: "Fe³⁺ er ljósgult", "verður rautt", or other specific observations. (5) Kc equation optional if not emphasized. (6) Colloquial language OK if correct.',
     },
     {
       id: 'taeki',
@@ -79,11 +85,11 @@ export const jafnvaegi: ExperimentConfig = {
       description: 'Should reference specific worksheet with brief description',
       maxPoints: 3,
       criteria: {
-        good: 'Vísar í ákveðinn vinnuseðil (t.d. "Jafnvægi í efnahvörfum" eða "Jafnvægi í hvörfum") OG gefur stutta lýsingu á tilrauninni. Útreikningar tilheyra Niðurstöðukafla.',
-        needsImprovement: 'Vinnuseðilsvísun of almenn eða vantar, eða of mikið af smáatriðum',
-        unsatisfactory: 'Vantar vinnuseðilsvísun eða gerir endurskrift á öllum skrefum í stað þess að vísa í vinnuseðil',
+        good: 'Vísar í ákveðinn vinnuseðil (t.d. "Jafnvægi í efnahvörfum" eða "Jafnvægi í hvörfum") OG gefur stutta lýsingu. ENGIR útreikningar - þeir tilheyra AÐEINS Niðurstöðukafla.',
+        needsImprovement: 'Vinnuseðilsvísun of almenn ("samkvæmt vinnuseðli" án nafns), eða hefur EINHVERJA útreikninga hér',
+        unsatisfactory: 'Vantar vinnuseðilsvísun, eða hefur ALLA útreikninga í Framkvæmd í stað Niðurstöður (alvarlegt skipulagsvilla)',
       },
-      specialNote: 'IMPORTANT: (1) Accept variations of worksheet name: "Jafnvægi í efnahvörfum", "Jafnvægi í hvörfum", "sýnitilraun" with context. (2) Brief procedure summary (1-2 sentences) is GOOD. (3) If ALL calculations appear in Niðurstöður section (as they should), this is GOOD - only deduct if calculations are mixed into procedure description here.',
+      specialNote: 'STRICT CHECK - Content Location: (1) Accept worksheet name variations: "Jafnvægi í efnahvörfum", "Jafnvægi í hvörfum", "sýnitilraun Jafnvægi". (2) CRITICAL: If you see mólstyrk calculations (M = mól/L), mass calculations, or ANY numerical chemistry work in Framkvæmd section, this is WRONG - calculations belong ONLY in Niðurstöður. Deduct points. (3) Brief procedure description is good. (4) This is STRUCTURAL requirement, not style.',
     },
     {
       id: 'nidurstodur',
@@ -91,11 +97,11 @@ export const jafnvaegi: ExperimentConfig = {
       description: 'All calculations, observations, answers to worksheet questions',
       maxPoints: 10.5,
       criteria: {
-        good: 'Allir þrír útreikningar réttir (KSCN, Fe(NO₃)₃ með kristallvatni, AgNO₃), allar athuganir skráðar (litabreytingar), útskýringar fyrir ALLAR 5 tilraunir með Le Chatelier, greining á hvort hvarfið sé inn- eða útvermið, öll svör við spurningum. Orðalag má vera daglegt ef hugtökin eru rétt (t.d. "hvarfið vill laga" er ásættanlegt).',
-        needsImprovement: 'Flestar niðurstöður til staðar: útreikningar að mestu réttir, flestar athuganir skráðar, en vantar 1-2 útskýringar eða vantar greiningu á inn/útvermni',
-        unsatisfactory: 'Vantar marga útreikninga, athuganir eða útskýringar; útskýringar ekki tengdar við Le Chatelier eða RANGAR',
+        good: 'Allir þrír útreikningar HÉRNA í Niðurstöðum (KSCN, Fe(NO₃)₃ með kristallvatni, AgNO₃), ALLAR 5 tilraunir skráðar með fullbúnum Le Chatelier útskýringum, greining á inn/útvermni, engin tóm bil. Orðalag má vera daglegt ef rétt.',
+        needsImprovement: 'Flestar niðurstöður til staðar en vantar 1-2 útskýringar, eða útskýringar eru ófullnægjandi',
+        unsatisfactory: 'Vantar útreikninga (þeir eru kannski í röngum kafla?), eða vantar margar útskýringar á tilraunum, eða hefur bara lýsingu án greiningar',
       },
-      specialNote: 'FOCUS ON CORRECTNESS, NOT FORMALITY: (1) All three calculations must be present and correct (check Fe(NO₃)₃ includes crystal water). (2) All 5 test tube observations and explanations must be documented. (3) Must determine if reaction is endothermic or exothermic. (4) ACCEPT colloquial language like "hvarfið vill laga breytinguna", "þarf að bæta við", "reynir að laga" if the CONCEPT is correct. Only deduct if explanation is actually WRONG or missing key Le Chatelier connection. Formal scientific terminology is nice to have but NOT required for "Gott" rating.',
+      specialNote: 'CHECK COMPLETENESS: (1) All 3 calculations must be HERE in Niðurstöður (not in Framkvæmd). (2) All 5 test tubes must have: observation + Le Chatelier explanation + direction of shift. (3) Must determine exo/endothermic. (4) Check for blank spaces or incomplete descriptions - deduct if present. (5) LANGUAGE: Accept "hvarfið vill laga", "þarf að bæta við" if concept correct. (6) Must have ANALYSIS not just description - "liturinn breyttist" is not enough, must explain WHY using Le Chatelier.',
     },
     {
       id: 'lokaord',
@@ -103,11 +109,11 @@ export const jafnvaegi: ExperimentConfig = {
       description: 'Summary with connection to theory and discussion of uncertainty',
       maxPoints: 4.5,
       criteria: {
-        good: 'Góð samantekt á helstu niðurstöðum, tengsl við Le Chatelier lögmál eru skýr, UMRÆÐA um óvissu eða skekkjur (hvort þær hafi áhrif á niðurstöður), samhengandi texti',
-        needsImprovement: 'Samantekt til staðar og tengir við fræðikafla, en VANTAR umræðu um óvissu/skekkjur',
-        unsatisfactory: 'Mjög veik samantekt sem tengist ekki við fræðikafla, VANTAR umræðu um óvissu, eða mjög samhengislaus',
+        good: 'Samantekt tengir við Le Chatelier, UMRÆÐA um óvissu/skekkjur, SAMHENGANDI (ekki endurtaka sama aftur og aftur), hnitmiðað',
+        needsImprovement: 'Tengsl við fræði til staðar en vantar umræðu um óvissu, eða smá óþarfa endurtekning',
+        unsatisfactory: 'SAMHENGISLAUS (hoppar milli hugmynda), mikil endurtekning á sömu setningum, vantar umræðu um óvissu, eða tengist ekki fræðum',
       },
-      specialNote: 'KEY REQUIREMENT: Must include discussion of UNCERTAINTY/ERROR ANALYSIS (óvissa) - for example: measurement errors, temperature control, concentration precision, or statement that errors were minimal and didn\'t affect conclusions. This is critical for "Gott" rating. Colloquial language is acceptable if concepts are clear. Conclusions should connect results back to Le Chatelier\'s principle.',
+      specialNote: 'CHECK FOR: (1) UNCERTAINTY discussion required (measurement errors, or "errors were minimal"). (2) COHERENCE: Ideas should flow logically. (3) AVOID REPETITION: If same concept/phrase repeated 3+ times, deduct points. Example of BAD: mentioning "Le Chatelier" 5 times in one paragraph. (4) Should be concise summary, not rambling. (5) Colloquial language OK if clear. (6) Must connect results to theory.',
     },
     {
       id: 'undirskrift',
@@ -115,10 +121,10 @@ export const jafnvaegi: ExperimentConfig = {
       description: 'Student signature present at bottom of report',
       maxPoints: 1.5,
       criteria: {
-        good: 'Undirskrift til staðar NEÐST í skýrslu',
-        unsatisfactory: 'Vantar undirskrift, eða er ekki neðst í skýrslu',
+        good: 'Undirskrift til staðar NEÐST í skýrslu (nafn nemanda)',
+        unsatisfactory: 'Undirskrift VANTAR eða er ekki neðst í skýrslu',
       },
-      specialNote: 'Signature must be at the BOTTOM of the report, after all other sections (especially after Lokaorð/Umræða)',
+      specialNote: 'BINARY CHECK: Signature must be present at BOTTOM of report. This is simple yes/no - either it\'s there or it isn\'t. Check if student name appears after conclusion section. If missing entirely, give 0 points.',
     },
     {
       id: 'samhengi',
@@ -126,11 +132,11 @@ export const jafnvaegi: ExperimentConfig = {
       description: 'Overall coherence between sections',
       maxPoints: 1.5,
       criteria: {
-        good: 'Góð tengsl milli kafla, skýrslan er samhengandi og lítur út fyrir að vera lesið yfir. Hugtök rétt notuð (formleg eða óformleg).',
-        needsImprovement: 'Þokkalegt samhengi en kaflar tengist ekki vel saman',
-        unsatisfactory: 'Lítið samhengi milli kafla, virðist ekki lesið yfir, eða miklar mótsagnir',
+        good: 'Kaflar tengist saman, skýrslan er FULLBÚIN (engin tóm bil eða ófullgerðar setningar), samhengandi og yfirlesin. Orðalag má vera daglegt.',
+        needsImprovement: 'Kaflar tengist ekki vel, eða virðist ekki vera lesin yfir, eða smá ófullgerðir hluti',
+        unsatisfactory: 'Mjög lítið samhengi, virðist ófullbúin með tómum bilum eða vantar stóra kafla, eða mótsagnir',
       },
-      specialNote: 'Focus on COHERENCE and CORRECTNESS, not formal terminology. Report should flow logically between sections. Colloquial but correct language should NOT be penalized here. Only deduct if sections contradict each other or report seems unreviewed.',
+      specialNote: 'Check for: (1) COMPLETENESS: Are there blank spaces ("__") or missing sections? (2) COHERENCE: Do sections flow logically? (3) REVIEW: Does it seem proofread? (4) Accept informal but correct language. (5) Deduct if report seems incomplete or has obvious gaps. This is about STRUCTURE not STYLE.',
     },
   ],
   gradeScale: ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1', '0'],
