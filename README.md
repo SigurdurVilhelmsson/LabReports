@@ -8,12 +8,14 @@ An AI-powered web application for chemistry teachers and students in Iceland to 
 
 This project has recently received significant enhancements:
 
+- **Pandoc Integration (Nov 19)** - Replaced client-side Mammoth.js with server-side pandoc for better .docx processing
+- **Better Equation Handling** - LaTeX equations now preserved natively in markdown format
+- **Improved Document Conversion** - More accurate .docx parsing with pandoc's robust engine
 - **Drag & Drop File Upload** - Intuitive file upload with drag-and-drop support
 - **PDF Support for Students** - Students can now upload PDF files (previously teacher-only)
-- **Enhanced Equation Support** - Automatic conversion of .docx files to images to capture equations
-- **Points-Based Grading** - Teacher mode now shows detailed point breakdown and reasoning
+- **Points-Based Grading** - Teacher mode shows detailed point breakdown and reasoning
 - **Improved Storage** - Robust error handling for browser storage edge cases
-- **Production Ready** - Timeout and CORS fixes for deployment
+- **Production Ready** - Full deployment support for Vercel, Netlify, and Linode
 - **Comprehensive Documentation** - Detailed guides for developers and AI assistants
 
 ## Features
@@ -34,7 +36,7 @@ This project has recently received significant enhancements:
 - **Encouragement**: Positive, supportive feedback in Icelandic to help students learn
 - **Actionable Advice**: Specific next steps to improve the report
 - **Multiple Format Support**: Submit reports as Word docs (.docx), PDFs (.pdf), or images (.jpg, .png, etc.)
-- **Equation Recognition**: Automatic extraction and analysis of equations from documents
+- **Equation Recognition**: LaTeX equations preserved natively from .docx files via pandoc
 
 ### 🔧 Technical Features
 - **Drag & Drop Upload**: Intuitive file upload with drag-and-drop support
@@ -51,6 +53,7 @@ This project has recently received significant enhancements:
 ### Prerequisites
 - Node.js 18+ and npm
 - An Anthropic API key ([Get one here](https://console.anthropic.com/))
+- **Pandoc** for .docx processing (see installation below)
 
 ### Installation
 
@@ -60,12 +63,36 @@ This project has recently received significant enhancements:
    cd LabReports
    ```
 
-2. **Install dependencies**:
+2. **Install pandoc** (required for .docx processing):
+
+   **macOS:**
+   ```bash
+   brew install pandoc
+   ```
+
+   **Linux (Ubuntu/Debian):**
+   ```bash
+   sudo apt update && sudo apt install pandoc
+   ```
+
+   **Windows:**
+   ```powershell
+   choco install pandoc
+   ```
+
+   Or download from [pandoc.org](https://pandoc.org/installing.html)
+
+   Verify installation:
+   ```bash
+   pandoc --version
+   ```
+
+3. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Set up environment variables**:
+4. **Set up environment variables**:
    ```bash
    cp .env.example .env
    ```
@@ -76,12 +103,12 @@ This project has recently received significant enhancements:
    VITE_APP_MODE=dual
    ```
 
-4. **Start development server**:
+5. **Start development server**:
    ```bash
    npm run dev
    ```
 
-5. **Open in browser**:
+6. **Open in browser**:
    ```
    http://localhost:5173
    ```
@@ -256,15 +283,19 @@ npm run type-check   # Check TypeScript types
 - **Icons**: Lucide React
 - **AI**: Claude Sonnet 4 (Anthropic)
 - **File Processing**:
-  - Mammoth (Word documents)
-  - PDF.js (PDF files)
-  - Browser FileReader API (images)
+  - Pandoc (Word documents - server-side)
+  - PDF.js (PDF files - client-side)
+  - Browser FileReader API (images - client-side)
+- **Server**: Vercel/Netlify serverless functions, Linode with nginx (production)
 
 ## Deployment
 
+**Important:** This application requires pandoc to be installed on the server. See [PANDOC_SETUP.md](./PANDOC_SETUP.md) for platform-specific setup instructions.
+
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for:
-- Vercel (Recommended)
-- Netlify
+- Vercel (Recommended) - Requires pandoc setup
+- Netlify - Requires pandoc setup
+- Linode/Ubuntu (Production) - Install via `apt install pandoc`
 - AWS Amplify
 - Cloudflare Pages
 

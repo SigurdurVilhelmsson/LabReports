@@ -7,6 +7,9 @@
   "functions": {
     "api/analyze.ts": {
       "maxDuration": 60
+    },
+    "api/process-document.ts": {
+      "maxDuration": 30
     }
   },
   "rewrites": [

@@ -14,9 +14,9 @@ This document provides guidance for AI assistants working with the Lab Report As
 - Frontend: React 18 + TypeScript + Vite
 - Styling: Tailwind CSS
 - AI: Claude Sonnet 4 (Anthropic API)
-- File Processing: Mammoth (docx), PDF.js (pdf), FileReader API (images)
+- File Processing: Pandoc (docx - server-side), PDF.js (pdf), FileReader API (images)
 - Routing: React Router DOM
-- Deployment: Vercel/Netlify with serverless functions
+- Deployment: Vercel/Netlify with serverless functions, Linode with nginx (production)
 
 **Language:** Icelandic (UI and feedback are in Icelandic)
 
@@ -33,9 +33,11 @@ The application has **two distinct modes**:
 ```
 LabReports/
 ├── api/                              # Vercel serverless functions
-│   └── analyze.ts                   # API proxy for Claude requests
+│   ├── analyze.ts                   # API proxy for Claude requests
+│   └── process-document.ts          # Pandoc document processing
 ├── netlify/functions/               # Netlify serverless functions
-│   └── analyze.ts                   # API proxy for Claude requests
+│   ├── analyze.ts                   # API proxy for Claude requests
+│   └── process-document.ts          # Pandoc document processing
 ├── src/
 │   ├── components/                  # React components
 │   │   ├── FileUpload.tsx          # File upload with drag-and-drop
@@ -191,24 +193,36 @@ These validations help AI avoid common chemistry misconceptions when grading.
 
 ### File Processing
 
-File processing happens in `src/utils/fileProcessing.ts`:
+File processing uses a hybrid client/server approach:
+
+**Client-side** (`src/utils/fileProcessing.ts`):
+- Handles file upload and routing
+- Processes PDFs and images locally
+- Sends .docx files to server for processing
+
+**Server-side** (`api/process-document.ts`, `netlify/functions/process-document.ts`):
+- Converts .docx files using pandoc
+- Extracts markdown with LaTeX equations
+- Returns processed content to client
 
 **Supported formats:**
-- `.docx` - Text extraction via Mammoth
-- `.pdf` - Text + images via PDF.js (includes equations as images)
-- Images (`.jpg`, `.png`, etc.) - Direct vision analysis
+- `.docx` - Server-side conversion via **Pandoc** (markdown + LaTeX equations)
+- `.pdf` - Client-side processing via PDF.js (text + images)
+- Images (`.jpg`, `.png`, etc.) - Client-side base64 encoding
 
 **Key function:** `extractTextFromFile(file: File): Promise<FileContent>`
 
 **Returns:**
 ```typescript
 {
-  type: 'text' | 'image' | 'pdf',
-  data: string,              // Text or base64
-  mediaType?: string,        // For images
-  images?: Array<{...}>      // For PDFs with images
+  type: 'text' | 'image' | 'pdf' | 'docx',
+  data: string,              // Text, markdown, or base64
+  mediaType?: string,        // For images and processed documents
+  images?: Array<{...}>      // For PDFs with images (optional)
 }
 ```
+
+**Important:** Pandoc must be installed on the server. See [PANDOC_SETUP.md](PANDOC_SETUP.md) for deployment instructions.
 
 ### API Integration
 
@@ -660,7 +674,8 @@ This project includes several documentation files. Here's when to consult each:
 - [Vite Documentation](https://vitejs.dev/) - Build tool
 
 ### Libraries
-- [Mammoth.js](https://github.com/mwilliamson/mammoth.js) - DOCX parsing
+- [Pandoc](https://pandoc.org/) - DOCX to Markdown conversion (server-side)
+- [Formidable](https://github.com/node-formidable/formidable) - File upload handling
 - [PDF.js](https://mozilla.github.io/pdf.js/) - PDF rendering
 - [Lucide Icons](https://lucide.dev/) - Icon library
 - [React Router](https://reactrouter.com/) - Routing
@@ -703,7 +718,7 @@ The project received significant enhancements throughout November 2025:
 ### File Upload Enhancements (Nov 16-18)
 - **Drag and Drop**: Full drag-and-drop support for file uploads (`FileUpload.tsx`, PR #18)
 - **PDF Support for Students**: Students can now upload PDF files (previously teacher-only, PR #19)
-- **Equation Extraction**: Automatic conversion of .docx files to images to capture equations (PR #17)
+- **Equation Extraction**: Automatic conversion of .docx files to images to capture equations (PR #17) - **Note**: Now superseded by pandoc LaTeX extraction
 - **Visual Feedback**: Improved upload states and error handling
 - **Multi-file Support**: Better handling of multiple file uploads
 
@@ -731,24 +746,37 @@ The project received significant enhancements throughout November 2025:
 - Updated README.md to reflect current repository structure (PR #23)
 - Added DEPENDENCY_UPDATE_PLAN.md for dependency management
 
+### Document Processing Migration (Nov 19)
+- **Pandoc Integration**: Replaced Mammoth.js with server-side pandoc processing
+- **Better Equation Handling**: LaTeX equations preserved natively in markdown
+- **Server-side Processing**: New `/api/process-document` endpoint for .docx files
+- **Improved Accuracy**: Better document conversion with pandoc's robust parser
+- **Production Ready**: Full setup guide for Vercel, Netlify, and Linode (PANDOC_SETUP.md)
+- **Bundle Size Reduction**: Removed html2canvas and mammoth (client-side only)
+- **Removed Dependencies**: mammoth, html2canvas
+- **Added Dependencies**: formidable (server-side file uploads)
+
 ### API Changes
 - Model version: `claude-sonnet-4-20250514` (current)
 - Direct API and serverless function modes fully supported
-- 30-second timeout per file analysis
+- 30-second timeout per file analysis (analyze endpoint)
+- 30-second timeout for document processing (process-document endpoint)
 - Automatic JSON extraction from Claude responses
 
 ## Dependency Management
 
-### Current Dependencies (v3.0.0)
+### Current Dependencies (v3.1.0)
 
 **Production:**
 - `@anthropic-ai/sdk` ^0.30.1 - Claude API client
 - `react` + `react-dom` ^18.3.1 - UI framework
 - `react-router-dom` ^7.9.5 - Routing
-- `mammoth` ^1.6.0 - DOCX parsing
-- `pdfjs-dist` ^4.0.379 - PDF parsing
+- `formidable` ^3.5.1 - File upload handling (server-side)
+- `pdfjs-dist` ^4.0.379 - PDF parsing (client-side)
 - `lucide-react` ^0.263.1 - Icons
-- `html2canvas` ^1.4.1 - Screenshot generation
+
+**System Dependencies:**
+- `pandoc` - Document conversion (must be installed on server)
 
 **Development:**
 - `typescript` ^5.3.3 - Type checking
