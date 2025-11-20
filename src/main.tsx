@@ -13,7 +13,7 @@ function App() {
   // If mode is locked, redirect to appropriate page
   if (appModeConfig === 'teacher') {
     return (
-      <BrowserRouter>
+      <BrowserRouter basename="/labreports">
         <Routes>
           <Route path="/*" element={<TeacherPage />} />
         </Routes>
@@ -23,7 +23,7 @@ function App() {
 
   if (appModeConfig === 'student') {
     return (
-      <BrowserRouter>
+      <BrowserRouter basename="/labreports">
         <Routes>
           <Route path="/*" element={<StudentPage />} />
         </Routes>
@@ -33,7 +33,7 @@ function App() {
 
   // Dual mode - show landing and allow navigation
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/labreports">
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/teacher/*" element={<TeacherPage />} />

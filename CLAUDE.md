@@ -20,6 +20,37 @@ This document provides guidance for AI assistants working with the Lab Report As
 
 **Language:** Icelandic (UI and feedback are in Icelandic)
 
+### Multi-Repository Architecture
+
+This application is part of a larger **ChemistryTools** suite with a multi-repository architecture:
+
+**Repository Structure:**
+```
+/home/user/
+├── ChemistryTools-Landing/   # Main landing page (links to all tools)
+├── LabReports/                # This repository
+└── [Other chemistry tools]/   # Future tools
+```
+
+**Deployment Structure:**
+```
+/var/www/
+├── ChemistryTools-Landing/   # example.com/
+├── LabReports/               # example.com/labreports/
+└── [Other tools]/            # example.com/[tool-name]/
+```
+
+**URL Structure:**
+- Main landing: `example.com/` → Links to chemistry tools
+- LabReports app: `example.com/labreports/` → Internal landing page (teacher/student chooser)
+  - Teacher mode: `example.com/labreports/teacher`
+  - Student mode: `example.com/labreports/student`
+
+**Important Configuration:**
+- Base path is set to `/labreports/` in `vite.config.ts`
+- BrowserRouter uses `basename="/labreports"` in `src/main.tsx`
+- All assets and routing are relative to this base path
+
 ## Architecture
 
 ### Core Concepts
