@@ -4,6 +4,23 @@ An AI-powered web application for chemistry teachers and students in Iceland to 
 
 **Repository**: [SigurdurVilhelmsson/LabReports](https://github.com/SigurdurVilhelmsson/LabReports)
 
+**Part of**: [Kvenno Chemistry Tools](https://kvenno.app) - A unified suite of chemistry education tools for Kvennaskólinn í Reykjavík
+
+## Site Structure
+
+This app is deployed as part of the **kvenno.app** multi-tool platform:
+
+- **Live URLs**:
+  - 2nd year: `kvenno.app/2-ar/lab-reports/`
+  - 3rd year: `kvenno.app/3-ar/lab-reports/`
+
+- **Site Navigation**:
+  - Landing: `kvenno.app/` → Year selection
+  - Year hubs: `kvenno.app/2-ar/` or `kvenno.app/3-ar/` → Tool selection
+  - This app: Teacher/student mode selection
+
+For complete site structure and design guidelines, see **[Kvenno_structure.md](./Kvenno_structure.md)**.
+
 ## What's New (November 2025)
 
 This project has recently received significant enhancements:
@@ -292,12 +309,24 @@ npm run type-check   # Check TypeScript types
 
 **Important:** This application requires pandoc to be installed on the server. See [PANDOC_SETUP.md](./PANDOC_SETUP.md) for platform-specific setup instructions.
 
+### Multi-Path Deployment
+
+This app is **shared** across multiple year levels and deployed to multiple paths:
+- **2nd year**: `/2-ar/lab-reports/`
+- **3rd year**: `/3-ar/lab-reports/`
+
+Each deployment requires separate builds with different `basename` configurations. See **[Kvenno_structure.md](./Kvenno_structure.md)** for complete deployment structure.
+
+### Platform Support
+
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for:
 - Vercel (Recommended) - Requires pandoc setup
 - Netlify - Requires pandoc setup
 - Linode/Ubuntu (Production) - Install via `apt install pandoc`
 - AWS Amplify
 - Cloudflare Pages
+
+**Note**: For production deployment at kvenno.app, follow the unified deployment process outlined in Kvenno_structure.md.
 
 ## Security
 
@@ -367,11 +396,14 @@ This project includes comprehensive documentation for different audiences:
 | Document | Purpose | Audience |
 |----------|---------|----------|
 | **README.md** (this file) | User guide, quick start, general usage | End users, new developers |
+| **Kvenno_structure.md** | Unified site structure, design system, navigation | **ALL developers** - Critical reference ⭐ |
 | **CLAUDE.md** | AI assistant guide, architecture details, code conventions | AI assistants, maintainers |
 | **DEPLOYMENT.md** | Platform-specific deployment instructions | DevOps, deployment |
 | **MIGRATION.md** | v2 to v3 upgrade guide | Existing users migrating |
 | **DEPENDENCY_UPDATE_PLAN.md** | Strategy for updating dependencies | Developers updating packages |
 | **src/config/experiments/README.md** | Guide for creating experiments | Content creators |
+
+**Important**: Before making any UI/design changes, consult **Kvenno_structure.md** for unified design system requirements (colors, buttons, navigation, etc.).
 
 ### Legacy Files
 

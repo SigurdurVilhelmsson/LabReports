@@ -188,12 +188,73 @@ Each app (Lab Reports, AI Tutor, etc.) must include:
 
 ## 8. This App's Details
 
-> **NOTE**: Update this section for each repo
+- **Repo Name**: `lab-reports-app` (SigurdurVilhelmsson/LabReports)
+- **Deployed To**:
+  - `/2-ar/lab-reports/` (2nd year students and teachers)
+  - `/3-ar/lab-reports/` (3rd year students and teachers)
+- **Purpose**: AI-powered lab report grading and feedback system for chemistry. Teachers can batch-grade reports with points-based evaluation; students receive detailed, encouraging feedback to improve their writing.
+- **Current Status**: ✅ **Deployed** (v3.0.0)
+- **Key Features**:
+  - Dual mode: Teacher grading & Student feedback
+  - File support: .docx (via pandoc), .pdf, images
+  - Points-based evaluation with detailed criteria
+  - Session management and CSV export
+  - Icelandic language UI and feedback
+- **Tech Stack**: React 18 + TypeScript + Vite + Tailwind CSS + Claude Sonnet 4
+- **Shared Across Years**: ✅ Yes - Same codebase deployed to multiple paths
+- **Base Path Configuration**: Uses React Router `basename` (e.g., `/2-ar/lab-reports/`)
+- **Year-Specific Experiments**: Configured via `year` property in experiment definitions (1, 2, or 3)
 
-- **Repo Name**: [e.g., lab-reports-app]
-- **Deployed To**: [e.g., /1-ar/lab-reports/]
-- **Purpose**: [Brief description of what this app does]
-- **Current Status**: [In development / Deployed / Planning]
+### Navigation Requirements for This App
+
+**Breadcrumbs**:
+- From `/2-ar/lab-reports/`: `Heim > 2. ár > Tilraunarskýrslur`
+- From `/3-ar/lab-reports/`: `Heim > 3. ár > Tilraunarskýrslur`
+
+**Header**:
+- Site logo → Links to `/` (main landing)
+- Admin button → Teacher login/access (if applicable)
+- Info button → Help/about modal or page
+
+**Back Navigation**:
+- "Til baka" button → Returns to year hub (`/2-ar/` or `/3-ar/`)
+
+### Base Path Configuration
+
+**Current Setup** (needs updating):
+- `vite.config.ts`: `base: '/lab-reports/'`
+- `src/main.tsx`: `<BrowserRouter basename="/lab-reports">`
+
+**Required for Multi-Path Deployment**:
+
+Option 1 - Environment Variable (Recommended):
+```typescript
+// vite.config.ts
+base: process.env.VITE_BASE_PATH || '/lab-reports/',
+
+// src/main.tsx
+<BrowserRouter basename={import.meta.env.VITE_BASE_PATH || '/lab-reports'}>
+```
+
+Then set in environment:
+- 2nd year: `VITE_BASE_PATH=/2-ar/lab-reports/`
+- 3rd year: `VITE_BASE_PATH=/3-ar/lab-reports/`
+
+Option 2 - Separate Builds:
+- Create separate build configurations for each year
+- Manually update paths before each deployment
+
+### Color Scheme in Use
+
+This app currently uses **indigo-600** as primary color in some components. **TODO**: Migrate to unified `#f36b22` orange per Kvenno design system.
+
+**Migration checklist**:
+- [ ] Update button colors from indigo to #f36b22
+- [ ] Update border colors to match orange theme
+- [ ] Add consistent header with "Kvenno Efnafræði" branding
+- [ ] Add breadcrumb navigation
+- [ ] Update hover states to darker orange shade
+- [ ] Make base path configurable via environment variable
 
 ## 9. Deployment Notes
 
