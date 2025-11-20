@@ -59,7 +59,7 @@ export const StudentHome: React.FC<StudentHomeProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-xl p-8">
-      <h1 className="text-3xl font-bold text-indigo-900 mb-2">Efnafræðiskýrslur</h1>
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Efnafræðiskýrslur</h1>
       <p className="text-slate-600 mb-6">Aðstoð við að skrifa skýrslur úr verklegum æfingum</p>
 
       <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
@@ -71,9 +71,9 @@ export const StudentHome: React.FC<StudentHomeProps> = ({
 
       {stats.totalSubmissions > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-indigo-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-indigo-900">{stats.totalReports}</div>
-            <div className="text-sm text-indigo-700">Skýrslur</div>
+          <div className="bg-orange-50 p-4 rounded-lg">
+            <div className="text-2xl font-bold text-slate-900">{stats.totalReports}</div>
+            <div className="text-sm text-slate-700">Skýrslur</div>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="text-2xl font-bold text-green-900">{stats.totalSubmissions}</div>
@@ -93,7 +93,7 @@ export const StudentHome: React.FC<StudentHomeProps> = ({
       <div className="grid gap-4 mb-6">
         <button
           onClick={onStartNew}
-          className="bg-indigo-600 text-white px-6 py-4 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2 text-lg font-semibold"
+          className="bg-kvenno-orange text-white px-6 py-4 rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-2 text-lg font-semibold"
         >
           <FileText size={24} />
           Byrja nýja skýrslu

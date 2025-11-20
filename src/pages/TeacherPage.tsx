@@ -257,7 +257,7 @@ export function TeacherPage() {
                 }}
                 className={`px-4 py-2 rounded-lg transition ${
                   view === 'grader'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-kvenno-orange text-white'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                 }`}
               >
@@ -267,7 +267,7 @@ export function TeacherPage() {
                 onClick={() => setView('history')}
                 className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
                   view === 'history'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-kvenno-orange text-white'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                 }`}
               >
@@ -293,7 +293,7 @@ export function TeacherPage() {
                 <select
                   value={selectedExperiment}
                   onChange={(e) => setSelectedExperiment(e.target.value)}
-                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-kvenno-orange"
                 >
                   {experiments.map((exp) => (
                     <option key={exp.id} value={exp.id}>

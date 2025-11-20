@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        'kvenno-orange': '#f36b22',
+      },
       keyframes: {
         'slide-up': {
           '0%': { transform: 'translateY(100%)', opacity: '0' },

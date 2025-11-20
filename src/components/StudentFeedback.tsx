@@ -57,13 +57,13 @@ export const StudentFeedback: React.FC<StudentFeedbackProps> = ({
 
             {/* Overall Grade */}
             {(item.heildareinkunn || item.totalPoints !== undefined) && (
-              <div className="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6">
-                <p className="text-2xl font-bold text-indigo-900">
+              <div className="bg-orange-50 border-l-4 border-kvenno-orange p-4 mb-6">
+                <p className="text-2xl font-bold text-slate-900">
                   Áætluð einkunn:{' '}
                   {item.heildareinkunn ||
                     `${item.totalPoints}/${item.maxTotalPoints || 30}`}
                 </p>
-                <p className="text-sm text-indigo-700 mt-1">
+                <p className="text-sm text-slate-700 mt-1">
                   Þetta er til leiðbeiningar - raunveruleg einkunn kemur frá kennara
                 </p>
               </div>
@@ -101,8 +101,8 @@ export const StudentFeedback: React.FC<StudentFeedbackProps> = ({
 
             {/* Overall Assessment (fallback if using English version) */}
             {item.overallAssessment && !item.almennarAthugasemdir && (
-              <div className="bg-indigo-50 border border-indigo-300 rounded-lg p-4 mb-6">
-                <h4 className="font-semibold text-indigo-900 mb-2 flex items-center gap-2">
+              <div className="bg-orange-50 border border-kvenno-orange rounded-lg p-4 mb-6">
+                <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
                   <Target size={20} />
                   Heildarmat
                 </h4>
@@ -180,7 +180,7 @@ export const StudentFeedback: React.FC<StudentFeedbackProps> = ({
                         {/* Suggestions */}
                         {sectionData.suggestions && sectionData.suggestions.length > 0 && (
                           <div>
-                            <div className="text-sm font-semibold text-indigo-700 mb-1 flex items-center gap-1">
+                            <div className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1">
                               <Lightbulb size={16} />
                               Tillögur:
                             </div>
@@ -245,7 +245,7 @@ export const StudentFeedback: React.FC<StudentFeedbackProps> = ({
                 {onRetry && (
                   <button
                     onClick={onRetry}
-                    className="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition"
+                    className="flex-1 bg-kvenno-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition"
                   >
                     Senda inn aftur
                   </button>

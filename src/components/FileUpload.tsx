@@ -87,7 +87,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       <div
         className={`border-2 border-dashed rounded-lg p-8 text-center mb-6 transition-colors ${
           isDragging
-            ? 'border-indigo-500 bg-indigo-50'
+            ? 'border-kvenno-orange bg-orange-50'
             : 'border-slate-300 bg-white'
         }`}
         onDragEnter={handleDragEnter}
@@ -96,7 +96,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         onDrop={handleDrop}
       >
         <Upload
-          className={`mx-auto mb-4 ${isDragging ? 'text-indigo-600' : 'text-slate-600'}`}
+          className={`mx-auto mb-4 ${isDragging ? 'text-kvenno-orange' : 'text-slate-600'}`}
           size={48}
         />
         <h3 className="text-lg font-semibold text-slate-800 mb-2">
@@ -113,7 +113,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         />
         <label
           htmlFor="file-upload"
-          className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition cursor-pointer inline-block"
+          className="bg-kvenno-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition cursor-pointer inline-block"
         >
           Velja skrá{isStudentMode ? '' : 'r'}
         </label>

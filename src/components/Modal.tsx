@@ -53,7 +53,7 @@ export const SaveDialog: React.FC<SaveDialogProps> = ({ isOpen, onClose, onSave,
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Sláðu inn heiti..."
-        className="w-full p-3 border border-slate-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500"
+        className="w-full p-3 border border-slate-300 rounded-lg mb-4 focus:ring-2 focus:ring-kvenno-orange"
         autoFocus
         onKeyPress={(e) => {
           if (e.key === 'Enter') {
