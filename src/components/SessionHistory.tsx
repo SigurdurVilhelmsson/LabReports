@@ -30,12 +30,12 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
         {sessions.map((session) => (
           <div
             key={session.id}
-            className="border rounded-lg p-4 flex justify-between items-center hover:border-indigo-500 transition"
+            className="border rounded-lg p-4 flex justify-between items-center hover:border-kvenno-orange transition"
           >
             <div className="flex items-start gap-3">
               <div className="mt-1">
                 {session.mode === 'teacher' ? (
-                  <GraduationCap className="text-indigo-600" size={24} />
+                  <GraduationCap className="text-kvenno-orange" size={24} />
                 ) : (
                   <BookOpen className="text-green-600" size={24} />
                 )}
@@ -53,7 +53,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
                   <span
                     className={`text-xs px-2 py-1 rounded ${
                       session.mode === 'teacher'
-                        ? 'bg-indigo-100 text-indigo-800'
+                        ? 'bg-orange-100 text-orange-800'
                         : 'bg-green-100 text-green-800'
                     }`}
                   >
@@ -65,7 +65,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
             <div className="flex gap-2">
               <button
                 onClick={() => onLoadSession(session.id)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+                className="bg-kvenno-orange text-white px-4 py-2 rounded hover:bg-orange-600 transition"
               >
                 Opna
               </button>

@@ -20,7 +20,7 @@ export const Toast: React.FC<ToastProps> = ({ toast }) => {
     success: 'bg-green-600 text-white',
     error: 'bg-red-600 text-white',
     warning: 'bg-yellow-600 text-white',
-    info: 'bg-indigo-600 text-white',
+    info: 'bg-kvenno-orange text-white',
   };
 
   return (

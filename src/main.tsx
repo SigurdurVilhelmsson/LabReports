@@ -10,10 +10,13 @@ import './index.css';
 const appModeConfig = import.meta.env.VITE_APP_MODE || 'dual'; // 'dual', 'teacher', or 'student'
 
 function App() {
+  // Get base path from environment or use default
+  const basePath = import.meta.env.VITE_BASE_PATH || '/lab-reports';
+
   // If mode is locked, redirect to appropriate page
   if (appModeConfig === 'teacher') {
     return (
-      <BrowserRouter basename="/lab-reports">
+      <BrowserRouter basename={basePath}>
         <Routes>
           <Route path="/*" element={<TeacherPage />} />
         </Routes>
@@ -23,7 +26,7 @@ function App() {
 
   if (appModeConfig === 'student') {
     return (
-      <BrowserRouter basename="/lab-reports">
+      <BrowserRouter basename={basePath}>
         <Routes>
           <Route path="/*" element={<StudentPage />} />
         </Routes>
@@ -33,7 +36,7 @@ function App() {
 
   // Dual mode - show landing and allow navigation
   return (
-    <BrowserRouter basename="/lab-reports">
+    <BrowserRouter basename={basePath}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/teacher/*" element={<TeacherPage />} />

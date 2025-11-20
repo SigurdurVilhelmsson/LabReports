@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { History, GraduationCap, BookOpen } from 'lucide-react';
+import { History, GraduationCap, BookOpen, ArrowLeft } from 'lucide-react';
 import {
   AppMode,
   AnalysisResult,
@@ -25,14 +25,23 @@ import { FileUpload } from './components/FileUpload';
 import { TeacherResults } from './components/TeacherResults';
 import { StudentFeedback as StudentFeedbackComponent } from './components/StudentFeedback';
 import { SessionHistory } from './components/SessionHistory';
+import { Header } from './components/Header';
+import { Breadcrumbs, getBreadcrumbsForPath } from './components/Breadcrumbs';
 
 type View = 'grader' | 'history';
 
 function App() {
   // Mode selection
   const appModeConfig = import.meta.env.VITE_APP_MODE || 'dual';
+  const basePath = import.meta.env.VITE_BASE_PATH || '/lab-reports';
   const [mode, setMode] = useState<AppMode>('teacher');
   const [view, setView] = useState<View>('grader');
+  const [showInfo, setShowInfo] = useState(false);
+
+  // Extract year from base path for back navigation
+  const yearMatch = basePath.match(/\/(\d)-ar\//);
+  const backPath = yearMatch ? `/${yearMatch[1]}-ar/` : '/';
+  const breadcrumbs = getBreadcrumbsForPath(basePath);
 
   // Experiment selection
   const [selectedExperiment, setSelectedExperiment] = useState('jafnvaegi');
@@ -261,14 +270,45 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Header
+        onInfoClick={() => setShowInfo(!showInfo)}
+      />
+
+      <div className="max-w-7xl mx-auto p-6">
+        <Breadcrumbs items={breadcrumbs} />
+
+        {/* Back button */}
+        <a
+          href={backPath}
+          className="inline-flex items-center gap-2 mb-6 text-slate-700 hover:text-kvenno-orange transition"
+        >
+          <ArrowLeft size={20} />
+          <span className="font-medium">Til baka</span>
+        </a>
+
         <div className="bg-white rounded-lg shadow-xl p-8 mb-6">
+          {/* Info panel */}
+          {showInfo && (
+            <div className="mb-6 p-4 bg-orange-50 border border-kvenno-orange rounded-lg">
+              <h3 className="font-bold text-slate-900 mb-2">Um verkfærið</h3>
+              <p className="text-sm text-slate-700 mb-2">
+                Þetta verkfæri notar gervigreind (Claude AI) til að meta tilraunarskýrslur í efnafræði og veita ítarlega endurgjöf.
+              </p>
+              <ul className="text-sm text-slate-700 space-y-1 list-disc list-inside">
+                <li><strong>Kennarar:</strong> Geta metið margar skýrslur í einu og flutt út niðurstöður</li>
+                <li><strong>Nemendur:</strong> Fá ítarlega endurgjöf með tillögum til úrbóta</li>
+                <li>Styður Word (.docx), PDF og myndir</li>
+                <li>Öll gögn eru vistuð í vafranum þínum</li>
+              </ul>
+            </div>
+          )}
+
           <div className="flex justify-between items-start mb-6">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                Kennslutól - Skýrslumat v3
-                <span className="text-sm text-orange-600 ml-3 font-normal">(Development)</span>
+                Tilraunarskýrslur
+                <span className="text-sm text-kvenno-orange ml-3 font-normal">(v3.0.0)</span>
               </h1>
               <p className="text-slate-600">
                 {mode === 'teacher'
@@ -284,7 +324,7 @@ function App() {
                 }}
                 className={`px-4 py-2 rounded-lg transition ${
                   view === 'grader'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-kvenno-orange text-white'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                 }`}
               >
@@ -294,7 +334,7 @@ function App() {
                 onClick={() => setView('history')}
                 className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
                   view === 'history'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-kvenno-orange text-white'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                 }`}
               >
@@ -311,7 +351,7 @@ function App() {
                 onClick={() => setMode('teacher')}
                 className={`flex-1 px-4 py-3 rounded-lg transition flex items-center justify-center gap-2 ${
                   mode === 'teacher'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-kvenno-orange text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
@@ -348,7 +388,7 @@ function App() {
                 <select
                   value={selectedExperiment}
                   onChange={(e) => setSelectedExperiment(e.target.value)}
-                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-kvenno-orange"
                 >
                   {experiments.map((exp) => (
                     <option key={exp.id} value={exp.id}>

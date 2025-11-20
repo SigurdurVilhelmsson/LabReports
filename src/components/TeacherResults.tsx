@@ -55,7 +55,7 @@ export const TeacherResults: React.FC<TeacherResultsProps> = ({
           </button>
           <button
             onClick={onExport}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2"
+            className="bg-kvenno-orange text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-2"
           >
             <Download size={20} />
             Niðurhala CSV
@@ -71,7 +71,7 @@ export const TeacherResults: React.FC<TeacherResultsProps> = ({
               {(result.suggestedGrade || (result.totalPoints !== undefined && result.maxTotalPoints !== undefined)) && (
                 <div className="text-right">
                   <div className="text-sm text-slate-600">Tillaga að einkunn:</div>
-                  <div className="text-2xl font-bold text-indigo-900">
+                  <div className="text-2xl font-bold text-slate-900">
                     {result.suggestedGrade || `${result.totalPoints}/${result.maxTotalPoints}`}
                   </div>
                   {result.totalPoints !== undefined && result.maxTotalPoints !== undefined && (

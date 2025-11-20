@@ -32,9 +32,9 @@ export const WorksheetView: React.FC<WorksheetViewProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-xl p-8 mb-6">
       <div className="flex items-center gap-3 mb-6">
-        <BookOpen className="text-indigo-600" size={32} />
+        <BookOpen className="text-kvenno-orange" size={32} />
         <div>
-          <h2 className="text-2xl font-bold text-indigo-900">{experiment.title}</h2>
+          <h2 className="text-2xl font-bold text-slate-900">{experiment.title}</h2>
           <p className="text-slate-600">Vinnuseðill</p>
         </div>
       </div>
@@ -88,7 +88,7 @@ export const WorksheetView: React.FC<WorksheetViewProps> = ({
         </button>
         <button
           onClick={onContinue}
-          className="flex-1 bg-indigo-600 text-white px-6 py-4 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2 text-lg font-semibold"
+          className="flex-1 bg-kvenno-orange text-white px-6 py-4 rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-2 text-lg font-semibold"
         >
           Halda áfram → Senda inn drög
           <ArrowRight size={20} />

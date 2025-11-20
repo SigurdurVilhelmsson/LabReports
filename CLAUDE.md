@@ -919,40 +919,34 @@ npm audit                   # Check for security issues
 
 **Last Updated:** 2025-11-20
 
-## Pending Migrations
+## Recent Migrations
 
-### Design System Migration to Kvenno Standards
+### Design System Migration to Kvenno Standards (November 2025)
 
-**Status**: Documentation updated, code implementation pending
+**Status**: ✅ **Completed**
 
-The app documentation has been updated to reflect the new **Kvenno unified design system** (see `Kvenno_structure.md`). However, the codebase still uses the old design:
+The app has been fully migrated to the **Kvenno unified design system** as specified in `Kvenno_structure.md`.
 
-**Current State**:
-- Primary color: `indigo-600`
-- Base path: `/lab-reports/` (hardcoded)
-- No unified header/breadcrumbs
-- No consistent navigation
+**Completed Changes**:
+- ✅ Primary color changed from `indigo-600` to `#f36b22` (Kvennaskólinn orange)
+- ✅ Base path made configurable via `VITE_BASE_PATH` environment variable
+- ✅ Added unified Header component with "Kvenno Efnafræði" branding
+- ✅ Implemented breadcrumb navigation: `Heim > [Year] > Tilraunarskýrslur`
+- ✅ Added "Til baka" back navigation to year hub
+- ✅ Updated all button and border colors to orange theme
+- ✅ Updated hover states to darker orange shade
+- ✅ All components use consistent 8px border radius
 
-**Target State** (per Kvenno_structure.md):
-- Primary color: `#f36b22` (Kvennaskólinn orange)
-- Base path: Configurable (`/2-ar/lab-reports/` or `/3-ar/lab-reports/`)
-- Consistent header with "Kvenno Efnafræði" branding
-- Breadcrumb navigation: `Heim > [Year] > Tilraunarskýrslur`
-- "Til baka" back navigation to year hub
+**New Components**:
+- `src/components/Header.tsx` - Unified site header with logo and action buttons
+- `src/components/Breadcrumbs.tsx` - Year-aware breadcrumb navigation
 
-**Implementation Checklist**:
-- [ ] Make base path configurable via `VITE_BASE_PATH` environment variable
-- [ ] Update all button colors from indigo to `#f36b22`
-- [ ] Update border colors to orange theme
-- [ ] Create shared Header component per Kvenno spec
-- [ ] Add breadcrumb navigation component
-- [ ] Update hover states to darker orange shade
-- [ ] Ensure 8px border radius on all buttons/cards
-- [ ] Test multi-path deployment (2-ar and 3-ar)
+**Configuration**:
+- Set `VITE_BASE_PATH=/2-ar/lab-reports` for 2nd year deployment
+- Set `VITE_BASE_PATH=/3-ar/lab-reports` for 3rd year deployment
+- See `.env.example` for complete configuration options
 
-**References**:
-- Design specs: `Kvenno_structure.md` sections 2, 3, 7
-- App-specific requirements: `Kvenno_structure.md` section 8
+**Build Status**: ✅ Successfully builds and compiles
 
 ---
 
