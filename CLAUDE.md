@@ -29,27 +29,32 @@ This application is part of a larger **ChemistryTools** suite with a multi-repos
 /home/user/
 ├── ChemistryTools-Landing/   # Main landing page (links to all tools)
 ├── LabReports/                # This repository
-└── [Other chemistry tools]/   # Future tools
+└── [Other chemistry tools]/   # Future tools (e.g., AI-Tutor)
 ```
 
 **Deployment Structure:**
 ```
-/var/www/
-├── ChemistryTools-Landing/   # example.com/
-├── LabReports/               # example.com/labreports/
-└── [Other tools]/            # example.com/[tool-name]/
+/var/www/kvenno.app/
+├── landing/                   # kvenno.app/ (root)
+├── lab-reports/               # kvenno.app/lab-reports/
+├── ai-tutor/                  # kvenno.app/ai-tutor/ (future)
+└── [other-tools]/             # kvenno.app/[tool-name]/
 ```
 
 **URL Structure:**
-- Main landing: `example.com/` → Links to chemistry tools
-- LabReports app: `example.com/labreports/` → Internal landing page (teacher/student chooser)
-  - Teacher mode: `example.com/labreports/teacher`
-  - Student mode: `example.com/labreports/student`
+- Main landing: `kvenno.app/` → Links to chemistry tools
+- LabReports app: `kvenno.app/lab-reports/` → Internal landing page (teacher/student chooser)
+  - Teacher mode: `kvenno.app/lab-reports/teacher`
+  - Student mode: `kvenno.app/lab-reports/student`
 
 **Important Configuration:**
-- Base path is set to `/labreports/` in `vite.config.ts`
-- BrowserRouter uses `basename="/labreports"` in `src/main.tsx`
+- Base path is set to `/lab-reports/` in `vite.config.ts`
+- BrowserRouter uses `basename="/lab-reports"` in `src/main.tsx`
 - All assets and routing are relative to this base path
+- Repos are separate but builds deploy to unified `/var/www/kvenno.app/` structure
+
+**Deployment:**
+See `DEPLOYMENT.md` for detailed git workflow and deployment procedures.
 
 ## Architecture
 
