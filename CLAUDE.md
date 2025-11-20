@@ -22,36 +22,60 @@ This document provides guidance for AI assistants working with the Lab Report As
 
 ### Multi-Repository Architecture
 
-This application is part of a larger **ChemistryTools** suite with a multi-repository architecture:
+This application is part of a larger **Kvenno Chemistry Tools** suite with a multi-repository, year-based architecture. For complete site structure details, see `Kvenno_structure.md`.
 
 **Repository Structure:**
 ```
-/home/user/
-├── ChemistryTools-Landing/   # Main landing page (links to all tools)
-├── LabReports/                # This repository
-└── [Other chemistry tools]/   # Future tools (e.g., AI-Tutor)
+Repositories:
+├── kvenno-landing/            # Main landing page (root)
+├── kvenno-1ar-hub/            # 1st year hub
+├── kvenno-2ar-hub/            # 2nd year hub
+├── kvenno-3ar-hub/            # 3rd year hub
+├── lab-reports-app/           # This repository (shared across years)
+├── ai-tutor-app/              # AI Chemistry Tutor (shared)
+└── chemistry-games-[year]/    # Year-specific games
 ```
 
 **Deployment Structure:**
 ```
 /var/www/kvenno.app/
-├── landing/                   # kvenno.app/ (root)
-├── lab-reports/               # kvenno.app/lab-reports/
-├── ai-tutor/                  # kvenno.app/ai-tutor/ (future)
-└── [other-tools]/             # kvenno.app/[tool-name]/
+├── /                          # Landing page (kvenno-landing)
+├── /1-ar/                     # 1st year hub
+│   ├── /1-ar/ai-tutor/        # AI Tutor for 1st year
+│   └── /1-ar/games/           # Games for 1st year
+├── /2-ar/                     # 2nd year hub
+│   ├── /2-ar/lab-reports/     # Lab Reports for 2nd year (this app)
+│   ├── /2-ar/ai-tutor/        # AI Tutor for 2nd year
+│   └── /2-ar/games/           # Games for 2nd year
+├── /3-ar/                     # 3rd year hub
+│   ├── /3-ar/lab-reports/     # Lab Reports for 3rd year (this app)
+│   ├── /3-ar/ai-tutor/        # AI Tutor for 3rd year
+│   └── /3-ar/games/           # Games for 3rd year
+└── /val/                      # Elective courses hub
 ```
 
 **URL Structure:**
-- Main landing: `kvenno.app/` → Links to chemistry tools
-- LabReports app: `kvenno.app/lab-reports/` → Internal landing page (teacher/student chooser)
-  - Teacher mode: `kvenno.app/lab-reports/teacher`
-  - Student mode: `kvenno.app/lab-reports/student`
+- Main landing: `kvenno.app/` → Year selection (1.ár, 2.ár, 3.ár, Val)
+- Year hubs: `kvenno.app/2-ar/` → Links to tools for that year
+- LabReports app:
+  - 2nd year: `kvenno.app/2-ar/lab-reports/` → Teacher/student chooser
+  - 3rd year: `kvenno.app/3-ar/lab-reports/` → Teacher/student chooser
 
 **Important Configuration:**
-- Base path is set to `/lab-reports/` in `vite.config.ts`
-- BrowserRouter uses `basename="/lab-reports"` in `src/main.tsx`
-- All assets and routing are relative to this base path
-- Repos are separate but builds deploy to unified `/var/www/kvenno.app/` structure
+- This app is **shared** across 2nd and 3rd year (same codebase, multiple deployments)
+- Base path configured via `basename` in React Router (e.g., `/2-ar/lab-reports/`)
+- Different builds/deployments for each year path
+- All apps follow unified design system: primary color `#f36b22` (Kvennaskólinn orange)
+- Consistent header with "Kvenno Efnafræði" branding across all apps
+- Breadcrumb navigation required: `Heim > [Year] > Lab Reports`
+
+**Design System:**
+See `Kvenno_structure.md` for complete design guidelines including:
+- Brand color: `#f36b22` (primary orange)
+- Header requirements (site logo, Admin, Info buttons)
+- Button/tile styling (8px border radius, 2px border)
+- Typography and layout patterns
+- Navigation and breadcrumb requirements
 
 **Deployment:**
 See `DEPLOYMENT.md` for detailed git workflow and deployment procedures.
@@ -142,6 +166,7 @@ LabReports/
 | `src/App.tsx` | Main app orchestration | When changing app-level behavior |
 | `vercel.json` | Vercel deployment config | When changing function timeouts |
 | `.eslintrc.cjs` | ESLint rules | When modifying code quality rules |
+| `Kvenno_structure.md` | Unified site structure & design | **CRITICAL**: Reference for all UI/UX decisions |
 | `DEPENDENCY_UPDATE_PLAN.md` | Dependency upgrade guide | When planning dependency updates |
 | `MIGRATION.md` | Migration guide | Reference for v2→v3 migration |
 
@@ -341,11 +366,16 @@ npm run lint -- --fix # Auto-fix issues where possible
 - **No custom CSS classes** unless absolutely necessary
 - **Responsive design** - Use Tailwind breakpoints
 - **Color palette:**
-  - Primary: `indigo-600`
+  - Primary: `#f36b22` (Kvennaskólinn brand orange) - Use for buttons, borders, and accents
   - Success: `green-600`
   - Warning: `amber-600`
   - Error: `red-600`
   - Neutral: `slate-*`
+- **Button styling** (per Kvenno design system):
+  - Border: 2px solid #f36b22 (or filled background with white text)
+  - Border radius: 8px
+  - Padding: 16px 24px
+  - Hover: Slightly darker shade or shadow effect
 
 ### Naming Conventions
 
@@ -686,6 +716,7 @@ This project includes several documentation files. Here's when to consult each:
 |----------|---------|----------|
 | **README.md** | User-facing guide, quick start, usage | End users, new developers |
 | **CLAUDE.md** (this file) | AI assistant guide, architecture, conventions | AI assistants, maintainers |
+| **Kvenno_structure.md** | Unified site structure, design system, navigation | **ALL developers** - Critical reference |
 | **DEPLOYMENT.md** | Platform-specific deployment guides | DevOps, deployment |
 | **MIGRATION.md** | v2→v3 upgrade guide | Existing users migrating |
 | **DEPENDENCY_UPDATE_PLAN.md** | Dependency upgrade strategy | Developers updating packages |
@@ -693,6 +724,8 @@ This project includes several documentation files. Here's when to consult each:
 
 ### Quick Decision Tree
 
+- **"What's the site structure?"** → `Kvenno_structure.md` ⭐ **START HERE**
+- **"What colors/design should I use?"** → `Kvenno_structure.md`
 - **"How do I deploy this?"** → `DEPLOYMENT.md`
 - **"How do I add a new experiment?"** → `src/config/experiments/README.md`
 - **"How do I update dependencies?"** → `DEPENDENCY_UPDATE_PLAN.md`
@@ -882,6 +915,45 @@ npm audit                   # Check for security issues
 
 ---
 
-**Last Updated:** 2025-11-18
+---
+
+**Last Updated:** 2025-11-20
+
+## Pending Migrations
+
+### Design System Migration to Kvenno Standards
+
+**Status**: Documentation updated, code implementation pending
+
+The app documentation has been updated to reflect the new **Kvenno unified design system** (see `Kvenno_structure.md`). However, the codebase still uses the old design:
+
+**Current State**:
+- Primary color: `indigo-600`
+- Base path: `/lab-reports/` (hardcoded)
+- No unified header/breadcrumbs
+- No consistent navigation
+
+**Target State** (per Kvenno_structure.md):
+- Primary color: `#f36b22` (Kvennaskólinn orange)
+- Base path: Configurable (`/2-ar/lab-reports/` or `/3-ar/lab-reports/`)
+- Consistent header with "Kvenno Efnafræði" branding
+- Breadcrumb navigation: `Heim > [Year] > Tilraunarskýrslur`
+- "Til baka" back navigation to year hub
+
+**Implementation Checklist**:
+- [ ] Make base path configurable via `VITE_BASE_PATH` environment variable
+- [ ] Update all button colors from indigo to `#f36b22`
+- [ ] Update border colors to orange theme
+- [ ] Create shared Header component per Kvenno spec
+- [ ] Add breadcrumb navigation component
+- [ ] Update hover states to darker orange shade
+- [ ] Ensure 8px border radius on all buttons/cards
+- [ ] Test multi-path deployment (2-ar and 3-ar)
+
+**References**:
+- Design specs: `Kvenno_structure.md` sections 2, 3, 7
+- App-specific requirements: `Kvenno_structure.md` section 8
+
+---
 
 For questions or clarifications, refer to the README.md and DEPLOYMENT.md files, or review the git commit history for context on recent changes.
