@@ -495,35 +495,44 @@ Edit prompts in `src/config/prompts.ts`:
 
 ## Deployment
 
+⚠️ **IMPORTANT**: For complete deployment instructions, see:
+- **[KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security)** - Backend API setup (CRITICAL!)
+- **[KVENNO-STRUCTURE.md Section 1](KVENNO-STRUCTURE.md#1-site-structure--url-routing)** - Multi-path deployment
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Platform-specific deployment guides
+
 ### Environment Variables
 
-**Development** (`.env`):
+**Frontend** (`.env` in repo root):
 ```bash
-VITE_ANTHROPIC_API_KEY=sk-ant-...  # Direct API
-VITE_APP_MODE=dual                  # dual, teacher, or student
+# Production (REQUIRED)
+VITE_API_ENDPOINT=https://kvenno.app/api  # Backend server endpoint
+VITE_BASE_PATH=/2-ar/lab-reports/          # Deployment path
+VITE_APP_MODE=dual                          # dual, teacher, or student
+
+# Development only (NOT for production!)
+# VITE_ANTHROPIC_API_KEY=sk-ant-...  # Uncomment ONLY for local dev without backend
 ```
 
-**Production** (platform environment):
+**Backend** (`server/.env` on server - NEVER commit!):
 ```bash
-ANTHROPIC_API_KEY=sk-ant-...        # Server-side only
-VITE_APP_MODE=dual
-VITE_API_ENDPOINT=/api/analyze      # Use serverless function
+CLAUDE_API_KEY=sk-ant-your-actual-key  # SECRET - server-side only!
+PORT=8000                               # Must be 8000 per KVENNO-STRUCTURE.md
+NODE_ENV=production
+FRONTEND_URL=https://kvenno.app
 ```
 
 ### Deployment Platforms
 
-**Vercel** (recommended):
-- Auto-deploys from GitHub
-- Serverless functions in `api/`
-- Set `ANTHROPIC_API_KEY` in dashboard
-- Function timeout: 60 seconds (configured in `vercel.json`)
-- See `DEPLOYMENT.md` for details
+**Linode Production (kvenno.app)** - Recommended:
+- Backend server runs on port 8000
+- nginx proxies `/api/` requests to backend
+- See [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security) for complete setup
+- See [DEPLOYMENT.md Section 5](DEPLOYMENT.md#5-linode--traditional-linux-server-production---kvennoapp) for details
 
-**Netlify**:
-- Auto-deploys from GitHub
-- Serverless functions in `netlify/functions/`
-- Set `ANTHROPIC_API_KEY` in dashboard
-- See `DEPLOYMENT.md` for details
+**Vercel/Netlify** (alternative):
+- Serverless functions in `api/` or `netlify/functions/`
+- Still requires backend server for production per KVENNO-STRUCTURE.md
+- See `DEPLOYMENT.md` for platform-specific details
 
 **Important Vercel Configuration:**
 The `vercel.json` includes critical settings:
@@ -551,17 +560,21 @@ Outputs to `dist/`:
 
 ## Security Considerations
 
+⚠️ **CRITICAL**: See [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security) for complete security requirements.
+
 ### API Key Security
 
 **NEVER:**
-- Commit `.env` file
+- Put API keys in `VITE_` prefixed environment variables (exposed in client bundle!)
+- Commit `.env` file with real API keys
 - Set `VITE_ANTHROPIC_API_KEY` in production
-- Expose API key in client-side code
+- Deploy without a backend server
 
 **ALWAYS:**
-- Use serverless functions in production
-- Store API key server-side only
-- Set `VITE_API_ENDPOINT` in production
+- Use backend server (port 8000) to proxy Claude API calls
+- Store `CLAUDE_API_KEY` in `server/.env` (server-side only)
+- Set `VITE_API_ENDPOINT=https://kvenno.app/api` in frontend
+- Follow KVENNO-STRUCTURE.md backend setup instructions
 
 ### File Upload Security
 
@@ -575,9 +588,11 @@ Outputs to `dist/`:
 ### Common Issues
 
 **"API key not configured"**
-- Check `.env` file exists
-- Verify `VITE_ANTHROPIC_API_KEY` is set
+- **Production**: Check backend server is running with `CLAUDE_API_KEY` in `server/.env`
+- **Production**: Verify `VITE_API_ENDPOINT` points to backend server
+- **Development**: Set `VITE_ANTHROPIC_API_KEY` in `.env` (dev only!)
 - Restart dev server after adding env vars
+- See [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security) for backend setup
 
 **"Gat ekki lesið skrá" (Cannot read file)**
 - Verify file format is supported
@@ -762,6 +777,8 @@ src/config/prompts.ts           # AI evaluation logic
 src/config/experiments/         # Experiment definitions
 src/utils/api.ts                # Claude API integration
 src/App.tsx                     # Main app component
+server/index.js                 # Backend server (port 8000)
+KVENNO-STRUCTURE.md             # CRITICAL: Site structure & security requirements
 ```
 
 ### Common Commands
@@ -772,16 +789,31 @@ npm run build        # Build for production
 npm run preview      # Preview production build
 npm run lint         # Run ESLint
 npm run type-check   # Check TypeScript
+
+# Backend server (in server/ directory)
+npm start            # Start backend server (port 8000)
+npm run dev          # Start with auto-reload
 ```
 
 ### Environment Variables
 
+**Frontend (NEVER put secrets here!):**
 ```bash
-VITE_ANTHROPIC_API_KEY    # Claude API key (dev only)
-VITE_APP_MODE             # dual | teacher | student
-VITE_API_ENDPOINT         # API endpoint (production)
-ANTHROPIC_API_KEY         # Server-side API key (production)
+VITE_API_ENDPOINT      # Backend endpoint (REQUIRED for production)
+VITE_BASE_PATH         # Deployment path (e.g., /2-ar/lab-reports/)
+VITE_APP_MODE          # dual | teacher | student
+# VITE_ANTHROPIC_API_KEY  # DEV ONLY - Never use in production!
 ```
+
+**Backend (server/.env - SECRETS):**
+```bash
+CLAUDE_API_KEY         # Anthropic API key (REQUIRED, SECRET!)
+PORT                   # Server port (8000 per KVENNO-STRUCTURE.md)
+NODE_ENV               # production | development
+FRONTEND_URL           # CORS allowed origin
+```
+
+See [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security) for complete configuration.
 
 ## Recent Improvements (November 2025)
 

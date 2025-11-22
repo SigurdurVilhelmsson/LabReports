@@ -13,10 +13,11 @@ import { unlink } from 'fs/promises';
 
 const execAsync = promisify(exec);
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8000;
 
 // CORS configuration
 const allowedOrigins = [
+  'https://kvenno.app',
   'https://www.kvenno.app',
   'http://localhost:5173',
   'http://localhost:4173',
@@ -196,9 +197,9 @@ app.post('/api/analyze', async (req, res) => {
     }
 
     // Get API key
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      console.error('ANTHROPIC_API_KEY not configured');
+      console.error('CLAUDE_API_KEY not configured');
       return res.status(500).json({ error: 'API key not configured' });
     }
 
@@ -264,8 +265,8 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`LabReports API server running on port ${PORT}`);
-  console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Backend API running on http://127.0.0.1:${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
 });
