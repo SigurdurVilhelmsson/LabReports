@@ -384,12 +384,22 @@ Each app (Lab Reports, AI Tutor, etc.) must include:
 
 ## 8. This App's Details
 
-> **NOTE**: Update this section for each repo
-
-- **Repo Name**: [e.g., lab-reports-app]
-- **Deployed To**: [e.g., /1-ar/lab-reports/]
-- **Purpose**: [Brief description of what this app does]
-- **Current Status**: [In development / Deployed / Planning]
+- **Repo Name**: LabReports
+- **GitHub**: [SigurdurVilhelmsson/LabReports](https://github.com/SigurdurVilhelmsson/LabReports)
+- **Deployed To**:
+  - `/2-ar/lab-reports/` (2nd year)
+  - `/3-ar/lab-reports/` (3rd year)
+- **Purpose**: AI-powered lab report grading and feedback system for chemistry teachers and students. Teachers can quickly grade multiple reports with points-based evaluation. Students receive detailed, encouraging feedback on their lab work.
+- **Current Status**: ✅ Deployed and actively maintained (v3.1.0)
+- **Tech Stack**: React 18 + TypeScript + Vite, Claude Sonnet 4, Tailwind CSS
+- **Authentication**: 🔒 Azure AD (planned) - Currently uses simple role-based access
+- **Key Features**:
+  - Dual mode: Teacher (grading) and Student (feedback)
+  - Multi-file upload (DOCX, PDF, images)
+  - Modular experiment definitions
+  - Points-based evaluation with detailed criteria
+  - Session management and CSV export
+  - Pandoc server-side document processing
 
 ## 9. Deployment Notes
 

@@ -62,8 +62,8 @@ export const StudentHome: React.FC<StudentHomeProps> = ({
       <h1 className="text-3xl font-bold text-slate-900 mb-2">Efnafræðiskýrslur</h1>
       <p className="text-slate-600 mb-6">Aðstoð við að skrifa skýrslur úr verklegum æfingum</p>
 
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-        <p className="text-sm text-blue-900">
+      <div className="bg-orange-50 border-l-4 border-kvenno-orange p-4 mb-6">
+        <p className="text-sm text-orange-900">
           <strong>Athugið:</strong> Þetta app aðstoðar þig við að skrifa betri skýrslu, en
           skrifar hana ALDREI fyrir þig.
         </p>
@@ -79,9 +79,9 @@ export const StudentHome: React.FC<StudentHomeProps> = ({
             <div className="text-2xl font-bold text-green-900">{stats.totalSubmissions}</div>
             <div className="text-sm text-green-700">Innsendingar</div>
           </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-purple-900">{stats.avgSubmissionsPerReport}</div>
-            <div className="text-sm text-purple-700">Meðaltal/skýrsla</div>
+          <div className="bg-slate-50 p-4 rounded-lg">
+            <div className="text-2xl font-bold text-slate-900">{stats.avgSubmissionsPerReport}</div>
+            <div className="text-sm text-slate-700">Meðaltal/skýrsla</div>
           </div>
           <div className="bg-orange-50 p-4 rounded-lg">
             <div className="text-2xl font-bold text-orange-900">{stats.avgGrade}/30</div>

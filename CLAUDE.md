@@ -644,6 +644,8 @@ Outputs to `dist/`:
    - Serverless functions protect sensitive data
    - File upload validation
    - No inline scripts (CSP-compatible)
+   - Authentication: Azure AD integration (planned - see KVENNO-STRUCTURE.md Section 2)
+   - Role-based access control for teacher/student features
 
 ## Best Practices
 
@@ -726,6 +728,7 @@ This project includes several documentation files. Here's when to consult each:
 
 - **"What's the site structure?"** → `Kvenno_structure.md` ⭐ **START HERE**
 - **"What colors/design should I use?"** → `Kvenno_structure.md`
+- **"How do I implement authentication?"** → `KVENNO-STRUCTURE.md` Section 2 (Azure AD)
 - **"How do I deploy this?"** → `DEPLOYMENT.md`
 - **"How do I add a new experiment?"** → `src/config/experiments/README.md`
 - **"How do I update dependencies?"** → `DEPENDENCY_UPDATE_PLAN.md`
