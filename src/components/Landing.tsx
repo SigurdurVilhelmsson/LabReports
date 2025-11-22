@@ -82,10 +82,10 @@ export const Landing: React.FC = () => {
             {/* Student Mode */}
             <button
               onClick={() => navigate('/student')}
-              className="group bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-2 border-green-500 rounded-lg p-8 transition-all hover:shadow-lg"
+              className="group bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 border-2 border-kvenno-orange rounded-lg p-8 transition-all hover:shadow-lg"
             >
               <div className="flex flex-col items-center text-center">
-                <div className="bg-green-600 text-white p-4 rounded-full mb-4 group-hover:scale-110 transition-transform">
+                <div className="bg-kvenno-orange text-white p-4 rounded-full mb-4 group-hover:scale-110 transition-transform">
                   <BookOpen size={48} />
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">Nemandi</h2>
