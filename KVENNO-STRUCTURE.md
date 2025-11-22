@@ -244,7 +244,410 @@ To add a new teacher:
 - Audit logging for teacher actions
 - Admin panel for teacher management
 
-## 3. Design System
+## 3. Backend API & Security
+
+### Critical Security Requirement
+
+⚠️ **NEVER expose API keys in frontend code!**
+
+Both LabReports and AI Tutor need to call the Claude API, but **API keys must NOT be stored in frontend environment variables** (variables starting with `VITE_`).
+
+**Why this is critical:**
+- Vite bundles environment variables into JavaScript at build time
+- `VITE_` prefixed variables are embedded in the client-side code
+- Anyone can open browser DevTools and extract your API key
+- Exposed keys can be stolen and rack up huge API bills
+- This violates Anthropic's terms of service
+
+### Required Backend Architecture
+
+```
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│   Browser   │ HTTPS   │   Backend    │  HTTPS  │  Claude API │
+│  (React App)├────────>│  (Node.js)   ├────────>│ (Anthropic) │
+│             │         │  Port 8000   │         │             │
+└─────────────┘         └──────────────┘         └─────────────┘
+                              ↓
+                        API Key stored
+                        securely in .env
+```
+
+**Flow:**
+1. React app sends request to `/api/analyze` (your backend)
+2. Backend validates request (can check authentication)
+3. Backend calls Claude API with secure key
+4. Backend returns response to React app
+
+### Backend Setup on Linode Server
+
+**Step 1: Create backend directory**
+
+```bash
+# SSH to your server
+ssh siggi@server
+
+# Create backend directory
+sudo mkdir -p /var/www/kvenno.app/backend
+cd /var/www/kvenno.app/backend
+
+# Initialize Node.js project
+npm init -y
+
+# Install dependencies
+npm install express @anthropic-ai/sdk cors dotenv
+```
+
+**Step 2: Create the backend server**
+
+```bash
+sudo nano /var/www/kvenno.app/backend/server.js
+```
+
+```javascript
+// server.js
+const express = require('express');
+const Anthropic = require('@anthropic-ai/sdk');
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+
+// CORS configuration - only allow requests from your domain
+app.use(cors({
+  origin: ['https://kvenno.app', 'https://www.kvenno.app'],
+  credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
+
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.CLAUDE_API_KEY,
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Claude API endpoint for LabReports
+app.post('/api/analyze', async (req, res) => {
+  try {
+    const { prompt, systemPrompt, maxTokens = 4000 } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      system: systemPrompt || '',
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    res.json(response);
+  } catch (error) {
+    console.error('Claude API error:', error);
+    res.status(500).json({ 
+      error: 'Failed to process request',
+      message: error.message 
+    });
+  }
+});
+
+// Claude API endpoint for AI Tutor (streaming support if needed)
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { messages, systemPrompt, maxTokens = 2000 } = req.body;
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      system: systemPrompt || '',
+      messages: messages,
+    });
+
+    res.json(response);
+  } catch (error) {
+    console.error('Claude API error:', error);
+    res.status(500).json({ 
+      error: 'Failed to process chat request',
+      message: error.message 
+    });
+  }
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Backend API running on http://127.0.0.1:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+```
+
+**Step 3: Create environment file with API key**
+
+```bash
+# Create .env file (NEVER commit this to git!)
+sudo nano /var/www/kvenno.app/backend/.env
+```
+
+```bash
+# Backend environment variables
+CLAUDE_API_KEY=your-actual-claude-api-key-here
+PORT=8000
+NODE_ENV=production
+```
+
+```bash
+# Secure the .env file
+sudo chmod 600 /var/www/kvenno.app/backend/.env
+sudo chown www-data:www-data /var/www/kvenno.app/backend/.env
+```
+
+**Step 4: Create systemd service to keep backend running**
+
+```bash
+sudo nano /etc/systemd/system/kvenno-backend.service
+```
+
+```ini
+[Unit]
+Description=Kvenno.app Backend API
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/kvenno.app/backend
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /var/www/kvenno.app/backend/server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kvenno-backend
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# Enable and start the service
+sudo systemctl daemon-reload
+sudo systemctl enable kvenno-backend
+sudo systemctl start kvenno-backend
+
+# Check status
+sudo systemctl status kvenno-backend
+
+# View logs
+sudo journalctl -u kvenno-backend -f
+```
+
+**Step 5: Update nginx to proxy API requests**
+
+Add this to your nginx kvenno.app server block (uncomment the existing API section):
+
+```nginx
+# Backend API proxy
+location /api/ {
+    proxy_pass http://127.0.0.1:8000/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    
+    # Increase timeout for long API calls
+    proxy_read_timeout 120s;
+    proxy_connect_timeout 10s;
+}
+```
+
+```bash
+# Test and reload nginx
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### Frontend Configuration
+
+**In React apps (LabReports, AI Tutor):**
+
+```bash
+# .env (in your LOCAL repo, for building)
+VITE_API_ENDPOINT=https://kvenno.app/api
+
+# For local development, you might use:
+# VITE_API_ENDPOINT=http://localhost:8000/api
+```
+
+**Update your API utility file:**
+
+```typescript
+// src/utils/api.ts
+const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT || 'https://kvenno.app/api';
+
+export async function analyzeReport(prompt: string, systemPrompt?: string) {
+  const response = await fetch(`${API_ENDPOINT}/analyze`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt,
+      systemPrompt,
+      maxTokens: 4000,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  return response.json();
+}
+```
+
+### Environment Variables Summary
+
+**Frontend (React apps) - .env in repo root:**
+```bash
+# These are SAFE to be public (baked into client JavaScript)
+VITE_AZURE_CLIENT_ID=public-azure-client-id
+VITE_AZURE_TENANT_ID=public-azure-tenant-id
+VITE_API_ENDPOINT=https://kvenno.app/api
+VITE_BASE_PATH=/2-ar/lab-reports/  # Set before each build
+```
+
+**Backend (Node.js server) - .env on server only:**
+```bash
+# These are SECRETS (never commit, never expose)
+CLAUDE_API_KEY=sk-ant-api-key-here
+PORT=8000
+NODE_ENV=production
+```
+
+### Security Best Practices
+
+**DO:**
+✅ Store API keys in backend `.env` file only
+✅ Set restrictive file permissions (600) on `.env`
+✅ Run backend as non-root user (www-data)
+✅ Use CORS to restrict API access to your domain
+✅ Add rate limiting to prevent abuse
+✅ Monitor API usage and costs
+✅ Use systemd to auto-restart backend if it crashes
+✅ Log errors for debugging
+
+**DON'T:**
+❌ Never put API keys in `VITE_` environment variables
+❌ Never commit `.env` files to git
+❌ Never expose backend to public internet directly (use nginx proxy)
+❌ Never trust frontend validation alone (validate in backend too)
+❌ Never skip authentication checks in backend endpoints
+
+### Backend Management Commands
+
+```bash
+# Start backend
+sudo systemctl start kvenno-backend
+
+# Stop backend
+sudo systemctl stop kvenno-backend
+
+# Restart backend (after code changes)
+sudo systemctl restart kvenno-backend
+
+# Check status
+sudo systemctl status kvenno-backend
+
+# View real-time logs
+sudo journalctl -u kvenno-backend -f
+
+# View recent logs
+sudo journalctl -u kvenno-backend -n 100
+
+# Update backend code
+cd /var/www/kvenno.app/backend
+sudo nano server.js  # Make changes
+sudo systemctl restart kvenno-backend
+```
+
+### Testing the Backend
+
+```bash
+# Test health endpoint
+curl https://kvenno.app/api/health
+
+# Test from your local machine during development
+curl -X POST http://localhost:8000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Hello, test message"}'
+```
+
+### Troubleshooting
+
+**Backend won't start:**
+```bash
+# Check logs
+sudo journalctl -u kvenno-backend -n 50
+
+# Common issues:
+# - Missing dependencies: cd /var/www/kvenno.app/backend && npm install
+# - Port already in use: sudo lsof -i :8000
+# - Permission issues: sudo chown -R www-data:www-data /var/www/kvenno.app/backend
+```
+
+**API requests timing out:**
+```bash
+# Check if backend is running
+sudo systemctl status kvenno-backend
+
+# Check nginx is proxying correctly
+sudo tail -f /var/log/nginx/error.log
+
+# Increase timeout in nginx if needed (already set to 120s)
+```
+
+**High API costs:**
+```bash
+# Add rate limiting to backend
+npm install express-rate-limit
+
+# In server.js:
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
+```
+
+### Future Backend Enhancements
+
+**Planned improvements:**
+- Add authentication middleware (verify Azure AD tokens)
+- Add rate limiting per user (not just per IP)
+- Add request logging and analytics
+- Add API key rotation system
+- Add backend validation of user roles
+- Add caching for repeated requests
+- Add request queue for high load
+- Add API usage monitoring dashboard
+
+## 4. Design System
 
 ### Brand Colors
 - **Primary Orange**: `#f36b22` (Kvennaskólinn í Reykjavík brand color)
@@ -283,8 +686,8 @@ Every page on kvenno.app must include a consistent header with:
 ### Header Requirements:
 - **Site name/logo**: "Efnafræðivefur Kvennó" or similar, links to `/`
 - **Right-aligned buttons**: 
-  - "Kennarar" (for teacher access)
-  - "Upplýsingar" (for help/about)
+  - "Admin" (for teacher access)
+  - "Info" (for help/about)
 - **Background**: White with bottom border or subtle shadow
 - **Height**: ~60px
 - **Sticky**: Consider making header sticky on scroll
@@ -296,8 +699,8 @@ Every page on kvenno.app must include a consistent header with:
   <div className="header-content">
     <a href="/" className="site-logo">Efnafræðivefur Kvennó</a>
     <div className="header-actions">
-      <button className="header-btn">Kennarar</button>
-      <button className="header-btn">Upplýsingar</button>
+      <button className="header-btn">Admin</button>
+      <button className="header-btn">Info</button>
     </div>
   </div>
 </header>
@@ -384,22 +787,12 @@ Each app (Lab Reports, AI Tutor, etc.) must include:
 
 ## 8. This App's Details
 
-- **Repo Name**: LabReports
-- **GitHub**: [SigurdurVilhelmsson/LabReports](https://github.com/SigurdurVilhelmsson/LabReports)
-- **Deployed To**:
-  - `/2-ar/lab-reports/` (2nd year)
-  - `/3-ar/lab-reports/` (3rd year)
-- **Purpose**: AI-powered lab report grading and feedback system for chemistry teachers and students. Teachers can quickly grade multiple reports with points-based evaluation. Students receive detailed, encouraging feedback on their lab work.
-- **Current Status**: ✅ Deployed and actively maintained (v3.1.0)
-- **Tech Stack**: React 18 + TypeScript + Vite, Claude Sonnet 4, Tailwind CSS
-- **Authentication**: 🔒 Azure AD (planned) - Currently uses simple role-based access
-- **Key Features**:
-  - Dual mode: Teacher (grading) and Student (feedback)
-  - Multi-file upload (DOCX, PDF, images)
-  - Modular experiment definitions
-  - Points-based evaluation with detailed criteria
-  - Session management and CSV export
-  - Pandoc server-side document processing
+> **NOTE**: Update this section for each repo
+
+- **Repo Name**: [e.g., lab-reports-app]
+- **Deployed To**: [e.g., /1-ar/lab-reports/]
+- **Purpose**: [Brief description of what this app does]
+- **Current Status**: [In development / Deployed / Planning]
 
 ## 9. Deployment Notes
 
@@ -672,7 +1065,7 @@ Some apps require teacher authentication:
 - Future admin features
 
 **Consistent login approach**:
-- AzureAD (preferred)
+- School Google account SSO (preferred)
 - Backend handles authentication
 - JWT tokens for session management
 - Clear visual indication of login status
@@ -696,4 +1089,4 @@ Some apps require teacher authentication:
 ---
 
 *Last updated: 2025-11-22*  
-*Maintainer: Siggi, Kvennaskólinn í Reykjavík*
+*Maintainer: Sigurður E. Vilhelmsson, Kvennaskólinn í Reykjavík*
