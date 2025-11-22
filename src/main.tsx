@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { MsalProvider } from '@azure/msal-react';
+import { msalInstance, initializeMsal } from './utils/msalInstance';
+import { AuthGuard } from './components/AuthGuard';
 import { Landing } from './components/Landing';
 import { TeacherPage } from './pages/TeacherPage';
 import { StudentPage } from './pages/StudentPage';
@@ -17,9 +20,11 @@ function App() {
   if (appModeConfig === 'teacher') {
     return (
       <BrowserRouter basename={basePath}>
-        <Routes>
-          <Route path="/*" element={<TeacherPage />} />
-        </Routes>
+        <AuthGuard>
+          <Routes>
+            <Route path="/*" element={<TeacherPage />} />
+          </Routes>
+        </AuthGuard>
       </BrowserRouter>
     );
   }
@@ -27,9 +32,11 @@ function App() {
   if (appModeConfig === 'student') {
     return (
       <BrowserRouter basename={basePath}>
-        <Routes>
-          <Route path="/*" element={<StudentPage />} />
-        </Routes>
+        <AuthGuard>
+          <Routes>
+            <Route path="/*" element={<StudentPage />} />
+          </Routes>
+        </AuthGuard>
       </BrowserRouter>
     );
   }
@@ -37,18 +44,25 @@ function App() {
   // Dual mode - show landing and allow navigation
   return (
     <BrowserRouter basename={basePath}>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/teacher/*" element={<TeacherPage />} />
-        <Route path="/student/*" element={<StudentPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AuthGuard>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/teacher/*" element={<TeacherPage />} />
+          <Route path="/student/*" element={<StudentPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthGuard>
     </BrowserRouter>
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// Initialize MSAL before rendering
+initializeMsal().then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <MsalProvider instance={msalInstance}>
+        <App />
+      </MsalProvider>
+    </React.StrictMode>
+  );
+});
