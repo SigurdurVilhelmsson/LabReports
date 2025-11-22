@@ -1,12 +1,12 @@
 import React from 'react';
-import { Info, UserCircle } from 'lucide-react';
+import { Info } from 'lucide-react';
+import { AuthButton } from './AuthButton';
 
 interface HeaderProps {
-  onAdminClick?: () => void;
   onInfoClick?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onAdminClick, onInfoClick }) => {
+export const Header: React.FC<HeaderProps> = ({ onInfoClick }) => {
   // Home path always goes to root landing page
   const homePath = '/';
 
@@ -22,15 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ onAdminClick, onInfoClick }) => 
           </a>
 
           <div className="flex items-center gap-3">
-            {onAdminClick && (
-              <button
-                onClick={onAdminClick}
-                className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:text-kvenno-orange transition border border-slate-300 rounded-lg hover:border-kvenno-orange"
-              >
-                <UserCircle size={20} />
-                <span className="font-medium">Admin</span>
-              </button>
-            )}
+            <AuthButton />
             {onInfoClick && (
               <button
                 onClick={onInfoClick}
