@@ -70,8 +70,13 @@ const buildMessageContent = (content: FileContent) => {
 };
 
 /**
- * Call Claude API directly (for development/testing)
- * In production, this should be replaced with a serverless function call
+ * Call Claude API via backend server (PRODUCTION)
+ * or directly (DEVELOPMENT ONLY)
+ *
+ * ⚠️ SECURITY WARNING ⚠️
+ * Production deployments MUST use backend server (VITE_API_ENDPOINT)
+ * Direct API mode exposes API keys in client code - use only for local development
+ * See KVENNO-STRUCTURE.md Section 3 for security requirements
  */
 export const analyzeWithClaude = async (
   content: FileContent,
@@ -89,14 +94,24 @@ export const analyzeWithClaude = async (
   // Student mode needs more tokens for detailed feedback
   const maxTokens = mode === 'student' ? 4000 : 2000;
 
-  const endpoint = import.meta.env.VITE_API_ENDPOINT || 'https://api.anthropic.com/v1/messages';
-  const useDirectAPI = !import.meta.env.VITE_API_ENDPOINT;
+  // ALWAYS prefer backend endpoint for security
+  const backendEndpoint = import.meta.env.VITE_API_ENDPOINT;
+  const useDirectAPI = !backendEndpoint;
 
   if (useDirectAPI) {
-    // Direct API call (requires API key in environment)
+    // ⚠️ DEVELOPMENT ONLY - Direct API call
+    // This mode exposes API keys in the client bundle - NEVER use in production!
+    console.warn(
+      '⚠️ WARNING: Using direct API mode. This is insecure and should only be used for local development. ' +
+      'Set VITE_API_ENDPOINT in .env to use secure backend server. See KVENNO-STRUCTURE.md Section 3.'
+    );
+
     const key = apiKey || import.meta.env.VITE_ANTHROPIC_API_KEY;
     if (!key) {
-      throw new Error('API key not configured. Please set VITE_ANTHROPIC_API_KEY in .env file.');
+      throw new Error(
+        'API key not configured. For production, set VITE_API_ENDPOINT to use backend server. ' +
+        'For development only, you can set VITE_ANTHROPIC_API_KEY (NOT recommended for production).'
+      );
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -128,8 +143,8 @@ export const analyzeWithClaude = async (
 
     return await response.json();
   } else {
-    // Serverless function call
-    const response = await fetch(endpoint, {
+    // Backend server call (SECURE - recommended for production)
+    const response = await fetch(`${backendEndpoint}/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

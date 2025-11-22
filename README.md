@@ -71,6 +71,7 @@ This project has recently received significant enhancements:
 - Node.js 18+ and npm
 - An Anthropic API key ([Get one here](https://console.anthropic.com/))
 - **Pandoc** for .docx processing (see installation below)
+- **Backend server** for secure API key storage (see setup below)
 
 ### Installation
 
@@ -114,11 +115,22 @@ This project has recently received significant enhancements:
    cp .env.example .env
    ```
 
-   Edit `.env` and add your Anthropic API key:
-   ```
-   VITE_ANTHROPIC_API_KEY=your_api_key_here
+   Edit `.env` for production deployment:
+   ```bash
+   # ⚠️ NEVER put API keys in VITE_ variables - they're exposed in client code!
+   VITE_API_ENDPOINT=https://kvenno.app/api  # Your backend server
+   VITE_BASE_PATH=/2-ar/lab-reports/
    VITE_APP_MODE=dual
    ```
+
+   **For local development only** (not production), you can use direct API mode:
+   ```bash
+   # Development only - uncomment the line below (NOT for production!)
+   # VITE_ANTHROPIC_API_KEY=your_development_key_here
+   VITE_APP_MODE=dual
+   ```
+
+   ⚠️ **Security Warning**: See [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security) for why API keys must NEVER be in frontend environment variables.
 
 5. **Start development server**:
    ```bash
@@ -326,23 +338,49 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for:
 - AWS Amplify
 - Cloudflare Pages
 
-**Note**: For production deployment at kvenno.app, follow the unified deployment process outlined in Kvenno_structure.md.
+**Note**: For production deployment at kvenno.app, follow the unified deployment process outlined in [KVENNO-STRUCTURE.md](./KVENNO-STRUCTURE.md), especially:
+- **Section 1**: Multi-path deployment structure
+- **Section 3**: Backend API security requirements (CRITICAL!)
+- **Section 9**: Complete deployment workflow
 
 ## Security
 
-### Important Security Notes
+### ⚠️ CRITICAL Security Requirements
 
-1. **Never commit API keys** - Use environment variables
-2. **Use serverless functions in production** - Keeps API keys server-side
-3. **Enable CORS properly** - Prevent unauthorized access
-4. **Validate file uploads** - Prevent malicious files
+**This application REQUIRES a backend server for production deployments.**
 
-### Recommended Production Setup
+❌ **NEVER do this:**
+- Put API keys in `VITE_` prefixed environment variables
+- Commit `.env` files with real API keys to git
+- Deploy with `VITE_ANTHROPIC_API_KEY` set in production
 
-1. Deploy to Vercel/Netlify with serverless functions
-2. Set `VITE_API_ENDPOINT` to your serverless function URL
-3. Store `ANTHROPIC_API_KEY` only in platform environment variables
-4. Never set `VITE_ANTHROPIC_API_KEY` in production
+✅ **ALWAYS do this:**
+1. Set up a backend server (Node.js Express) to proxy Claude API calls
+2. Store `CLAUDE_API_KEY` in backend `.env` (server-side only)
+3. Set `VITE_API_ENDPOINT=https://kvenno.app/api` in frontend
+4. Use backend endpoints `/api/analyze` and `/api/process-document`
+
+### Why This Matters
+
+Vite embeds `VITE_` prefixed variables into client JavaScript at build time. Anyone can:
+1. Open browser DevTools
+2. Search for your API key in the JavaScript bundle
+3. Steal it and rack up huge bills on your account
+
+**Complete setup guide**: See [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security) for:
+- Backend server implementation
+- systemd service configuration
+- nginx proxy setup
+- SSL/HTTPS configuration
+- Security best practices
+
+### Additional Security Notes
+
+1. **Validate file uploads** - Prevent malicious files
+2. **Enable CORS properly** - Restrict to your domain only
+3. **Use HTTPS** - Always use SSL certificates in production
+4. **Monitor API usage** - Watch for unusual activity
+5. **Keep dependencies updated** - Regularly update packages
 
 ## Browser Compatibility
 
@@ -372,7 +410,8 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for:
 ### Common Issues
 
 **"API key not configured"**
-- Check `.env` file has `VITE_ANTHROPIC_API_KEY`
+- For production: Ensure backend server is running with `CLAUDE_API_KEY` in `server/.env`
+- For development: Set `VITE_ANTHROPIC_API_KEY` in `.env` (development only!)
 - Restart development server after adding env variables
 
 **"Gat ekki lesið skrá" (Cannot read file)**

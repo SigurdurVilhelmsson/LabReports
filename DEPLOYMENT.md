@@ -2,6 +2,25 @@
 
 This application can be deployed to multiple platforms. Choose the one that best fits your needs.
 
+## ⚠️ CRITICAL: Backend API Requirement
+
+**This application REQUIRES a backend server to securely handle Claude API calls.**
+
+See **[KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security)** for complete backend setup instructions.
+
+### Why Backend is Required
+
+❌ **NEVER put API keys in frontend environment variables (VITE_ prefix)**
+- Vite embeds these variables into client-side JavaScript at build time
+- Anyone can open browser DevTools and extract your API key
+- Exposed keys can be stolen and rack up huge API bills
+- This violates Anthropic's terms of service
+
+✅ **ALWAYS use a backend server to proxy API requests**
+- API keys stored securely server-side only
+- Frontend calls your backend, backend calls Claude API
+- No risk of key exposure
+
 ## Important: Pandoc Requirement
 
 **This application requires pandoc to process .docx files.** See **[PANDOC_SETUP.md](PANDOC_SETUP.md)** for detailed setup instructions for each deployment platform.
@@ -17,6 +36,7 @@ Quick overview:
 - An Anthropic API key ([Get one here](https://console.anthropic.com/))
 - Node.js 18+ installed locally (for development)
 - **Pandoc** installed (see [PANDOC_SETUP.md](PANDOC_SETUP.md) for details)
+- **Backend server** configured (see [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security))
 
 ## Platform-Specific Deployment
 
@@ -148,11 +168,11 @@ Cloudflare Pages offers excellent global CDN and edge functions.
 
 ---
 
-### 5. Linode / Traditional Linux Server
+### 5. Linode / Traditional Linux Server (Production - kvenno.app)
 
 For traditional Linux servers (Ubuntu, Debian, etc.) with nginx. Provides full control and is ideal for production deployments.
 
-**Note:** This requires setting up a Node.js backend server, as serverless functions don't work on traditional servers.
+**This is the recommended deployment method for kvenno.app production.**
 
 #### Prerequisites:
 - Ubuntu 24.04 (or similar Linux distribution)
@@ -161,9 +181,16 @@ For traditional Linux servers (Ubuntu, Debian, etc.) with nginx. Provides full c
 - pandoc installed (`sudo apt install pandoc`)
 - Root or sudo access
 
-#### Quick Setup:
+#### Setup Instructions:
 
-See the detailed guide in **[server/README.md](server/README.md)** for complete instructions.
+**For complete backend setup**, see **[KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security)** which includes:
+- Backend server implementation (Node.js Express on port 8000)
+- systemd service configuration
+- nginx proxy configuration
+- SSL/HTTPS setup with Let's Encrypt
+- Security best practices
+
+**For LabReports-specific setup**, see **[server/README.md](server/README.md)** for details.
 
 **Summary:**
 
@@ -562,21 +589,49 @@ When deploying multiple tools:
 
 ## Environment Variables
 
-All platforms require the following environment variable:
+### Frontend Variables (.env in project root)
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `ANTHROPIC_API_KEY` | Your Anthropic API key | Yes |
-| `VITE_APP_MODE` | App mode: "dual", "teacher", or "student" | No (defaults to "dual") |
-| `VITE_API_ENDPOINT` | Custom API endpoint URL (if using serverless) | No |
+**These are embedded in the client JavaScript bundle - NEVER put secrets here!**
 
-### Setting up for serverless API:
+| Variable | Description | Required | Example |
+|----------|-------------|----------|---------|
+| `VITE_API_ENDPOINT` | Backend API endpoint URL | **Yes (Production)** | `https://kvenno.app/api` |
+| `VITE_APP_MODE` | App mode: "dual", "teacher", or "student" | No | `dual` (default) |
+| `VITE_BASE_PATH` | Deployment path for multi-year setup | **Yes** | `/2-ar/lab-reports/` |
+| `VITE_AZURE_CLIENT_ID` | Azure AD client ID (public value) | No | See KVENNO-STRUCTURE.md |
+| `VITE_AZURE_TENANT_ID` | Azure AD tenant ID (public value) | No | See KVENNO-STRUCTURE.md |
 
-1. Set `VITE_API_ENDPOINT` to your deployed function URL:
-   - Vercel: `https://your-domain.vercel.app/api/analyze`
-   - Netlify: `https://your-domain.netlify.app/.netlify/functions/analyze`
+⚠️ **NEVER set `VITE_ANTHROPIC_API_KEY` in production!** Use backend server instead.
 
-2. Do NOT set `VITE_ANTHROPIC_API_KEY` in production (security risk)
+### Backend Variables (server/.env on server only)
+
+**These are SECRETS - never commit to git or expose to client!**
+
+| Variable | Description | Required | Example |
+|----------|-------------|----------|---------|
+| `CLAUDE_API_KEY` | Your Anthropic API key (SECRET!) | **Yes** | `sk-ant-...` |
+| `PORT` | Backend server port | No | `8000` (default) |
+| `NODE_ENV` | Environment | No | `production` |
+| `FRONTEND_URL` | Allowed CORS origin | No | `https://kvenno.app` |
+
+### Configuration for Production:
+
+1. **Frontend (.env):**
+   ```bash
+   VITE_API_ENDPOINT=https://kvenno.app/api
+   VITE_BASE_PATH=/2-ar/lab-reports/
+   VITE_APP_MODE=dual
+   ```
+
+2. **Backend (server/.env on server - NEVER commit!):**
+   ```bash
+   CLAUDE_API_KEY=sk-ant-your-actual-api-key
+   PORT=8000
+   NODE_ENV=production
+   FRONTEND_URL=https://kvenno.app
+   ```
+
+See **[KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security)** for complete security guidelines.
 
 ---
 
