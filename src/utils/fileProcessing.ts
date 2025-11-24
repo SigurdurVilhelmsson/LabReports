@@ -61,7 +61,7 @@ const extractFromDocx = async (file: File): Promise<FileContent> => {
     // The server returns: { content: string, format: 'markdown', equations: string[] }
     return {
       type: 'docx',
-      data: result.content, // Markdown text with LaTeX equations
+      data: result.text, // Markdown text with LaTeX equations
       mediaType: 'text/markdown',
     };
   } catch (error: any) {
