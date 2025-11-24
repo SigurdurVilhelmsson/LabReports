@@ -18,7 +18,16 @@
  * </AuthGuard>
  * ```
  */
-
+export function AuthGuard({ children }: { children: React.ReactNode }) {
+  // ⚠️ TEMPORARY: Bypass authentication for testing
+  const BYPASS_AUTH = true; // Set to false to re-enable auth
+  
+  if (BYPASS_AUTH) {
+    console.warn('⚠️ AUTHENTICATION BYPASSED - FOR TESTING ONLY');
+    return <>{children}</>;
+  }
+  
+  // ... rest of your AuthGuard code
 import { ReactNode, useEffect } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
