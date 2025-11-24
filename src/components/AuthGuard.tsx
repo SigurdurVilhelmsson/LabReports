@@ -1,3 +1,14 @@
+// IMPORTS MUST BE FIRST
+import { ReactNode, useEffect } from 'react';
+import { useMsal, useIsAuthenticated } from '@azure/msal-react';
+import { InteractionStatus } from '@azure/msal-browser';
+import { loginRequest } from '../config/authConfig';
+import { saveReturnUrl } from '../utils/authHelpers';
+
+interface AuthGuardProps {
+  children: ReactNode;
+}
+
 /**
  * Authentication Guard Component
  *
@@ -18,7 +29,7 @@
  * </AuthGuard>
  * ```
  */
-export function AuthGuard({ children }: { children: React.ReactNode }) {
+export const AuthGuard = ({ children }: AuthGuardProps) => {
   // ⚠️ TEMPORARY: Bypass authentication for testing
   const BYPASS_AUTH = true; // Set to false to re-enable auth
   
@@ -26,19 +37,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     console.warn('⚠️ AUTHENTICATION BYPASSED - FOR TESTING ONLY');
     return <>{children}</>;
   }
-  
-  // ... rest of your AuthGuard code
-import { ReactNode, useEffect } from 'react';
-import { useMsal, useIsAuthenticated } from '@azure/msal-react';
-import { InteractionStatus } from '@azure/msal-browser';
-import { loginRequest } from '../config/authConfig';
-import { saveReturnUrl } from '../utils/authHelpers';
 
-interface AuthGuardProps {
-  children: ReactNode;
-}
-
-export const AuthGuard = ({ children }: AuthGuardProps) => {
+  // Rest of AuthGuard code
   const { instance, inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
 
@@ -80,6 +80,6 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
     );
   }
 
-  // User is authenticated - render protected content
+  // User is authenticated, render protected content
   return <>{children}</>;
 };
