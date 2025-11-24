@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MsalProvider } from '@azure/msal-react';
 import { msalInstance, initializeMsal } from './utils/msalInstance';
 import { AuthGuard } from './components/AuthGuard';
+import { AuthCallback } from './components/AuthCallback';
 import { Landing } from './components/Landing';
 import { TeacherPage } from './pages/TeacherPage';
 import { StudentPage } from './pages/StudentPage';
@@ -15,6 +16,18 @@ const appModeConfig = import.meta.env.VITE_APP_MODE || 'dual'; // 'dual', 'teach
 function App() {
   // Get base path from environment or use default
   const basePath = import.meta.env.VITE_BASE_PATH || '/lab-reports';
+
+  // Check if we're on the auth callback route (no basename prefix)
+  // This handles the centralized /auth/callback endpoint
+  if (window.location.pathname === '/auth/callback') {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
 
   // If mode is locked, redirect to appropriate page
   if (appModeConfig === 'teacher') {
