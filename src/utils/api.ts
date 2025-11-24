@@ -1,7 +1,7 @@
 import { FileContent, AnalysisResult, StudentFeedback, ExperimentConfig, AppMode } from '@/types';
 import { buildTeacherSystemPrompt, buildStudentSystemPrompt } from '@/config/prompts';
 
-const API_TIMEOUT = 30000; // 30 seconds
+const API_TIMEOUT = 90000; // 90 seconds
 
 // Anthropic API response types
 interface AnthropicTextContent {

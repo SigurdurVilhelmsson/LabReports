@@ -92,9 +92,9 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
 
-    // Call Anthropic API with timeout protection (55s, leaving buffer for Netlify timeout)
+    // Call Anthropic API with timeout protection (85s, leaving 5s buffer for 90s limit)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 55000);
+    const timeoutId = setTimeout(() => controller.abort(), 85000);
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {

@@ -69,9 +69,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
-    // Call Anthropic API with timeout protection (55s, leaving 5s buffer for Vercel's 60s limit)
+    // Call Anthropic API with timeout protection (85s, leaving 5s buffer for 90s limit)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 55000);
+    const timeoutId = setTimeout(() => controller.abort(), 85000);
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {

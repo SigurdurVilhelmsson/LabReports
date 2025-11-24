@@ -203,9 +203,9 @@ app.post('/api/analyze', async (req, res) => {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
-    // Call Anthropic API with timeout (55s)
+    // Call Anthropic API with timeout (85s, leaving 5s buffer for 90s limit)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 55000);
+    const timeoutId = setTimeout(() => controller.abort(), 85000);
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
