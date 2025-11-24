@@ -4,7 +4,8 @@
  * This file configures Microsoft Authentication Library (MSAL) for
  * authenticating users with their Kvennaskólinn school accounts.
  *
- * IMPORTANT: This uses DYNAMIC redirect URIs based on current URL.
+ * IMPORTANT: This uses a CENTRALIZED redirect URI (/auth/callback).
+ * The return URL is saved before login and restored after authentication.
  * This allows the app to work at multiple deployment paths:
  * - /2-ar/lab-reports/
  * - /3-ar/lab-reports/
@@ -27,19 +28,27 @@ if (!clientId || !tenantId) {
 }
 
 /**
+ * Detect environment and set appropriate redirect URI
+ */
+const isDevelopment = import.meta.env.DEV;
+const redirectUri = isDevelopment
+  ? 'http://localhost:3000/auth/callback'
+  : 'https://kvenno.app/auth/callback';
+
+/**
  * MSAL Configuration
  *
- * Uses DYNAMIC redirect URI based on current window location.
- * This ensures authentication works regardless of deployment path.
+ * Uses STATIC redirect URI pointing to centralized /auth/callback endpoint.
+ * The original URL is saved in sessionStorage and restored after auth.
  */
 export const msalConfig: Configuration = {
   auth: {
     clientId: clientId || '',
     authority: `https://login.microsoftonline.com/${tenantId || 'common'}`,
-    // DYNAMIC redirect URI - works for any deployment path
-    redirectUri: window.location.origin + window.location.pathname,
-    postLogoutRedirectUri: window.location.origin + window.location.pathname,
-    navigateToLoginRequestUrl: true,
+    // STATIC redirect URI - centralized callback endpoint
+    redirectUri: redirectUri,
+    postLogoutRedirectUri: window.location.origin,
+    navigateToLoginRequestUrl: false, // We handle navigation manually
   },
   cache: {
     cacheLocation: 'sessionStorage', // Store tokens in session storage

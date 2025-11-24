@@ -6,6 +6,7 @@
  *
  * Features:
  * - Automatic redirect to Azure AD login if not authenticated
+ * - Saves current URL before redirect (restored after login)
  * - Loading state while checking authentication
  * - Error handling in Icelandic
  * - Graceful fallback for auth failures
@@ -22,6 +23,7 @@ import { ReactNode, useEffect } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
 import { loginRequest } from '../config/authConfig';
+import { saveReturnUrl } from '../utils/authHelpers';
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -37,6 +39,10 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
     // 2. No authentication operation is in progress
     // 3. MSAL is fully initialized
     if (!isAuthenticated && inProgress === InteractionStatus.None) {
+      // Save the current URL BEFORE redirecting to login
+      // This allows us to return the user to their original page
+      saveReturnUrl();
+
       // Use redirect for login (better UX than popup)
       instance.loginRedirect(loginRequest).catch((error) => {
         console.error('Innskráningarvilla:', error);
