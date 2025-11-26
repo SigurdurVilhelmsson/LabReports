@@ -17,5 +17,16 @@
       "source": "/api/:path*",
       "destination": "/api/:path*"
     }
+  ],
+  "headers": [
+    {
+      "source": "/(.*).mjs",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
+    }
   ]
 }
