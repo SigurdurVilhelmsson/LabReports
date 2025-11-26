@@ -8,7 +8,8 @@ import type { Handler, HandlerEvent, HandlerResponse } from '@netlify/functions'
 import { IncomingForm, File as FormidableFile } from 'formidable';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { unlink } from 'fs/promises';
+import { unlink, mkdir, readdir, readFile, rm } from 'fs/promises';
+import { join, extname } from 'path';
 import { IncomingMessage } from 'http';
 import { Readable } from 'stream';
 
@@ -18,6 +19,11 @@ interface ProcessedDocument {
   content: string;
   format: 'markdown' | 'text';
   equations: string[];
+  images?: Array<{
+    data: string;        // base64 encoded image
+    mediaType: string;   // MIME type (e.g., 'image/png')
+    filename?: string;   // Original filename from document
+  }>;
 }
 
 /**
@@ -33,21 +39,54 @@ async function isPandocAvailable(): Promise<boolean> {
 }
 
 /**
+ * Get MIME type from file extension
+ */
+function getMimeType(filename: string): string {
+  const ext = extname(filename).toLowerCase();
+  const mimeTypes: Record<string, string> = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.bmp': 'image/bmp',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
+}
+
+/**
  * Process a .docx file using pandoc
  * Converts to markdown with LaTeX equations preserved
+ * Extracts embedded images
  */
 async function processDocxWithPandoc(filePath: string): Promise<ProcessedDocument> {
-  // Convert .docx to markdown with LaTeX math
-  const command = `pandoc "${filePath}" --from=docx --to=markdown --wrap=none`;
+  // Create a unique temporary directory for extracted media
+  const mediaDir = `/tmp/docx-media-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  console.log('[Pandoc] Processing document:', filePath);
+  console.log('[Pandoc] Media directory:', mediaDir);
 
   try {
+    // Create media directory
+    await mkdir(mediaDir, { recursive: true });
+
+    // Convert .docx to markdown with LaTeX math and extract images
+    // Options:
+    // --from=docx: Input format
+    // --to=markdown: Output format
+    // --extract-media=<dir>: Extract images to directory
+    // --wrap=none: Don't wrap lines
+    const command = `pandoc "${filePath}" --from=docx --to=markdown --extract-media="${mediaDir}" --wrap=none`;
+
     const { stdout, stderr } = await execAsync(command);
 
     if (stderr && !stderr.includes('Warning')) {
-      console.error('Pandoc stderr:', stderr);
+      console.error('[Pandoc] stderr:', stderr);
     }
 
     const content = stdout;
+    console.log('[Pandoc] Document converted, length:', content.length);
 
     // Extract equations (simple heuristic - look for LaTeX patterns)
     const equations: string[] = [];
@@ -64,13 +103,62 @@ async function processDocxWithPandoc(filePath: string): Promise<ProcessedDocumen
       }
     }
 
+    console.log('[Pandoc] Extracted equations:', equations.length);
+
+    // Check if any images were extracted
+    const images: Array<{ data: string; mediaType: string; filename?: string }> = [];
+
+    try {
+      // Pandoc extracts images to a 'media' subdirectory
+      const mediaSubdir = join(mediaDir, 'media');
+      const files = await readdir(mediaSubdir);
+
+      console.log('[Pandoc] Found image files:', files.length);
+
+      // Read and encode each image
+      for (const file of files) {
+        const imagePath = join(mediaSubdir, file);
+        const imageBuffer = await readFile(imagePath);
+        const base64Data = imageBuffer.toString('base64');
+        const mediaType = getMimeType(file);
+
+        images.push({
+          data: base64Data,
+          mediaType,
+          filename: file,
+        });
+
+        console.log(`[Pandoc] Encoded image: ${file} (${mediaType}, ${(base64Data.length / 1024).toFixed(2)} KB)`);
+      }
+    } catch (error) {
+      // No images extracted or error reading - this is not fatal
+      console.log('[Pandoc] No images extracted or error reading images:',
+        error instanceof Error ? error.message : 'Unknown error');
+    }
+
+    // Clean up media directory
+    try {
+      await rm(mediaDir, { recursive: true, force: true });
+      console.log('[Pandoc] Cleaned up media directory');
+    } catch (error) {
+      console.error('[Pandoc] Failed to clean up media directory:', error);
+    }
+
     return {
       content,
       format: 'markdown',
       equations,
+      images: images.length > 0 ? images : undefined,
     };
   } catch (error) {
-    console.error('Pandoc processing error:', error);
+    // Ensure cleanup on error
+    try {
+      await rm(mediaDir, { recursive: true, force: true });
+    } catch {
+      // Ignore cleanup errors
+    }
+
+    console.error('[Pandoc] Processing error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     throw new Error(`Failed to process document: ${errorMessage}`);
   }

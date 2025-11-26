@@ -70,16 +70,19 @@ const extractFromDocx = async (file: File): Promise<FileContent> => {
     const result = await response.json();
 
     console.log('[DOCX Processing] Document processed successfully:', {
-      textLength: result.text?.length || 0,
+      textLength: result.content?.length || 0,
       format: result.format,
+      equationCount: result.equations?.length || 0,
+      imageCount: result.images?.length || 0,
     });
 
     // Return the processed content
-    // The server returns: { content: string, format: 'markdown', equations: string[] }
+    // The server returns: { content: string, format: 'markdown', equations: string[], images?: Array<{...}> }
     return {
       type: 'docx',
-      data: result.text, // Markdown text with LaTeX equations
+      data: result.content, // Markdown text with LaTeX equations
       mediaType: 'text/markdown',
+      images: result.images, // Pass through extracted images
     };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
