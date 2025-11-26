@@ -1,10 +1,72 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import { FileContent } from '@/types';
 
-// Configure PDF.js worker - import from node_modules and let Vite handle it
-// This ensures the worker is bundled and served from the same domain
+// Configure PDF.js worker with smart path resolution and CDN fallback
+// Import the worker URL from Vite
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
+/**
+ * Get the correct worker URL based on deployment context
+ * Handles absolute URLs, blob URLs, and relative paths with base path configuration
+ */
+const getWorkerUrl = (): string => {
+  // In development or when using absolute URLs, use as-is
+  if (pdfjsWorker.startsWith('http') || pdfjsWorker.startsWith('blob:')) {
+    return pdfjsWorker;
+  }
+
+  // For relative paths, ensure it's resolved from the document base
+  // This handles cases where the app is deployed to a subpath like /3-ar/lab-reports/
+  const base = document.querySelector('base')?.getAttribute('href') || import.meta.env.BASE_URL || '/';
+
+  // If worker path already starts with base, use it as-is
+  if (pdfjsWorker.startsWith(base)) {
+    return pdfjsWorker;
+  }
+
+  // Remove leading slash from worker path if present
+  const workerPath = pdfjsWorker.startsWith('/') ? pdfjsWorker.slice(1) : pdfjsWorker;
+
+  // Ensure base ends with slash
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+
+  // Construct full URL using window.location.origin + base + worker path
+  const fullUrl = `${window.location.origin}${normalizedBase}${workerPath}`;
+
+  console.log('[PDF.js] Worker configured (bundled):', {
+    workerUrl: fullUrl,
+    originalPath: pdfjsWorker,
+    baseUrl: normalizedBase,
+  });
+
+  return fullUrl;
+};
+
+/**
+ * Get CDN worker URL as fallback
+ * Uses exact version match for compatibility
+ */
+const getCdnWorkerUrl = (): string => {
+  // Use cdnjs with exact version matching pdfjs-dist (4.10.38)
+  const version = '4.10.38';
+  const cdnUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.mjs`;
+  console.log('[PDF.js] CDN worker URL prepared:', cdnUrl);
+  return cdnUrl;
+};
+
+/**
+ * Retry PDF loading with CDN worker
+ * Called when bundled worker fails
+ */
+const retryWorkerWithCdn = async () => {
+  console.log('[PDF Processing] Worker error detected, retrying with CDN fallback...');
+  const cdnUrl = getCdnWorkerUrl();
+  pdfjsLib.GlobalWorkerOptions.workerSrc = cdnUrl;
+  console.log('[PDF.js] Worker reconfigured to CDN:', cdnUrl);
+};
+
+// Initial worker configuration with bundled worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = getWorkerUrl();
 
 // Get API endpoint from environment or use default
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT || '/api';
@@ -112,11 +174,48 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
       arrayBufferSize: `${(arrayBuffer.byteLength / 1024).toFixed(2)} KB`,
     });
 
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    console.log('[PDF Processing] PDF document loaded successfully:', {
-      numPages: pdf.numPages,
-      fingerprints: pdf.fingerprints,
-    });
+    // Attempt to load PDF document with automatic retry on worker errors
+    let pdf;
+    try {
+      pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      console.log('[PDF Processing] PDF document loaded successfully:', {
+        numPages: pdf.numPages,
+        fingerprints: pdf.fingerprints,
+      });
+    } catch (pdfError: unknown) {
+      const errorMsg = pdfError instanceof Error ? pdfError.message : String(pdfError);
+      console.error('[PDF Processing] PDF.js document loading failed (attempt 1):', {
+        error: errorMsg,
+        workerSrc: pdfjsLib.GlobalWorkerOptions.workerSrc,
+        fileName: file.name,
+      });
+
+      // Check if it's a worker loading error
+      if (errorMsg.includes('worker') || errorMsg.includes('Worker') || errorMsg.includes('fetch')) {
+        // Try with CDN fallback
+        await retryWorkerWithCdn();
+
+        try {
+          pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          console.log('[PDF Processing] Successfully loaded PDF with CDN worker:', {
+            numPages: pdf.numPages,
+            fingerprints: pdf.fingerprints,
+          });
+        } catch (retryError: unknown) {
+          const retryMsg = retryError instanceof Error ? retryError.message : String(retryError);
+          console.error('[PDF Processing] CDN worker retry also failed:', retryMsg);
+          throw new Error(
+            'Vandamál við að hlaða PDF vinnsluforritinu. Vinsamlegast reynið aftur eða hafið samband við stjórnanda.'
+          );
+        }
+      } else if (errorMsg.includes('Invalid') || errorMsg.includes('corrupted')) {
+        // Check if it's a corrupted PDF
+        throw new Error('PDF skjalið virðist vera skemmt. Vinsamlegast reynið að vista það aftur úr upprunaforritinu.');
+      } else {
+        // Re-throw other errors with original message
+        throw new Error(`Villa við að lesa PDF: ${errorMsg}`);
+      }
+    }
 
     const images: Array<{ data: string; mediaType: string }> = [];
     let fullText = '';
