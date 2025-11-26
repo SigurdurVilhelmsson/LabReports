@@ -7,36 +7,24 @@ import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 /**
  * Get the correct worker URL based on deployment context
- * Handles absolute URLs, blob URLs, and relative paths with base path configuration
+ * Vite's ?url import handles base path resolution automatically
  */
 const getWorkerUrl = (): string => {
-  // In development or when using absolute URLs, use as-is
+  // If already an absolute URL (http/https/blob), use as-is
   if (pdfjsWorker.startsWith('http') || pdfjsWorker.startsWith('blob:')) {
     return pdfjsWorker;
   }
 
-  // For relative paths, ensure it's resolved from the document base
-  // This handles cases where the app is deployed to a subpath like /3-ar/lab-reports/
-  const base = document.querySelector('base')?.getAttribute('href') || import.meta.env.BASE_URL || '/';
-
-  // If worker path already starts with base, use it as-is
-  if (pdfjsWorker.startsWith(base)) {
-    return pdfjsWorker;
-  }
-
-  // Remove leading slash from worker path if present
-  const workerPath = pdfjsWorker.startsWith('/') ? pdfjsWorker.slice(1) : pdfjsWorker;
-
-  // Ensure base ends with slash
-  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
-
-  // Construct full URL using window.location.origin + base + worker path
-  const fullUrl = `${window.location.origin}${normalizedBase}${workerPath}`;
+  // For relative paths, make absolute by prepending origin
+  // Vite already includes the correct base path in the imported URL
+  const fullUrl = pdfjsWorker.startsWith('/')
+    ? `${window.location.origin}${pdfjsWorker}`
+    : `${window.location.origin}/${pdfjsWorker}`;
 
   console.log('[PDF.js] Worker configured (bundled):', {
     workerUrl: fullUrl,
     originalPath: pdfjsWorker,
-    baseUrl: normalizedBase,
+    origin: window.location.origin,
   });
 
   return fullUrl;
@@ -65,8 +53,27 @@ const retryWorkerWithCdn = async () => {
   console.log('[PDF.js] Worker reconfigured to CDN:', cdnUrl);
 };
 
-// Initial worker configuration with bundled worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = getWorkerUrl();
+/**
+ * Determine which worker to use based on environment
+ * In production with subpaths, CDN is more reliable
+ */
+const selectWorkerUrl = (): string => {
+  // Check if we're in a subpath deployment (base URL is not just '/')
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  const isSubpathDeployment = baseUrl !== '/' && baseUrl.length > 1;
+
+  // For subpath deployments, prefer CDN worker to avoid path resolution issues
+  if (isSubpathDeployment && import.meta.env.PROD) {
+    console.log('[PDF.js] Subpath deployment detected, using CDN worker for reliability');
+    return getCdnWorkerUrl();
+  }
+
+  // Otherwise, try bundled worker first
+  return getWorkerUrl();
+};
+
+// Initial worker configuration
+pdfjsLib.GlobalWorkerOptions.workerSrc = selectWorkerUrl();
 
 // Get API endpoint from environment or use default
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT || '/api';

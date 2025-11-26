@@ -22,8 +22,13 @@ export default defineConfig({
         },
       },
     },
+    assetsInlineLimit: 0, // Don't inline assets, keep worker files separate
   },
   optimizeDeps: {
     include: ['pdfjs-dist'],
+    exclude: ['pdfjs-dist/build/pdf.worker.min.mjs'], // Don't pre-bundle worker
+  },
+  worker: {
+    format: 'es', // Use ES modules for workers
   },
 });
