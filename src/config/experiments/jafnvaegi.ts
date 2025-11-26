@@ -2,7 +2,7 @@ import { ExperimentConfig } from '@/types';
 
 /**
  * Jafnvægi í efnahvörfum (Chemical Equilibrium)
- * 3rd year chemistry experiment - IMPROVED VERSION v6
+ * 3rd year chemistry experiment - IMPROVED VERSION v7
  *
  * This experiment explores Le Chatelier's principle by observing
  * how an equilibrium system (Fe³⁺ + SCN⁻ ⇌ FeSCN²⁺) responds to
@@ -14,7 +14,7 @@ import { ExperimentConfig } from '@/types';
  * - STRICT on COMPLETENESS: All required elements must be present
  * - STRICT on DEPTH: Must explain concepts, not just list them
  * - STRICT on EXPERIMENT-SPECIFIC CONTENT: Theory must be general (but reaction equation is allowed)
- * - STRICT on READABILITY: Proper paragraph breaks required, especially in Niðurstöður
+ * - STRICT on READABILITY: Proper paragraph breaks required, especially in Niðurstöður (HARD CAP if missing)
  *
  * GRADING INSTRUCTIONS:
  * - For each section, provide: (1) Points awarded out of maximum, (2) ONE brief sentence stating what was done well, (3) ONE brief sentence stating what was missing or incorrect (if applicable).
@@ -24,10 +24,12 @@ import { ExperimentConfig } from '@/types';
  * REVIEW CHECKLIST (complete before presenting grade):
  * [ ] Verify signature is at END of report (after Lokaorð), not just on title page
  * [ ] Verify signature is the ACTUAL AUTHOR'S NAME (not another name mentioned in text)
+ * [ ] Check for IMAGE signatures in .docx files (handwritten/digital signatures as images)
  * [ ] Confirm calculations are graded based on content quality, with structural penalty applied only once in Framkvæmd/Heildarsamhengi
  * [ ] Check that Fræðikafli contains NO experiment-specific OBSERVATIONS (colors, results) - reaction equation IS allowed
  * [ ] Verify uncertainty/skekkjur is discussed in Lokaorð
  * [ ] Check readability: paragraph breaks in Fræðikafli, line/paragraph breaks between results in Niðurstöður
+ * [ ] HARD CAP CHECK: If Niðurstöður has no breaks between results (wall of text), max score is 10/12
  * [ ] Ensure no double-penalties for the same issue across sections
  * [ ] Confirm total points match sum of section points
  *
@@ -38,7 +40,8 @@ import { ExperimentConfig } from '@/types';
  * 4. Another person's name at end (not author) → 0 points for Undirskrift
  * 5. No uncertainty discussion → Deduct 2 points in Lokaorð
  * 6. Listing factors without explaining mechanisms → Deduct 3-4 points in Fræðikafli
- * 7. Wall of text without paragraph breaks → Deduct in Heildarsamhengi for readability
+ * 7. Wall of text in Niðurstöður without breaks → HARD CAP at 10/12 points maximum
+ * 8. Image signature not detected → Check .docx for embedded images after Lokaorð
  *
  * OUTPUT FORMAT:
  * ## Einkunn: [X]/50
@@ -177,10 +180,11 @@ export const jafnvaegi: ExperimentConfig = {
         'All calculations, observations, answers to worksheet questions',
       maxPoints: 12,
       pointGuidance: {
-        '10-12':
-          'Complete: All THREE calculations correct with work shown, ALL 5 test tubes documented with FULL Le Chatelier explanations (what was added, direction of shift, WHY), proper formatting with breaks between results',
-        '8-9': 'Mostly complete: Has calculations and observations, but 1-2 explanations lack depth (missing WHY), or minor formatting issues',
-        '5-7': 'Partial: Missing one calculation OR several explanations are superficial ("verður rautt" without mechanism)',
+        '11-12':
+          'Excellent: All THREE calculations correct, ALL 5 test tubes with FULL Le Chatelier explanations, AND good formatting (clear breaks between each result/calculation)',
+        '9-10': 'Complete content but formatting issues: All calculations and explanations present and correct, BUT results run together without clear separation (wall of text) = cap at 10 points maximum',
+        '7-8': 'Mostly complete: Has calculations and observations, but 1-2 explanations lack depth (missing WHY), regardless of formatting',
+        '5-6': 'Partial: Missing one calculation OR several explanations are superficial ("verður rautt" without mechanism)',
         '2-4': 'Incomplete: Missing multiple calculations OR missing exo/endothermic determination OR several test tubes not explained',
         '0-1': 'Minimal: Very little content, or calculations in wrong section with nothing here',
       },
@@ -192,7 +196,7 @@ export const jafnvaegi: ExperimentConfig = {
           'Vantar útreikninga (þeir eru kannski í röngum kafla?), eða vantar margar útskýringar á tilraunum, eða hefur bara lýsingu án greiningar ("verður rautt" án þess að segja HVERS VEGNA), eða vantar inn/útvermið greining',
       },
       specialNote:
-        'CHECK COMPLETENESS, DEPTH, AND FORMATTING: (1) MUST have ALL THREE calculations with complete work shown: (a) 0,002M KSCN: mól = M × L, then grams using molar mass, (b) 0,2M Fe(NO₃)₃·9H₂O: mól = M × L, then grams using 404 g/mol, (c) 0,1M AgNO₃: mól = M × L, then grams. NOTE: If calculations are in Framkvæmd instead, grade the QUALITY here as if they were correct, do NOT deduct here for wrong placement (that penalty is in Framkvæmd). (2) MUST have observations AND Le Chatelier explanations for ALL 5 test tubes: (a) Test 1: reference/control, (b) Test 2: add KSCN(s) → darker → why (more SCN⁻, shifts right, more FeSCN²⁺), (c) Test 3: add Fe(NO₃)₃ → darker → why (more Fe³⁺, shifts right), (d) Test 4: add AgNO₃ → lighter → why (Ag⁺ removes SCN⁻ as AgSCN precipitate, shifts left), (e) Test 5: heat → lighter → exothermic (if darker → endothermic). (3) Each explanation must include: what was added, direction of shift, WHY it shifts. "Verður rautt" alone = insufficient. Need "Verður rautt því hvarfið færist til hægri til að mynda meira FeSCN²⁺ vegna þess að við bættum við Fe³⁺" = sufficient. (4) Accept colloquial language if mechanism is correct. (5) Check for blank spaces ("__") - deduct if present. (6) READABILITY REQUIREMENT: There MUST be at least a line break (preferably paragraph break) between individual results and/or calculations. A wall of text with all results running together = deduct 1-2 points. Good formatting separates each test tube observation and each calculation clearly.',
+        'FORMATTING REQUIREMENT (CHECK FIRST): Results MUST have clear visual separation - at minimum a line break between each test tube observation and between calculations. If all results run together in a "wall of text" without breaks, MAXIMUM score is 10/12 regardless of content quality. This is a HARD CAP. --- CHECK COMPLETENESS AND DEPTH: (1) MUST have ALL THREE calculations with complete work shown: (a) 0,002M KSCN: mól = M × L, then grams using molar mass, (b) 0,2M Fe(NO₃)₃·9H₂O: mól = M × L, then grams using 404 g/mol, (c) 0,1M AgNO₃: mól = M × L, then grams. NOTE: If calculations are in Framkvæmd instead, grade the QUALITY here as if they were correct, do NOT deduct here for wrong placement (that penalty is in Framkvæmd). (2) MUST have observations AND Le Chatelier explanations for ALL 5 test tubes: (a) Test 1: reference/control, (b) Test 2: add KSCN(s) → darker → why (more SCN⁻, shifts right, more FeSCN²⁺), (c) Test 3: add Fe(NO₃)₃ → darker → why (more Fe³⁺, shifts right), (d) Test 4: add AgNO₃ → lighter → why (Ag⁺ removes SCN⁻ as AgSCN precipitate, shifts left), (e) Test 5: heat → lighter → exothermic (if darker → endothermic). (3) Each explanation must include: what was added, direction of shift, WHY it shifts. "Verður rautt" alone = insufficient. Need "Verður rautt því hvarfið færist til hægri til að mynda meira FeSCN²⁺ vegna þess að við bættum við Fe³⁺" = sufficient. (4) Accept colloquial language if mechanism is correct. (5) Check for blank spaces ("__") - deduct if present.',
     },
     {
       id: 'lokaord',
@@ -232,7 +236,7 @@ export const jafnvaegi: ExperimentConfig = {
           'Undirskrift VANTAR, eða er AÐEINS á titilsíðu/haus (ekki neðst eftir Lokaorð), eða nafn neðst er EKKI nafn höfundar',
       },
       specialNote:
-        'SIGNATURE VERIFICATION (CRITICAL): (1) Signature must appear AFTER the Lokaorð section, at the very END of the report body. (2) A name on a TITLE PAGE or HEADER does NOT count as a signature. (3) CRITICAL: The signature MUST be the ACTUAL AUTHOR\'S NAME. Verify that the name at the end matches the author of the report (check title page or header for author\'s name). (4) COMMON MISTAKE: Another person\'s name mentioned in text at the end is NOT a signature. Example: "Eina heimild mín var vinnuseðillinn og spjallmennið sem Siggi bjó til." - "Siggi" here is NOT the author\'s signature, it is a reference to the teacher/creator. This should receive 0 points. (5) Look for the author\'s name specifically appearing as a standalone signature after all content, not embedded in a sentence referring to someone else. (6) This is BINARY: either author\'s signature is at end (2 points) or it is not (0 points). (7) Accept full name or first name only, as long as it matches the author.',
+        'SIGNATURE VERIFICATION (CRITICAL): (1) Signature must appear AFTER the Lokaorð section, at the very END of the report body. (2) A name on a TITLE PAGE or HEADER does NOT count as a signature. (3) CRITICAL: The signature MUST be the ACTUAL AUTHOR\'S NAME. Verify that the name at the end matches the author of the report (check title page or header for author\'s name). (4) COMMON MISTAKE: Another person\'s name mentioned in text at the end is NOT a signature. Example: "Eina heimild mín var vinnuseðillinn og spjallmennið sem Siggi bjó til." - "Siggi" here is NOT the author\'s signature, it is a reference to the teacher/creator. This should receive 0 points. (5) Look for the author\'s name specifically appearing as a standalone signature after all content, not embedded in a sentence referring to someone else. (6) This is BINARY: either author\'s signature is at end (2 points) or it is not (0 points). (7) Accept full name or first name only, as long as it matches the author. (8) IMAGE SIGNATURES: Signatures may be inserted as IMAGES in .docx files (handwritten signature photos, digital signatures). These ARE VALID if they appear after Lokaorð and represent the author. When processing documents, ensure image content is checked for signatures, not just text extraction.',
     },
     {
       id: 'samhengi',
