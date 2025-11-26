@@ -39,11 +39,18 @@ export const fileToBase64 = (file: File): Promise<string> => {
  * Sends the file to the server for processing and receives markdown with LaTeX equations
  */
 const extractFromDocx = async (file: File): Promise<FileContent> => {
+  console.log('[DOCX Processing] Starting Word document processing:', {
+    fileName: file.name,
+    fileSize: `${(file.size / 1024).toFixed(2)} KB`,
+  });
+
   // Create FormData to upload the file
   const formData = new FormData();
   formData.append('file', file);
 
   try {
+    console.log('[DOCX Processing] Sending to server for pandoc conversion...');
+
     // Send to server for processing
     const response = await fetch(`${API_ENDPOINT}/process-document`, {
       method: 'POST',
@@ -51,11 +58,21 @@ const extractFromDocx = async (file: File): Promise<FileContent> => {
     });
 
     if (!response.ok) {
+      console.error('[DOCX Processing] Server returned error:', {
+        status: response.status,
+        statusText: response.statusText,
+      });
+
       const error = await response.json();
       throw new Error(error.error || 'Failed to process document');
     }
 
     const result = await response.json();
+
+    console.log('[DOCX Processing] Document processed successfully:', {
+      textLength: result.text?.length || 0,
+      format: result.format,
+    });
 
     // Return the processed content
     // The server returns: { content: string, format: 'markdown', equations: string[] }
@@ -64,9 +81,14 @@ const extractFromDocx = async (file: File): Promise<FileContent> => {
       data: result.text, // Markdown text with LaTeX equations
       mediaType: 'text/markdown',
     };
-  } catch (error: any) {
-    console.error('Error processing .docx file:', error);
-    throw new Error(`Gat ekki lesið Word skjalið: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[DOCX Processing] Error processing .docx file:', {
+      fileName: file.name,
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw new Error(`Gat ekki lesið Word skjalið: ${errorMessage}`);
   }
 };
 
@@ -75,57 +97,113 @@ const extractFromDocx = async (file: File): Promise<FileContent> => {
  * This function extracts both text content and images (including equations rendered as images)
  */
 const extractFromPdf = async (file: File): Promise<FileContent> => {
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  console.log('[PDF Processing] Starting PDF extraction:', {
+    fileName: file.name,
+    fileSize: `${(file.size / 1024).toFixed(2)} KB`,
+    mimeType: file.type,
+  });
 
-  const images: Array<{ data: string; mediaType: string }> = [];
-  let fullText = '';
-
-  // Process each page
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-
-    // Extract text content
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      .map((item) => (item as PDFTextItem).str)
-      .join(' ');
-    fullText += pageText + '\n\n';
-
-    // Render page to canvas to capture images and equations
-    const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better quality
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-
-    if (!context) continue;
-
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-
-    await page.render({
-      canvasContext: context,
-      viewport: viewport,
-    }).promise;
-
-    // Convert canvas to base64 image
-    const imageData = canvas.toDataURL('image/png');
-    const base64Data = imageData.split(',')[1];
-
-    images.push({
-      data: base64Data,
-      mediaType: 'image/png',
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    console.log('[PDF Processing] File loaded into memory:', {
+      arrayBufferSize: `${(arrayBuffer.byteLength / 1024).toFixed(2)} KB`,
     });
 
-    // Clean up canvas to free memory
-    canvas.width = 0;
-    canvas.height = 0;
-  }
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    console.log('[PDF Processing] PDF document loaded successfully:', {
+      numPages: pdf.numPages,
+      fingerprints: pdf.fingerprints,
+    });
 
-  return {
-    type: 'pdf',
-    data: fullText.trim(),
-    images: images,
-  };
+    const images: Array<{ data: string; mediaType: string }> = [];
+    let fullText = '';
+    let totalTextLength = 0;
+
+    // Process each page
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+
+      // Extract text content
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item) => (item as PDFTextItem).str)
+        .join(' ');
+      fullText += pageText + '\n\n';
+      totalTextLength += pageText.length;
+
+      console.log(`[PDF Processing] Page ${pageNum}/${pdf.numPages}:`, {
+        textLength: pageText.length,
+        itemCount: textContent.items.length,
+      });
+
+      // Render page to canvas to capture images and equations
+      const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better quality
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
+      if (!context) {
+        console.warn(`[PDF Processing] Canvas context not available for page ${pageNum}`);
+        continue;
+      }
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({
+        canvasContext: context,
+        viewport: viewport,
+      }).promise;
+
+      // Convert canvas to base64 image
+      const imageData = canvas.toDataURL('image/png');
+      const base64Data = imageData.split(',')[1];
+
+      images.push({
+        data: base64Data,
+        mediaType: 'image/png',
+      });
+
+      console.log(`[PDF Processing] Page ${pageNum} rendered:`, {
+        canvasSize: `${canvas.width}x${canvas.height}`,
+        imageSize: `${(base64Data.length / 1024).toFixed(2)} KB`,
+      });
+
+      // Clean up canvas to free memory
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+
+    const totalImageSize = images.reduce((sum, img) => sum + img.data.length, 0);
+    console.log('[PDF Processing] Extraction complete:', {
+      totalTextLength,
+      numImages: images.length,
+      totalImageSize: `${(totalImageSize / 1024).toFixed(2)} KB`,
+      averageImageSize: images.length > 0 ? `${(totalImageSize / images.length / 1024).toFixed(2)} KB` : '0 KB',
+    });
+
+    // Validate extraction results
+    if (totalTextLength === 0 && images.length === 0) {
+      console.error('[PDF Processing] No content extracted from PDF - file may be empty or corrupted');
+      throw new Error('PDF skjalið virðist vera tómt eða skemmt');
+    }
+
+    if (totalTextLength === 0) {
+      console.warn('[PDF Processing] No text extracted - PDF may be scanned/image-based');
+    }
+
+    return {
+      type: 'pdf',
+      data: fullText.trim(),
+      images: images,
+    };
+  } catch (error) {
+    console.error('[PDF Processing] Error during PDF extraction:', {
+      fileName: file.name,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
+  }
 };
 
 /**
@@ -141,10 +219,75 @@ const extractFromImage = async (file: File): Promise<FileContent> => {
 };
 
 /**
+ * Validate PDF file before processing
+ * Checks file size, structure, and basic integrity
+ */
+const validatePdf = async (file: File): Promise<{ valid: boolean; error?: string }> => {
+  console.log('[PDF Validation] Starting validation for:', file.name);
+
+  // Check file size (max 50MB)
+  const maxSize = 50 * 1024 * 1024; // 50MB
+  if (file.size > maxSize) {
+    console.error('[PDF Validation] File too large:', {
+      size: file.size,
+      maxSize,
+      fileName: file.name,
+    });
+    return {
+      valid: false,
+      error: `PDF skjalið er of stórt (${(file.size / 1024 / 1024).toFixed(2)}MB). Hámark er 50MB`,
+    };
+  }
+
+  // Check minimum file size (at least 1KB to be a valid PDF)
+  if (file.size < 1024) {
+    console.error('[PDF Validation] File too small:', {
+      size: file.size,
+      fileName: file.name,
+    });
+    return {
+      valid: false,
+      error: 'PDF skjalið er of lítið - það kann að vera skemmt',
+    };
+  }
+
+  // Check PDF magic number (PDF files start with "%PDF-")
+  try {
+    const header = await file.slice(0, 5).text();
+    if (!header.startsWith('%PDF-')) {
+      console.error('[PDF Validation] Invalid PDF header:', {
+        header,
+        fileName: file.name,
+      });
+      return {
+        valid: false,
+        error: 'Skráin er ekki gilt PDF skjal',
+      };
+    }
+    console.log('[PDF Validation] Valid PDF header detected:', header);
+  } catch (error) {
+    console.error('[PDF Validation] Error reading file header:', error);
+    return {
+      valid: false,
+      error: 'Gat ekki lesið PDF skrána',
+    };
+  }
+
+  console.log('[PDF Validation] Validation passed for:', file.name);
+  return { valid: true };
+};
+
+/**
  * Main function to extract content from any supported file type
  * Supports: .docx, .pdf, and image files
  */
 export const extractTextFromFile = async (file: File): Promise<FileContent | null> => {
+  console.log('[File Processing] Starting extraction for:', {
+    fileName: file.name,
+    fileSize: `${(file.size / 1024).toFixed(2)} KB`,
+    mimeType: file.type,
+  });
+
   try {
     const fileName = file.name.toLowerCase();
 
@@ -153,23 +296,46 @@ export const extractTextFromFile = async (file: File): Promise<FileContent | nul
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       fileName.endsWith('.docx')
     ) {
+      console.log('[File Processing] Processing as Word document');
       return await extractFromDocx(file);
     }
 
     // PDF files
     if (file.type === 'application/pdf' || fileName.endsWith('.pdf')) {
+      console.log('[File Processing] Processing as PDF');
+
+      // Validate PDF before processing
+      const validation = await validatePdf(file);
+      if (!validation.valid) {
+        console.error('[File Processing] PDF validation failed:', validation.error);
+        throw new Error(validation.error);
+      }
+
       return await extractFromPdf(file);
     }
 
     // Image files
     if (file.type.startsWith('image/')) {
+      console.log('[File Processing] Processing as image');
       return await extractFromImage(file);
     }
 
-    console.error('Unsupported file type:', file.type);
+    console.error('[File Processing] Unsupported file type:', {
+      fileName: file.name,
+      mimeType: file.type,
+    });
     return null;
   } catch (error) {
-    console.error('Error extracting text from file:', error);
+    console.error('[File Processing] Error extracting text from file:', {
+      fileName: file.name,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    // Re-throw the error to preserve the error message
+    if (error instanceof Error) {
+      throw error;
+    }
     return null;
   }
 };

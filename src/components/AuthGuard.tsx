@@ -32,17 +32,15 @@ interface AuthGuardProps {
 export const AuthGuard = ({ children }: AuthGuardProps) => {
   // ⚠️ TEMPORARY: Bypass authentication for testing
   const BYPASS_AUTH = true; // Set to false to re-enable auth
-  
-  if (BYPASS_AUTH) {
-    console.warn('⚠️ AUTHENTICATION BYPASSED - FOR TESTING ONLY');
-    return <>{children}</>;
-  }
 
-  // Rest of AuthGuard code
+  // Hooks must be called before any conditional returns
   const { instance, inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
 
   useEffect(() => {
+    // Skip login trigger if auth is bypassed
+    if (BYPASS_AUTH) return;
+
     // Only trigger login if:
     // 1. User is not authenticated
     // 2. No authentication operation is in progress
@@ -57,7 +55,13 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
         console.error('Innskráningarvilla:', error);
       });
     }
-  }, [isAuthenticated, inProgress, instance]);
+  }, [isAuthenticated, inProgress, instance, BYPASS_AUTH]);
+
+  // Bypass auth if flag is set (for testing only)
+  if (BYPASS_AUTH) {
+    console.warn('⚠️ AUTHENTICATION BYPASSED - FOR TESTING ONLY');
+    return <>{children}</>;
+  }
 
   // Show loading state while checking authentication or during login
   if (inProgress !== InteractionStatus.None || !isAuthenticated) {
