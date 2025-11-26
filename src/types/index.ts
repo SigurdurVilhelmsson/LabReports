@@ -15,6 +15,7 @@ export interface ExperimentSection {
   criteria: SectionCriteria;
   specialNote?: string;
   maxPoints?: number; // Maximum points for this section
+  pointGuidance?: Record<string, string>; // Point ranges with descriptions
 }
 
 export interface Worksheet {
