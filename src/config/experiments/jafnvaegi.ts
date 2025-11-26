@@ -2,7 +2,7 @@ import { ExperimentConfig } from '@/types';
 
 /**
  * Jafnvægi í efnahvörfum (Chemical Equilibrium)
- * 3rd year chemistry experiment - IMPROVED VERSION v7
+ * 3rd year chemistry experiment - IMPROVED VERSION v8
  *
  * This experiment explores Le Chatelier's principle by observing
  * how an equilibrium system (Fe³⁺ + SCN⁻ ⇌ FeSCN²⁺) responds to
@@ -27,6 +27,7 @@ import { ExperimentConfig } from '@/types';
  * [ ] Check for IMAGE signatures in .docx files (handwritten/digital signatures as images)
  * [ ] Confirm calculations are graded based on content quality, with structural penalty applied only once in Framkvæmd/Heildarsamhengi
  * [ ] Check that Fræðikafli contains NO experiment-specific OBSERVATIONS (colors, results) - reaction equation IS allowed
+ * [ ] FORMULA CHECK: General formulas (M=n/V, Kc, equilibrium equations) ARE allowed in Fræðikafli - do NOT penalize for these
  * [ ] Verify uncertainty/skekkjur is discussed in Lokaorð
  * [ ] Check readability: paragraph breaks in Fræðikafli, line/paragraph breaks between results in Niðurstöður
  * [ ] HARD CAP CHECK: If Niðurstöður has no breaks between results (wall of text), max score is 10/12
@@ -42,6 +43,11 @@ import { ExperimentConfig } from '@/types';
  * 6. Listing factors without explaining mechanisms → Deduct 3-4 points in Fræðikafli
  * 7. Wall of text in Niðurstöður without breaks → HARD CAP at 10/12 points maximum
  * 8. Image signature not detected → Check .docx for embedded images after Lokaorð
+ * 9. FORMULAS vs CALCULATIONS confusion:
+ *    - FORMULAS (M = n/V, Kc equation, aA+bB⇌cC+dD) ARE ALLOWED in Fræðikafli
+ *    - CALCULATIONS with specific numbers (0,002M × 0,1L = 0,0002 mól) are NOT allowed in Fræðikafli
+ *    - General chemistry examples (AgNO₃ + NaCl → AgCl) ARE ALLOWED in Fræðikafli
+ *    - DO NOT penalize students for showing general formulas in theory section!
  *
  * OUTPUT FORMAT:
  * ## Einkunn: [X]/50
@@ -131,7 +137,7 @@ export const jafnvaegi: ExperimentConfig = {
           'Vantar skilgreiningu á efnajafnvægi eða Le Chatelier útskýringu, eða bara telur upp þætti án þess að útskýra, eða lýsir NIÐURSTÖÐUM þessarar tilraunar í fræðikafla',
       },
       specialNote:
-        'CRITICAL - EXPERIMENT-SPECIFIC CONTENT CHECK: (1) Theory MUST use GENERAL examples for explaining concepts. (2) HOWEVER: The reaction equation (Fe³⁺ + SCN⁻ ⇌ FeSCN²⁺) IS ALLOWED as part of general discussion or to illustrate a point - this is NOT a violation. (3) What IS a violation (deduct 3-4 points): describing OBSERVATIONS or RESULTS specific to this experiment, such as: "ljósgult" (light yellow), "rautt" (red), "glært" (clear), "dökkrauð" (dark red), or statements like "þegar þessar jónir eru blandaðar saman verður lausnin rauð". (4) Example of ALLOWED: "Í þessari tilraun skoðum við hvarfið Fe³⁺ + SCN⁻ ⇌ FeSCN²⁺ og hvernig Le Chatelier reglan spáir fyrir um áhrif breytinga." (5) Example of NOT ALLOWED: "Fe³⁺(aq) er ljósgult og SCN⁻(aq) er glært en þegar þessar jónir eru blandaðar saman er fengið FeSCN²⁺(aq) sem verður rautt" - this describes observations and belongs in Niðurstöður! (6) Kc equation should be GENERAL (aA + bB ⇌ cC + dD) or omitted, NOT calculated for this specific reaction. (7) Must EXPLAIN how each factor works, not just list them. "Þættirnir eru styrkur, hitastig og þrýstingur" = BAD (just listing, deduct 3-4 points). (8) NO calculations in theory section. (9) READABILITY: Should have paragraph breaks between different topics (equilibrium definition, Le Chatelier explanation, factors). Wall of text = deduct 1 point.',
+        'CRITICAL DISTINCTIONS - READ CAREFULLY: (1) FORMULAS vs CALCULATIONS: General FORMULAS (like M = n/V, Kc = [C]^c[D]^d/[A]^a[B]^b, or aA + bB ⇌ cC + dD) ARE ALLOWED in theory - these explain concepts. CALCULATIONS with specific numbers from this experiment (like "0,002 mol/L × 0,1 L = 0,0002 mol" or "0,019g KSCN") are NOT allowed - these belong in Niðurstöður. (2) GENERAL CHEMISTRY EXAMPLES: Examples from general chemistry (like AgNO₃ + NaCl → AgCl as a precipitation example) ARE ALLOWED even if they use real chemical names - these are teaching examples, not results from THIS experiment. (3) EXPERIMENT-SPECIFIC CONTENT: What IS a violation (deduct 3-4 points): describing OBSERVATIONS or RESULTS specific to THIS experiment, such as: "ljósgult" (light yellow), "rautt" (red), "glært" (clear), "dökkrauð" (dark red), or statements like "þegar þessar jónir eru blandaðar saman verður lausnin rauð", or "við sáum að lausnin varð dekkri". (4) The reaction equation (Fe³⁺ + SCN⁻ ⇌ FeSCN²⁺) IS ALLOWED as part of general discussion. (5) Example of ALLOWED: "Mólstyrkur er reiknaður með jöfnunni M = n/V" or "Dæmi um fellingarhvarf er AgNO₃ + NaCl → AgCl + NaNO₃". (6) Example of NOT ALLOWED: "Við reiknuðum 0,002M × 0,1L = 0,0002 mól" or "FeSCN²⁺ er rautt á litinn". (7) Must EXPLAIN how each Le Chatelier factor works, not just list them. (8) READABILITY: Should have paragraph breaks between topics.',
     },
     {
       id: 'taeki',
