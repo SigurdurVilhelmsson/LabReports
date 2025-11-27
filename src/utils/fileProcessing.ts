@@ -331,24 +331,21 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
             pageText += '\n\n';
           }
           // Moderate y-difference indicates line break
-          // Use more sensitive threshold for direct PDFs (0.2 vs 0.3) to catch tight table rows
-          else if (yDiff > lastHeight * (extractionMethod === 'direct-pdf' ? 0.2 : 0.3)) {
+          // Direct PDFs with character-level encoding need very sensitive threshold
+          // DOCX-converted PDFs have better spacing and use standard threshold
+          else if (yDiff > lastHeight * (extractionMethod === 'direct-pdf' ? 0.1 : 0.3)) {
             pageText += '\n';
           }
           // Same line - check horizontal spacing
           else if (xDiff > 0) {  // Only consider positive gaps
             xGaps.push(xDiff);
 
-            // Table detection disabled for PDFs with character-level encoding
-            // These PDFs have maxGap < 1 unit, making X-coordinate detection unreliable
-            // Claude can see tables in the page images instead
-            //
-            // Original threshold approach (not effective for character-level PDFs):
-            // const threshold = extractionMethod === 'docx-converted-pdf' ? 25 : 40;
-            // if (xDiff > threshold) { pageText += '  |  '; }
+            // For character-level PDFs, only add space if gap is significant (> 0.5)
+            // This prevents "L e  C h a t e l i e r" spacing artifacts
+            // Typical character gaps are 0.0-0.3, word gaps should be larger
+            const minWordGap = 0.5;
 
-            // Just add normal spacing
-            if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
+            if (xDiff > minWordGap && pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
               pageText += ' ';
             }
           }
