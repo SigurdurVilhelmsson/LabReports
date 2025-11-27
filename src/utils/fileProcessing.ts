@@ -330,10 +330,16 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
           if (yDiff > lastHeight * 1.5) {
             pageText += '\n\n';
           }
-          // Moderate y-difference indicates line break
-          // Direct PDFs with character-level encoding need very sensitive threshold
-          // DOCX-converted PDFs have better spacing and use standard threshold
-          else if (yDiff > lastHeight * (extractionMethod === 'direct-pdf' ? 0.1 : 0.3)) {
+          // Line break detection - different strategies per extraction method
+          else if (extractionMethod === 'direct-pdf') {
+            // For direct PDFs with character-level encoding: ANY Y-change = new line
+            // This catches even tightly-spaced table rows (< 1 unit apart)
+            if (yDiff > 0) {
+              pageText += '\n';
+            }
+          }
+          // DOCX-converted PDFs use standard threshold
+          else if (yDiff > lastHeight * 0.3) {
             pageText += '\n';
           }
           // Same line - character-level PDFs encode each character separately
