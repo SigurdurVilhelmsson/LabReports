@@ -104,6 +104,7 @@ export interface FileContent {
     data: string;
     mediaType: string;
   }>;
+  equations?: string[]; // LaTeX equations extracted from document
 }
 
 // Toast notification
