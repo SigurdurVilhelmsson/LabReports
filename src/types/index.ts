@@ -122,6 +122,11 @@ export interface FileContent {
       averageLineLength: number;
       whitespaceDensity: number;
     };
+    tableDetection?: {
+      // Table structure detection
+      columnSeparatorsDetected: number;
+      hasTableStructure: boolean;
+    };
   };
 }
 
