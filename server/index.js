@@ -79,11 +79,15 @@ async function isLibreOfficeAvailable() {
 async function convertDocxToPdf(docxPath) {
   const outputDir = path.dirname(docxPath);
   const baseName = path.basename(docxPath, '.docx');
-  const pdfPath = path.join(outputDir, `${baseName}.pdf`);
+
+  // LibreOffice may handle filenames with multiple dots differently
+  // Expected output, but LibreOffice might create a different filename
+  const expectedPdfPath = path.join(outputDir, `${baseName}.pdf`);
 
   console.log('[LibreOffice] Converting DOCX to PDF:', {
     input: docxPath,
-    output: pdfPath,
+    expectedOutput: expectedPdfPath,
+    baseName,
   });
 
   const command = `libreoffice --headless --convert-to pdf --outdir "${outputDir}" "${docxPath}"`;
@@ -95,8 +99,43 @@ async function convertDocxToPdf(docxPath) {
       console.error('LibreOffice stderr:', stderr);
     }
 
-    console.log('[LibreOffice] Conversion complete:', pdfPath);
-    return pdfPath;
+    // Check if expected PDF exists
+    try {
+      await readFile(expectedPdfPath);
+      console.log('[LibreOffice] Conversion complete (expected path):', expectedPdfPath);
+      return expectedPdfPath;
+    } catch {
+      // Expected path doesn't exist - LibreOffice might have created a different filename
+      // This can happen with filenames containing dots (e.g., "file.25.docx" -> "file.pdf")
+      console.warn('[LibreOffice] Expected PDF not found, searching for created file...');
+
+      // Try to find the PDF by looking for recently created PDF files
+      // LibreOffice might strip dots from filename: "file.25.docx" -> "file.pdf"
+      const { readdirSync } = await import('fs');
+      const files = readdirSync(outputDir);
+
+      // Look for PDF files that match the base name pattern
+      // Try multiple patterns to handle LibreOffice's filename handling
+      const baseNameFirstPart = baseName.split('.')[0];
+      const possibleNames = [
+        `${baseName}.pdf`,           // Full name with dots
+        `${baseNameFirstPart}.pdf`,  // First part only (dots stripped)
+      ];
+
+      console.log('[LibreOffice] Searching for PDF in:', outputDir);
+      console.log('[LibreOffice] Possible names:', possibleNames);
+      console.log('[LibreOffice] Found files:', files.filter(f => f.endsWith('.pdf')));
+
+      for (const possibleName of possibleNames) {
+        if (files.includes(possibleName)) {
+          const actualPdfPath = path.join(outputDir, possibleName);
+          console.log('[LibreOffice] Found PDF:', actualPdfPath);
+          return actualPdfPath;
+        }
+      }
+
+      throw new Error(`PDF not found after conversion. Expected one of: ${possibleNames.join(', ')}`);
+    }
   } catch (error) {
     console.error('LibreOffice conversion error:', error);
     throw new Error(`Failed to convert DOCX to PDF: ${error.message}`);
