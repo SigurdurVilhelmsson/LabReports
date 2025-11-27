@@ -84,7 +84,7 @@ pandoc --version
 
 4. **Restart your backend server**:
    ```bash
-   pm2 restart labreports-api
+   sudo systemctl restart kvenno-backend
    ```
 
 ### Other Linux Distributions
@@ -183,7 +183,7 @@ which libreoffice  # Should show: /usr/bin/libreoffice
 libreoffice --version
 
 # Restart backend
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 ```
 
 ### "Pandoc not found" Error
@@ -199,7 +199,7 @@ sudo apt install pandoc
 which pandoc  # Should show: /usr/bin/pandoc
 
 # Restart backend
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 ```
 
 **Note:** Pandoc is optional - if not available, the server will still convert DOCX → PDF, but won't extract LaTeX equations.
@@ -217,7 +217,7 @@ ps aux | grep node
 chmod 1777 /tmp
 
 # Restart backend
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 ```
 
 ### Conversion Timeout
@@ -233,7 +233,7 @@ const { stdout } = await execAsync(command, { timeout: 60000 }); // Increase to 
 
 Then restart:
 ```bash
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 ```
 
 ### Missing Dependencies
@@ -247,7 +247,7 @@ sudo apt install texlive-latex-base  # For LaTeX support
 sudo apt install librsvg2-bin         # For SVG support
 
 # Restart backend
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 ```
 
 ### Equation Extraction Issues
@@ -302,7 +302,7 @@ curl -X POST http://localhost:8000/api/process-document \
   -F "file=@/path/to/test.docx"
 
 # Check backend logs
-pm2 logs labreports-api
+sudo journalctl -u kvenno-backend -n 100
 ```
 
 ---
@@ -402,7 +402,7 @@ console.log('Conversion successful, length:', stdout.length);
 watch -n 1 'ps aux | grep pandoc'
 
 # Check conversion success rate
-pm2 logs labreports-api | grep "Pandoc processing"
+sudo journalctl -u kvenno-backend | grep "Pandoc processing"
 
 # Monitor temp directory
 watch -n 5 'ls -lh /tmp/docx-*'
@@ -438,7 +438,7 @@ pandoc --version
 ```bash
 sudo apt update
 sudo apt upgrade pandoc
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 ```
 
 ### Install Latest Version (if repo version is old)
@@ -453,7 +453,7 @@ sudo dpkg -i pandoc-3.1.11-1-amd64.deb
 pandoc --version
 
 # Restart backend
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 ```
 
 ---
@@ -471,7 +471,7 @@ pm2 restart labreports-api
 
 If you encounter issues:
 
-1. **Check logs**: `pm2 logs labreports-api`
+1. **Check logs**: `sudo journalctl -u kvenno-backend -n 100`
 2. **Test pandoc**: `pandoc --version`
 3. **Review backend code**: `server/index.js`
 4. **Create issue**: https://github.com/SigurdurVilhelmsson/LabReports/issues

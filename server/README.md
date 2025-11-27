@@ -35,7 +35,7 @@ Server runs on http://localhost:3001
 1. **Node.js 18+** installed
 2. **nginx** installed
 3. **pandoc** installed (`sudo apt install pandoc`)
-4. **PM2 or systemd** for process management
+4. **systemd** for process management (built into Ubuntu)
 
 ### Step-by-Step Setup
 
@@ -301,38 +301,69 @@ free -h
    - Environment configuration
    - Application code
 
-## Alternative: PM2 Instead of systemd
+## Process Management with systemd
 
-If you prefer PM2:
+The production backend uses systemd (NOT PM2). The service is managed as follows:
+
+**Service name:** `kvenno-backend`
+**Service file:** `/etc/systemd/system/kvenno-backend.service`
+**Backend location:** `/var/www/kvenno.app/backend/`
+
+### systemd Commands
 
 ```bash
-# Install PM2 globally
-sudo npm install -g pm2
+# Check status
+sudo systemctl status kvenno-backend
 
-# Start application
-cd /var/www/labreports/server
-sudo -u www-data pm2 start index.js --name labreports
+# Start the service
+sudo systemctl start kvenno-backend
 
-# Save PM2 configuration
-sudo -u www-data pm2 save
+# Stop the service
+sudo systemctl stop kvenno-backend
 
-# Setup startup script
-sudo pm2 startup systemd -u www-data --hp /var/www
+# Restart (use after code changes)
+sudo systemctl restart kvenno-backend
+
+# Enable auto-start on boot
+sudo systemctl enable kvenno-backend
+
+# View logs
+sudo journalctl -u kvenno-backend -n 100
+
+# Follow logs in real-time
+sudo journalctl -u kvenno-backend -f
 ```
 
-PM2 commands:
+### Service File Example
+
+Location: `/etc/systemd/system/kvenno-backend.service`
+
+```ini
+[Unit]
+Description=Kvenno.app Backend API
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/kvenno.app/backend
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /var/www/kvenno.app/backend/server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kvenno-backend
+
+[Install]
+WantedBy=multi-user.target
+```
+
+After creating or modifying the service file:
 ```bash
-# Status
-pm2 status
-
-# Logs
-pm2 logs labreports
-
-# Restart
-pm2 restart labreports
-
-# Stop
-pm2 stop labreports
+sudo systemctl daemon-reload
+sudo systemctl enable kvenno-backend
+sudo systemctl start kvenno-backend
 ```
 
 ## Performance Tips
