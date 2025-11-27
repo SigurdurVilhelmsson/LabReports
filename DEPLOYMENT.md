@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This application can be deployed to multiple platforms. Choose the one that best fits your needs.
+This application is deployed on **Linode** with Node.js backend and nginx.
 
 ## ⚠️ CRITICAL: Backend API Requirement
 
@@ -23,13 +23,11 @@ See **[KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--securit
 
 ## Important: Pandoc Requirement
 
-**This application requires pandoc to process .docx files.** See **[PANDOC_SETUP.md](PANDOC_SETUP.md)** for detailed setup instructions for each deployment platform.
+**This application requires pandoc to process .docx files.** See **[PANDOC_SETUP.md](PANDOC_SETUP.md)** for detailed setup instructions.
 
 Quick overview:
 - **Local Development**: Install pandoc via `brew install pandoc` (macOS) or `apt install pandoc` (Linux)
-- **Vercel Hobby**: Use `pandoc-lambda` package or bundle static binary
-- **Netlify**: Use build plugin or install during build
-- **Linode Production**: Install via `apt install pandoc` on Ubuntu 24.04
+- **Linode Production**: Install via `sudo apt install pandoc` on Ubuntu 24.04
 
 ## Prerequisites
 
@@ -38,363 +36,212 @@ Quick overview:
 - **Pandoc** installed (see [PANDOC_SETUP.md](PANDOC_SETUP.md) for details)
 - **Backend server** configured (see [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security))
 
-## Platform-Specific Deployment
+---
 
-### 1. Vercel (Recommended)
+## Local Development Setup
 
-Vercel offers excellent performance and simple deployment.
+### Installation
 
-#### Steps:
-
-1. **Install Vercel CLI** (optional, for local testing):
+1. **Clone the repository**:
    ```bash
-   npm install -g vercel
+   git clone https://github.com/SigurdurVilhelmsson/LabReports.git
+   cd LabReports
    ```
 
-2. **Connect your repository**:
-   - Go to [vercel.com](https://vercel.com)
-   - Click "New Project"
-   - Import your GitHub repository
+2. **Install pandoc**:
+   - **macOS**: `brew install pandoc`
+   - **Linux**: `sudo apt install pandoc`
+   - **Windows**: `choco install pandoc`
 
-3. **Configure environment variables**:
-   - In Vercel dashboard, go to: Settings → Environment Variables
-   - Add: `ANTHROPIC_API_KEY` with your API key value
-
-4. **Deploy**:
-   - Push to your main branch
-   - Vercel will automatically build and deploy
-
-#### Local testing with Vercel:
-```bash
-vercel dev
-```
-
----
-
-### 2. Netlify
-
-Netlify is another excellent option with generous free tier.
-
-#### Steps:
-
-1. **Connect your repository**:
-   - Go to [netlify.com](https://netlify.com)
-   - Click "Add new site" → "Import an existing project"
-   - Connect your GitHub repository
-
-2. **Build settings** (should be auto-detected):
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-
-3. **Configure environment variables**:
-   - In Netlify dashboard, go to: Site settings → Environment variables
-   - Add: `ANTHROPIC_API_KEY` with your API key value
-
-4. **Deploy**:
-   - Click "Deploy site"
-   - Future pushes to main branch will auto-deploy
-
-#### Local testing with Netlify:
-```bash
-npm install -g netlify-cli
-netlify dev
-```
-
----
-
-### 3. AWS Amplify
-
-For AWS users, Amplify provides seamless integration.
-
-#### Steps:
-
-1. **Connect your repository**:
-   - Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
-   - Click "New app" → "Host web app"
-   - Connect your GitHub repository
-
-2. **Build settings**:
-   ```yaml
-   version: 1
-   frontend:
-     phases:
-       preBuild:
-         commands:
-           - npm install
-       build:
-         commands:
-           - npm run build
-     artifacts:
-       baseDirectory: dist
-       files:
-         - '**/*'
-     cache:
-       paths:
-         - node_modules/**/*
+3. **Install dependencies**:
+   ```bash
+   npm install
    ```
 
-3. **Environment variables**:
-   - In Amplify Console: App settings → Environment variables
-   - Add: `ANTHROPIC_API_KEY`
+4. **Set up environment variables**:
+   ```bash
+   cp .env.example .env
+   ```
 
-4. **Deploy**:
-   - Amplify will automatically detect changes and deploy
+   For local development, you can use direct API mode (development only):
+   ```bash
+   # Development only - uncomment the line below (NOT for production!)
+   VITE_ANTHROPIC_API_KEY=your_development_key_here
+   VITE_APP_MODE=dual
+   ```
 
----
+5. **Start development server**:
+   ```bash
+   npm run dev
+   ```
 
-### 4. Cloudflare Pages
-
-Cloudflare Pages offers excellent global CDN and edge functions.
-
-#### Steps:
-
-1. **Connect your repository**:
-   - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Pages
-   - Click "Create a project"
-   - Connect your GitHub repository
-
-2. **Build configuration**:
-   - Framework preset: Vite
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-
-3. **Environment variables**:
-   - Add `ANTHROPIC_API_KEY` in Pages settings
-
-4. **Note about API functions**:
-   - Cloudflare Pages uses a different serverless function format
-   - You'll need to adapt the API endpoint to Cloudflare Workers format
-   - See [Cloudflare Pages Functions docs](https://developers.cloudflare.com/pages/functions/)
+6. **Open in browser**:
+   ```
+   http://localhost:5173
+   ```
 
 ---
 
-### 5. Linode / Traditional Linux Server (Production - kvenno.app)
+## Production Deployment (Linode)
 
 For traditional Linux servers (Ubuntu, Debian, etc.) with nginx. Provides full control and is ideal for production deployments.
 
-**This is the recommended deployment method for kvenno.app production.**
+**This is the deployment method for kvenno.app production.**
 
-#### Prerequisites:
+### Prerequisites:
 - Ubuntu 24.04 (or similar Linux distribution)
 - Node.js 18+ installed
 - nginx installed
 - pandoc installed (`sudo apt install pandoc`)
+- PM2 for process management (`npm install -g pm2`)
 - Root or sudo access
 
-#### Setup Instructions:
+### Setup Instructions:
 
 **For complete backend setup**, see **[KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security)** which includes:
 - Backend server implementation (Node.js Express on port 8000)
-- systemd service configuration
+- PM2 process management
 - nginx proxy configuration
 - SSL/HTTPS setup with Let's Encrypt
 - Security best practices
 
 **For LabReports-specific setup**, see **[server/README.md](server/README.md)** for details.
 
-**Summary:**
+### Summary:
 
 1. **Deploy application:**
    ```bash
-   sudo mkdir -p /var/www/labreports
-   sudo git clone <your-repo> /var/www/labreports
-   sudo chown -R www-data:www-data /var/www/labreports
+   sudo mkdir -p /var/www/kvenno.app/lab-reports
+   cd /var/www/kvenno.app/lab-reports
+   sudo git clone https://github.com/SigurdurVilhelmsson/LabReports.git .
    ```
 
 2. **Build frontend:**
    ```bash
-   cd /var/www/labreports
-   sudo -u www-data npm install
-   sudo -u www-data npm run build
+   npm install
+   npm run build
+   # Built files are in dist/
    ```
 
 3. **Setup backend server:**
    ```bash
-   cd /var/www/labreports/server
-   sudo -u www-data npm install
-   sudo -u www-data cp .env.example .env
-   sudo nano .env  # Add your ANTHROPIC_API_KEY
+   cd server
+   npm install
+   cp .env.example .env
+   nano .env  # Add your CLAUDE_API_KEY
    ```
 
-4. **Configure nginx:**
+   Backend `.env` file:
    ```bash
-   sudo cp nginx-site.conf /etc/nginx/sites-available/labreports
-   sudo ln -s /etc/nginx/sites-available/labreports /etc/nginx/sites-enabled/
+   CLAUDE_API_KEY=sk-ant-your-actual-key
+   PORT=8000
+   NODE_ENV=production
+   FRONTEND_URL=https://kvenno.app
+   ```
+
+4. **Start backend with PM2:**
+   ```bash
+   pm2 start server/index.js --name labreports-api
+   pm2 save
+   pm2 startup  # Follow instructions to enable PM2 on boot
+   ```
+
+5. **Configure nginx:**
+
+   Create `/etc/nginx/sites-available/kvenno.app` (or add to existing):
+   ```nginx
+   server {
+       listen 80;
+       server_name kvenno.app www.kvenno.app;
+
+       # Lab Reports app - 2nd year
+       location /2-ar/lab-reports/ {
+           alias /var/www/kvenno.app/lab-reports/dist/;
+           try_files $uri $uri/ /2-ar/lab-reports/index.html;
+       }
+
+       # Lab Reports app - 3rd year
+       location /3-ar/lab-reports/ {
+           alias /var/www/kvenno.app/lab-reports/dist/;
+           try_files $uri $uri/ /3-ar/lab-reports/index.html;
+       }
+
+       # Lab Reports API endpoints
+       location /api/ {
+           proxy_pass http://localhost:8000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+           proxy_read_timeout 90s;  # Claude API can be slow
+       }
+   }
+   ```
+
+   Enable site:
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/kvenno.app /etc/nginx/sites-enabled/
    sudo nginx -t
    sudo systemctl reload nginx
-   ```
-
-5. **Setup systemd service:**
-   ```bash
-   sudo cp labreports.service /etc/systemd/system/
-   sudo systemctl daemon-reload
-   sudo systemctl enable labreports
-   sudo systemctl start labreports
    ```
 
 6. **Setup SSL (recommended):**
    ```bash
    sudo apt install certbot python3-certbot-nginx
-   sudo certbot --nginx -d yourdomain.com
+   sudo certbot --nginx -d kvenno.app -d www.kvenno.app
    ```
 
-#### Architecture:
+### Architecture:
 
 ```
-Browser → nginx (80/443) → Express.js (3001) → Anthropic API
+Browser → nginx (80/443) → Express.js (8000) → Anthropic API
           ↓ Static files (dist/)
 ```
 
-#### Advantages:
+### Advantages:
 - Full control over server
 - No serverless function limits
 - Cost-effective for high traffic
 - Easy to debug and monitor
 
-#### Troubleshooting:
+### Troubleshooting:
 
 **405 Method Not Allowed error:**
-- This means the API endpoints aren't configured correctly
-- Check that the backend server is running: `sudo systemctl status labreports`
+- Check that the backend server is running: `pm2 status`
 - Check nginx is proxying: `sudo nginx -t`
-- Check logs: `sudo journalctl -u labreports -n 50`
+- Check logs: `pm2 logs labreports-api`
 
 **Pandoc not found:**
 ```bash
 sudo apt update
 sudo apt install pandoc
-sudo systemctl restart labreports
+pm2 restart labreports-api
+```
+
+**Backend won't start:**
+```bash
+# Check logs
+pm2 logs labreports-api
+
+# Check environment variables
+cd /var/www/kvenno.app/lab-reports/server
+cat .env  # Verify CLAUDE_API_KEY is set
+
+# Restart
+pm2 restart labreports-api
 ```
 
 See **[server/README.md](server/README.md)** for complete troubleshooting guide.
 
 ---
 
-### 6. Multi-Repository Deployment (kvenno.app Production)
-
-This project is part of a **multi-repository architecture** where each chemistry tool is a separate repository but deployed to a unified directory structure.
-
-#### Architecture Overview
-
-**Repository Structure:**
-```
-/home/user/
-├── ChemistryTools-Landing/   # Main landing page
-├── LabReports/                # This repository
-└── AI-Tutor/                  # Future tool
-```
-
-**Deployment Structure:**
-```
-/var/www/kvenno.app/
-├── landing/                   # kvenno.app/ (root)
-├── lab-reports/               # kvenno.app/lab-reports/
-└── ai-tutor/                  # kvenno.app/ai-tutor/ (future)
-```
-
-**URL Structure:**
-- `kvenno.app/` → Landing page with links to tools
-- `kvenno.app/lab-reports/` → LabReports app
-- `kvenno.app/ai-tutor/` → AI Tutor (future)
-
-#### Initial Server Setup
-
-**1. Create directory structure:**
-```bash
-sudo mkdir -p /var/www/kvenno.app/landing
-sudo mkdir -p /var/www/kvenno.app/lab-reports
-```
-
-**2. Clone repositories to user directory:**
-```bash
-cd /home/user
-git clone https://github.com/SigurdurVilhelmsson/ChemistryTools-Landing.git
-git clone https://github.com/SigurdurVilhelmsson/LabReports.git
-```
-
-**3. Build and deploy LabReports:**
-```bash
-cd /home/user/LabReports
-npm install
-npm run build
-sudo cp -r dist/* /var/www/kvenno.app/lab-reports/
-sudo chown -R www-data:www-data /var/www/kvenno.app/lab-reports/
-```
-
-**4. Setup backend server:**
-```bash
-cd /home/user/LabReports/server
-npm install
-cp .env.example .env
-nano .env  # Add ANTHROPIC_API_KEY
-```
-
-**5. Configure systemd service:**
-```bash
-sudo cp labreports.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable labreports
-sudo systemctl start labreports
-```
-
-**6. Configure nginx:**
-
-Create `/etc/nginx/sites-available/kvenno.app`:
-```nginx
-server {
-    listen 80;
-    server_name kvenno.app www.kvenno.app;
-
-    # Root serves landing page
-    location / {
-        root /var/www/kvenno.app/landing;
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Lab Reports app
-    location /lab-reports/ {
-        alias /var/www/kvenno.app/lab-reports/;
-        try_files $uri $uri/ /lab-reports/index.html;
-    }
-
-    # Lab Reports API endpoints
-    location /api/ {
-        proxy_pass http://localhost:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Future: AI Tutor app
-    # location /ai-tutor/ {
-    #     alias /var/www/kvenno.app/ai-tutor/;
-    #     try_files $uri $uri/ /ai-tutor/index.html;
-    # }
-}
-```
-
-Enable site:
-```bash
-sudo ln -s /etc/nginx/sites-available/kvenno.app /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-**7. Setup SSL:**
-```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d kvenno.app -d www.kvenno.app
-```
-
-#### Git Deployment Workflow
+## Git Deployment Workflow
 
 **On your local machine:**
 
 1. **Make changes and commit:**
    ```bash
-   cd /home/user/LabReports
    # Make your changes
    git add .
    git commit -m "feat: your feature description"
@@ -405,7 +252,7 @@ sudo certbot --nginx -d kvenno.app -d www.kvenno.app
 
 2. **Pull latest changes:**
    ```bash
-   cd /home/user/LabReports
+   cd /var/www/kvenno.app/lab-reports
    git pull origin main
    ```
 
@@ -415,29 +262,26 @@ sudo certbot --nginx -d kvenno.app -d www.kvenno.app
    npm run build
    ```
 
-4. **Deploy to production directory:**
-   ```bash
-   sudo cp -r dist/* /var/www/kvenno.app/lab-reports/
-   sudo chown -R www-data:www-data /var/www/kvenno.app/lab-reports/
-   ```
-
-5. **Restart backend if needed** (only if server code changed):
+4. **Restart backend if needed** (only if server code changed):
    ```bash
    cd server
    npm install  # Only if package.json changed
-   sudo systemctl restart labreports
+   pm2 restart labreports-api
    ```
 
-6. **Verify deployment:**
+5. **Verify deployment:**
    ```bash
    # Check backend is running
-   sudo systemctl status labreports
+   pm2 status
+
+   # Test API endpoint
+   curl https://kvenno.app/api/health
 
    # Test in browser
-   curl https://kvenno.app/lab-reports/
+   curl https://kvenno.app/2-ar/lab-reports/
    ```
 
-#### Automated Deployment Script
+### Automated Deployment Script
 
 Create `/home/user/deploy-lab-reports.sh`:
 
@@ -448,7 +292,7 @@ set -e
 echo "🚀 Deploying LabReports..."
 
 # Navigate to repo
-cd /home/user/LabReports
+cd /var/www/kvenno.app/lab-reports
 
 # Pull latest changes
 echo "📥 Pulling latest changes..."
@@ -462,26 +306,21 @@ npm install
 echo "🔨 Building frontend..."
 npm run build
 
-# Deploy to production
-echo "📂 Deploying to /var/www/kvenno.app/lab-reports/..."
-sudo cp -r dist/* /var/www/kvenno.app/lab-reports/
-sudo chown -R www-data:www-data /var/www/kvenno.app/lab-reports/
-
 # Check if server files changed
 if git diff HEAD@{1} HEAD --name-only | grep -q "^server/"; then
     echo "🔄 Server files changed, restarting backend..."
     cd server
     npm install
-    sudo systemctl restart labreports
+    pm2 restart labreports-api
 else
     echo "✅ No server changes detected, skipping restart"
 fi
 
 echo "✅ Deployment complete!"
-echo "🌐 Visit: https://kvenno.app/lab-reports/"
+echo "🌐 Visit: https://kvenno.app/2-ar/lab-reports/"
 
 # Show backend status
-sudo systemctl status labreports --no-pager -l
+pm2 status
 ```
 
 Make it executable:
@@ -494,12 +333,12 @@ chmod +x /home/user/deploy-lab-reports.sh
 /home/user/deploy-lab-reports.sh
 ```
 
-#### Rollback Procedure
+### Rollback Procedure
 
 If something goes wrong:
 
 ```bash
-cd /home/user/LabReports
+cd /var/www/kvenno.app/lab-reports
 
 # Find the last working commit
 git log --oneline -10
@@ -507,83 +346,38 @@ git log --oneline -10
 # Rollback to specific commit
 git checkout <commit-hash>
 
-# Rebuild and redeploy
+# Rebuild and restart
 npm run build
-sudo cp -r dist/* /var/www/kvenno.app/lab-reports/
-sudo chown -R www-data:www-data /var/www/kvenno.app/lab-reports/
-
-# Restart backend if needed
-sudo systemctl restart labreports
+pm2 restart labreports-api
 
 # To go back to latest
 git checkout main
 ```
 
-#### Monitoring Deployment
+### Monitoring Deployment
 
 **Check logs:**
 ```bash
 # Backend logs
-sudo journalctl -u labreports -n 50 -f
+pm2 logs labreports-api
 
 # Nginx logs
 sudo tail -f /var/log/nginx/access.log
 sudo tail -f /var/log/nginx/error.log
-
-# Build logs (during deployment)
-npm run build 2>&1 | tee build.log
 ```
 
 **Health checks:**
 ```bash
 # Backend health
-curl http://localhost:3001/api/health
+curl http://localhost:8000/health
 
 # Frontend
-curl https://kvenno.app/lab-reports/
+curl https://kvenno.app/2-ar/lab-reports/
 
 # Full system status
-systemctl status nginx labreports
+pm2 status
+systemctl status nginx
 ```
-
-#### Multi-Tool Deployment Notes
-
-When deploying multiple tools:
-
-1. **Each tool has its own:**
-   - Repository in `/home/user/`
-   - Build directory in `/var/www/kvenno.app/[tool-name]/`
-   - Deployment script
-   - Base path configuration in `vite.config.ts`
-
-2. **Shared resources:**
-   - Nginx configuration (single file handles all tools)
-   - SSL certificate (covers entire domain)
-   - Backend server (can be shared or separate per tool)
-
-3. **Landing page updates:**
-   - Deploy landing page separately
-   - Update links when new tools are added
-   - Keep as simple static HTML/CSS
-
-#### Troubleshooting Multi-Repo Deployment
-
-**404 errors on sub-paths:**
-- Check `base: '/lab-reports/'` in `vite.config.ts`
-- Check `basename="/lab-reports"` in `src/main.tsx`
-- Verify nginx `alias` directive is correct
-- Check file permissions: `sudo chown -R www-data:www-data /var/www/kvenno.app/`
-
-**Assets not loading:**
-- Verify build output has correct paths: check `dist/index.html`
-- Asset URLs should be `/lab-reports/assets/...`
-- Clear browser cache: `Ctrl+Shift+R`
-
-**API calls failing:**
-- Check backend is running: `sudo systemctl status labreports`
-- Verify proxy_pass in nginx config
-- Check CORS settings if using separate API domain
-- Review logs: `sudo journalctl -u labreports -n 50`
 
 ---
 
@@ -598,8 +392,6 @@ When deploying multiple tools:
 | `VITE_API_ENDPOINT` | Backend API endpoint URL | **Yes (Production)** | `https://kvenno.app/api` |
 | `VITE_APP_MODE` | App mode: "dual", "teacher", or "student" | No | `dual` (default) |
 | `VITE_BASE_PATH` | Deployment path for multi-year setup | **Yes** | `/2-ar/lab-reports/` |
-| `VITE_AZURE_CLIENT_ID` | Azure AD client ID (public value) | No | See KVENNO-STRUCTURE.md |
-| `VITE_AZURE_TENANT_ID` | Azure AD tenant ID (public value) | No | See KVENNO-STRUCTURE.md |
 
 ⚠️ **NEVER set `VITE_ANTHROPIC_API_KEY` in production!** Use backend server instead.
 
@@ -635,79 +427,56 @@ See **[KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--securit
 
 ---
 
-## Custom Domain
-
-### Vercel:
-1. Go to Project Settings → Domains
-2. Add your custom domain
-3. Follow DNS configuration instructions
-
-### Netlify:
-1. Go to Site settings → Domain management
-2. Add custom domain
-3. Configure DNS
-
-### AWS Amplify:
-1. Go to App settings → Domain management
-2. Add custom domain
-3. Amplify will handle SSL certificates automatically
-
----
-
 ## Security Notes
 
 1. **Never commit `.env` files** - They're already in `.gitignore`
-2. **Use serverless functions** for production to keep API keys secure
-3. **Set up CORS properly** if using custom API endpoints
-4. **Enable HTTPS** (all platforms provide this by default)
-
----
-
-## Monitoring and Logs
-
-### Vercel:
-- View logs: Project → Deployments → [Select deployment] → Function Logs
-
-### Netlify:
-- View logs: Site → Functions → [Select function] → Logs
-
-### AWS Amplify:
-- View logs: App → Hosting → Build history → View logs
+2. **Use backend server** for production to keep API keys secure
+3. **Set up CORS properly** in backend server (`server/index.js`)
+4. **Enable HTTPS** with Let's Encrypt
+5. **Keep Node.js and dependencies updated** for security patches
 
 ---
 
 ## Troubleshooting
 
 ### Build fails:
-- Check Node.js version (must be 18+)
-- Verify all dependencies are in `package.json`
-- Check build logs for specific errors
+- Check Node.js version (must be 18+): `node --version`
+- Verify all dependencies are installed: `npm install`
+- Check build logs for specific errors: `npm run build`
 
 ### API calls fail:
-- Verify `ANTHROPIC_API_KEY` is set correctly
-- Check serverless function logs
-- Ensure API endpoint URL is correct
+- Verify `CLAUDE_API_KEY` is set in `server/.env`
+- Check backend is running: `pm2 status`
+- Check backend logs: `pm2 logs labreports-api`
+- Verify nginx proxy configuration: `sudo nginx -t`
 
 ### Storage not working:
-- The app uses browser storage - ensure it's not blocked
+- The app uses browser `localStorage` - ensure it's not blocked
 - Try a different browser
-- Check browser console for errors
+- Check browser console for errors (F12 → Console)
+
+### 404 errors on sub-paths:
+- Check `base: '/2-ar/lab-reports/'` in `vite.config.ts`
+- Check `basename="/2-ar/lab-reports"` in React Router setup
+- Verify nginx `location` and `alias` directives are correct
+
+### Assets not loading:
+- Verify build output has correct paths: check `dist/index.html`
+- Asset URLs should be `/2-ar/lab-reports/assets/...`
+- Clear browser cache: `Ctrl+Shift+R`
 
 ---
 
 ## Cost Considerations
 
-- **Vercel**: Free tier includes 100GB bandwidth, serverless functions
-- **Netlify**: Free tier includes 100GB bandwidth, 125k function requests
-- **AWS Amplify**: Pay-as-you-go pricing
+- **Linode VPS**: Fixed monthly cost based on server plan
 - **Anthropic API**: Usage-based pricing (check [Anthropic pricing](https://www.anthropic.com/pricing))
+- **Let's Encrypt SSL**: Free
 
 ---
 
 ## Support
 
-For platform-specific issues:
-- Vercel: https://vercel.com/support
-- Netlify: https://www.netlify.com/support/
-- AWS: https://aws.amazon.com/support/
-- Anthropic: https://support.anthropic.com/
+For issues:
+- Repository: https://github.com/SigurdurVilhelmsson/LabReports/issues
+- Anthropic API: https://support.anthropic.com/

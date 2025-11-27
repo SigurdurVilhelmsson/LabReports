@@ -1,9 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": "vite",
+  "$$comment": "DEPRECATED - This file is no longer used. Application is deployed on Linode with Node.js backend.",
+  "$$see": "See DEPLOYMENT.md for current deployment instructions",
   "functions": {
     "api/analyze.ts": {
       "maxDuration": 60
@@ -11,11 +8,5 @@
     "api/process-document.ts": {
       "maxDuration": 30
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    }
-  ]
+  }
 }

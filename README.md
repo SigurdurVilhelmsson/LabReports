@@ -32,7 +32,7 @@ This project has recently received significant enhancements:
 - **PDF Support for Students** - Students can now upload PDF files (previously teacher-only)
 - **Points-Based Grading** - Teacher mode shows detailed point breakdown and reasoning
 - **Improved Storage** - Robust error handling for browser storage edge cases
-- **Production Ready** - Full deployment support for Vercel, Netlify, and Linode
+- **Production Ready** - Full deployment on Linode with Node.js backend and nginx
 - **Comprehensive Documentation** - Detailed guides for developers and AI assistants
 
 ## Features
@@ -63,7 +63,7 @@ This project has recently received significant enhancements:
 - **Responsive Design**: Works on desktop and mobile
 - **Session Persistence**: Robust browser storage with graceful error handling
 - **Modular Architecture**: Clean, maintainable codebase with TypeScript
-- **Production Ready**: Deployed on Vercel/Netlify with serverless functions
+- **Production Ready**: Deployed on Linode with Node.js backend server and nginx
 
 ## Quick Start
 
@@ -166,10 +166,9 @@ This project has recently received significant enhancements:
 
 ```
 LabReports/
-├── api/                              # Serverless API functions
-│   └── analyze.ts                   # Vercel serverless function
-├── netlify/functions/               # Netlify serverless functions
-│   └── analyze.ts                  # Netlify function
+├── server/                          # Backend Node.js server
+│   ├── index.js                     # Express server with API endpoints
+│   └── README.md                    # Server documentation
 ├── src/
 │   ├── components/                  # React components
 │   │   ├── FileUpload.tsx          # File upload with drag-and-drop
@@ -213,14 +212,12 @@ LabReports/
 ├── MIGRATION.md                    # v2 to v3 migration guide
 ├── README.md                       # User-facing documentation (this file)
 ├── index.html                      # HTML entry point
-├── netlify.toml                    # Netlify deployment config
 ├── package.json                    # Dependencies and scripts
 ├── postcss.config.js               # PostCSS configuration
 ├── tailwind.config.js              # Tailwind configuration
 ├── tsconfig.json                   # TypeScript configuration
 ├── tsconfig.node.json              # TypeScript Node configuration
-├── vite.config.ts                  # Vite build configuration
-└── vercel.json                     # Vercel deployment config
+└── vite.config.ts                  # Vite build configuration
 ```
 
 ## Configuration
@@ -315,7 +312,7 @@ npm run type-check   # Check TypeScript types
   - Pandoc (Word documents - server-side)
   - PDF.js (PDF files - client-side)
   - Browser FileReader API (images - client-side)
-- **Server**: Vercel/Netlify serverless functions, Linode with nginx (production)
+- **Server**: Node.js/Express backend, Linode with nginx (production)
 
 ## Deployment
 
@@ -332,11 +329,7 @@ Each deployment requires separate builds with different `basename` configuration
 ### Platform Support
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for:
-- Vercel (Recommended) - Requires pandoc setup
-- Netlify - Requires pandoc setup
-- Linode/Ubuntu (Production) - Install via `apt install pandoc`
-- AWS Amplify
-- Cloudflare Pages
+- **Linode/Ubuntu (Production)** - Install pandoc via `apt install pandoc`, run Express backend on port 8000
 
 **Note**: For production deployment at kvenno.app, follow the unified deployment process outlined in [KVENNO-STRUCTURE.md](./KVENNO-STRUCTURE.md), especially:
 - **Section 1**: Multi-path deployment structure
