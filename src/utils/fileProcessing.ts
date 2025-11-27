@@ -183,7 +183,8 @@ const extractFromDocx = async (file: File): Promise<FileContent> => {
       });
 
       // Process using existing PDF pipeline - ensures consistent results
-      const pdfContent = await extractFromPdf(pdfFile);
+      // Mark as docx-converted-pdf for debugging
+      const pdfContent = await extractFromPdf(pdfFile, 'docx-converted-pdf');
 
       // Add equation metadata from server (best accuracy from original DOCX)
       return {
@@ -213,14 +214,34 @@ const extractFromDocx = async (file: File): Promise<FileContent> => {
 };
 
 /**
+ * Analyze text structure for debugging
+ */
+const analyzeTextStructure = (text: string) => {
+  const lines = text.split('\n');
+  const nonEmptyLines = lines.filter(line => line.trim().length > 0);
+  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+  const totalChars = text.length;
+  const whitespaceChars = (text.match(/\s/g) || []).length;
+
+  return {
+    paragraphCount: paragraphs.length,
+    averageLineLength: nonEmptyLines.length > 0
+      ? Math.round(nonEmptyLines.reduce((sum, line) => sum + line.length, 0) / nonEmptyLines.length)
+      : 0,
+    whitespaceDensity: totalChars > 0 ? Math.round((whitespaceChars / totalChars) * 100) / 100 : 0,
+  };
+};
+
+/**
  * Extract text and images from a PDF file
  * This function extracts both text content and images (including equations rendered as images)
  */
-const extractFromPdf = async (file: File): Promise<FileContent> => {
+const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx-converted-pdf' = 'direct-pdf'): Promise<FileContent> => {
   console.log('[PDF Processing] Starting PDF extraction:', {
     fileName: file.name,
     fileSize: `${(file.size / 1024).toFixed(2)} KB`,
     mimeType: file.type,
+    extractionMethod,
   });
 
   try {
@@ -365,11 +386,20 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
     }
 
     const totalImageSize = images.reduce((sum, img) => sum + img.data.length, 0);
+    const trimmedText = fullText.trim();
+    const textLines = trimmedText.split('\n').length;
+
+    // Analyze text structure for debugging
+    const textStructure = analyzeTextStructure(trimmedText);
+
     console.log('[PDF Processing] Extraction complete:', {
       totalTextLength,
+      textLines,
       numImages: images.length,
       totalImageSize: `${(totalImageSize / 1024).toFixed(2)} KB`,
       averageImageSize: images.length > 0 ? `${(totalImageSize / images.length / 1024).toFixed(2)} KB` : '0 KB',
+      extractionMethod,
+      textStructure,
     });
 
     // Validate extraction results
@@ -382,11 +412,33 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
       console.warn('[PDF Processing] No text extracted - PDF may be scanned/image-based');
     }
 
-    return {
+    // Build result with debug information
+    const result: FileContent = {
       type: 'pdf',
-      data: fullText.trim(),
+      data: trimmedText,
       images: images,
+      debug: {
+        textLength: totalTextLength,
+        textLines,
+        imageCount: images.length,
+        totalImageSize,
+        averageImageSize: images.length > 0 ? Math.round(totalImageSize / images.length) : 0,
+        extractionMethod,
+        textSample: trimmedText.substring(0, 500),
+        textStructure,
+      },
     };
+
+    // Log debug summary for easy comparison
+    console.log('[PDF Processing] Debug Summary:', {
+      method: result.debug?.extractionMethod,
+      text: `${result.debug?.textLength} chars, ${result.debug?.textLines} lines`,
+      images: `${result.debug?.imageCount} images, avg ${((result.debug?.averageImageSize ?? 0) / 1024).toFixed(0)} KB`,
+      structure: `${result.debug?.textStructure?.paragraphCount} paragraphs, avg ${result.debug?.textStructure?.averageLineLength} chars/line`,
+      sample: result.debug?.textSample?.substring(0, 100) + '...',
+    });
+
+    return result;
   } catch (error) {
     console.error('[PDF Processing] Error during PDF extraction:', {
       fileName: file.name,

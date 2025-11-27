@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle, XCircle, Lightbulb, TrendingUp, Target, AlertCircle } from 'lucide-react';
 import { StudentFeedback as StudentFeedbackType, ExperimentSection } from '@/types';
+import { ExtractionDebug, isExtractionDebugEnabled } from './ExtractionDebug';
 
 interface StudentFeedbackProps {
   feedback: StudentFeedbackType[];
@@ -237,6 +238,18 @@ export const StudentFeedback: React.FC<StudentFeedbackProps> = ({
                   ))}
                 </ul>
               </div>
+            )}
+
+            {/* Debug information (only shown when localStorage.debug-extraction = 'true') */}
+            {isExtractionDebugEnabled() && item.extractionDebug && (
+              <ExtractionDebug
+                fileContent={{
+                  type: 'pdf',
+                  data: '',
+                  debug: item.extractionDebug
+                }}
+                fileName={item.filename}
+              />
             )}
 
             {/* Action buttons */}

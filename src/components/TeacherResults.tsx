@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Download, Save } from 'lucide-react';
 import { AnalysisResult, ExperimentSection } from '@/types';
+import { ExtractionDebug, isExtractionDebugEnabled } from './ExtractionDebug';
 
 interface TeacherResultsProps {
   results: AnalysisResult[];
@@ -137,6 +138,18 @@ export const TeacherResults: React.FC<TeacherResultsProps> = ({
                   );
                 })}
               </div>
+            )}
+
+            {/* Debug information (only shown when localStorage.debug-extraction = 'true') */}
+            {isExtractionDebugEnabled() && result.extractionDebug && (
+              <ExtractionDebug
+                fileContent={{
+                  type: 'pdf',
+                  data: '',
+                  debug: result.extractionDebug
+                }}
+                fileName={result.filename}
+              />
             )}
           </div>
         ))}

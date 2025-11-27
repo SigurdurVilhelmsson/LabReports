@@ -207,11 +207,13 @@ export const processFile = async (
       return {
         filename: file.name,
         ...parsed,
+        extractionDebug: content.debug, // Include debug info for troubleshooting
       } as AnalysisResult;
     } else {
       return {
         filename: file.name,
         ...parsed,
+        extractionDebug: content.debug, // Include debug info for troubleshooting
       } as StudentFeedback;
     }
   };

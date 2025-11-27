@@ -58,6 +58,7 @@ export interface AnalysisResult {
   maxTotalPoints?: number; // Maximum possible points (e.g., 30)
   quickSummary?: string; // Brief summary for teachers
   error?: string;
+  extractionDebug?: FileContent['debug']; // Debug info for troubleshooting DOCX/PDF differences
 }
 
 // Student assistance types
@@ -82,6 +83,7 @@ export interface StudentFeedback {
   };
   nextSteps?: string[];
   næstuSkref?: string[]; // Next steps in Icelandic
+  extractionDebug?: FileContent['debug']; // Debug info for troubleshooting DOCX/PDF differences
 }
 
 // Session management
@@ -105,6 +107,22 @@ export interface FileContent {
     mediaType: string;
   }>;
   equations?: string[]; // LaTeX equations extracted from document
+  debug?: {
+    // Debug information for troubleshooting extraction differences
+    textLength: number;
+    textLines: number;
+    imageCount: number;
+    totalImageSize: number;
+    averageImageSize: number;
+    extractionMethod: string; // 'direct-pdf' | 'docx-converted-pdf'
+    textSample?: string; // First 500 chars of extracted text
+    textStructure?: {
+      // Text structure analysis
+      paragraphCount: number;
+      averageLineLength: number;
+      whitespaceDensity: number;
+    };
+  };
 }
 
 // Toast notification
