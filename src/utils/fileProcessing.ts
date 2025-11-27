@@ -338,15 +338,16 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
           else if (xDiff > 0) {  // Only consider positive gaps
             xGaps.push(xDiff);
 
-            // More conservative threshold: 40 instead of 20
-            // Also require gap to be significantly larger than typical spacing
-            if (xDiff > 40) {
-              // Add multiple spaces or tab to preserve table structure
-              pageText += '  |  ';  // Visual separator for table columns
-              largeGapsDetected++;
-            }
-            // Normal spacing between words
-            else if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
+            // Table detection disabled for PDFs with character-level encoding
+            // These PDFs have maxGap < 1 unit, making X-coordinate detection unreliable
+            // Claude can see tables in the page images instead
+            //
+            // Original threshold approach (not effective for character-level PDFs):
+            // const threshold = extractionMethod === 'docx-converted-pdf' ? 25 : 40;
+            // if (xDiff > threshold) { pageText += '  |  '; }
+
+            // Just add normal spacing
+            if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
               pageText += ' ';
             }
           }
@@ -380,9 +381,14 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
       const adaptiveThreshold = Math.max(40, medianXGap * 3);
       const gapsOverAdaptive = xGaps.filter(g => g > adaptiveThreshold).length;
 
+      // Current threshold used for this extraction method
+      const currentThreshold = extractionMethod === 'docx-converted-pdf' ? 25 : 40;
+
       console.log(`[PDF Processing] Page ${pageNum}/${pdf.numPages}:`, {
         textLength: pageText.length,
         itemCount: textContent.items.length,
+        extractionMethod,
+        thresholdUsed: currentThreshold,
         tableColumnsDetected: largeGapsDetected,
         hasTableStructure: largeGapsDetected > 0,
         xGapStats: {
