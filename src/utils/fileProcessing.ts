@@ -325,8 +325,9 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
       });
 
       // Render page to canvas to capture images and equations
-      // Reduced scale from 2.0 to 1.5 to prevent 413 errors on multi-page documents
-      const viewport = page.getViewport({ scale: 1.5 });
+      // Reduced scale from 2.0 to 1.2 to prevent 413 errors on multi-page documents
+      // Lower scale still preserves equations and diagrams while significantly reducing payload
+      const viewport = page.getViewport({ scale: 1.2 });
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
 
@@ -343,8 +344,9 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
         viewport: viewport,
       }).promise;
 
-      // Convert canvas to JPEG (smaller file size than PNG, quality 0.85)
-      const imageData = canvas.toDataURL('image/jpeg', 0.85);
+      // Convert canvas to JPEG (smaller file size than PNG, quality 0.7)
+      // Quality 0.7 is sufficient for chemistry diagrams and equations while minimizing payload
+      const imageData = canvas.toDataURL('image/jpeg', 0.7);
       const base64Data = imageData.split(',')[1];
 
       images.push({
