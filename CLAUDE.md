@@ -529,7 +529,7 @@ FRONTEND_URL=https://kvenno.app
 - Express.js server with CORS support
 - 85-second timeout for API analysis (90s limit with 5s buffer)
 - Pandoc installed for document processing
-- PM2 for process management
+- systemd for process management
 
 ### Build Process
 

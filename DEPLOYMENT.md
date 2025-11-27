@@ -93,14 +93,14 @@ For traditional Linux servers (Ubuntu, Debian, etc.) with nginx. Provides full c
 - Node.js 18+ installed
 - nginx installed
 - pandoc installed (`sudo apt install pandoc`)
-- PM2 for process management (`npm install -g pm2`)
+- systemd for process management (built into Ubuntu)
 - Root or sudo access
 
 ### Setup Instructions:
 
 **For complete backend setup**, see **[KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security)** which includes:
 - Backend server implementation (Node.js Express on port 8000)
-- PM2 process management
+- systemd process management
 - nginx proxy configuration
 - SSL/HTTPS setup with Let's Encrypt
 - Security best practices
@@ -139,11 +139,15 @@ For traditional Linux servers (Ubuntu, Debian, etc.) with nginx. Provides full c
    FRONTEND_URL=https://kvenno.app
    ```
 
-4. **Start backend with PM2:**
+4. **Start backend with systemd:**
    ```bash
-   pm2 start server/index.js --name labreports-api
-   pm2 save
-   pm2 startup  # Follow instructions to enable PM2 on boot
+   # Backend service is managed by systemd
+   # Service name: kvenno-backend
+   # See server/README.md for systemd setup
+
+   sudo systemctl start kvenno-backend
+   sudo systemctl enable kvenno-backend  # Enable auto-start on boot
+   sudo systemctl status kvenno-backend  # Check status
    ```
 
 5. **Configure nginx:**
@@ -208,28 +212,28 @@ Browser → nginx (80/443) → Express.js (8000) → Anthropic API
 ### Troubleshooting:
 
 **405 Method Not Allowed error:**
-- Check that the backend server is running: `pm2 status`
+- Check that the backend server is running: `sudo systemctl status kvenno-backend`
 - Check nginx is proxying: `sudo nginx -t`
-- Check logs: `pm2 logs labreports-api`
+- Check logs: `sudo journalctl -u kvenno-backend -n 100`
 
 **Pandoc not found:**
 ```bash
 sudo apt update
 sudo apt install pandoc
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 ```
 
 **Backend won't start:**
 ```bash
 # Check logs
-pm2 logs labreports-api
+sudo journalctl -u kvenno-backend -n 100
 
 # Check environment variables
-cd /var/www/kvenno.app/lab-reports/server
+cd /var/www/kvenno.app/backend
 cat .env  # Verify CLAUDE_API_KEY is set
 
 # Restart
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 ```
 
 See **[server/README.md](server/README.md)** for complete troubleshooting guide.
@@ -266,13 +270,13 @@ See **[server/README.md](server/README.md)** for complete troubleshooting guide.
    ```bash
    cd server
    npm install  # Only if package.json changed
-   pm2 restart labreports-api
+   sudo systemctl restart kvenno-backend
    ```
 
 5. **Verify deployment:**
    ```bash
    # Check backend is running
-   pm2 status
+   sudo systemctl status kvenno-backend
 
    # Test API endpoint
    curl https://kvenno.app/api/health
@@ -311,7 +315,7 @@ if git diff HEAD@{1} HEAD --name-only | grep -q "^server/"; then
     echo "🔄 Server files changed, restarting backend..."
     cd server
     npm install
-    pm2 restart labreports-api
+    sudo systemctl restart kvenno-backend
 else
     echo "✅ No server changes detected, skipping restart"
 fi
@@ -320,7 +324,7 @@ echo "✅ Deployment complete!"
 echo "🌐 Visit: https://kvenno.app/2-ar/lab-reports/"
 
 # Show backend status
-pm2 status
+sudo systemctl status kvenno-backend --no-pager
 ```
 
 Make it executable:
@@ -348,7 +352,7 @@ git checkout <commit-hash>
 
 # Rebuild and restart
 npm run build
-pm2 restart labreports-api
+sudo systemctl restart kvenno-backend
 
 # To go back to latest
 git checkout main
@@ -359,7 +363,7 @@ git checkout main
 **Check logs:**
 ```bash
 # Backend logs
-pm2 logs labreports-api
+sudo journalctl -u kvenno-backend -f
 
 # Nginx logs
 sudo tail -f /var/log/nginx/access.log
@@ -375,8 +379,8 @@ curl http://localhost:8000/health
 curl https://kvenno.app/2-ar/lab-reports/
 
 # Full system status
-pm2 status
-systemctl status nginx
+sudo systemctl status kvenno-backend
+sudo systemctl status nginx
 ```
 
 ---
@@ -446,8 +450,8 @@ See **[KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--securit
 
 ### API calls fail:
 - Verify `CLAUDE_API_KEY` is set in `server/.env`
-- Check backend is running: `pm2 status`
-- Check backend logs: `pm2 logs labreports-api`
+- Check backend is running: `sudo systemctl status kvenno-backend`
+- Check backend logs: `sudo journalctl -u kvenno-backend -n 100`
 - Verify nginx proxy configuration: `sudo nginx -t`
 
 ### Storage not working:
