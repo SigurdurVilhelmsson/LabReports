@@ -330,31 +330,27 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
           if (yDiff > lastHeight * 1.5) {
             pageText += '\n\n';
           }
-          // Moderate y-difference indicates line break
-          // Use more sensitive threshold for direct PDFs (0.2 vs 0.3) to catch tight table rows
-          else if (yDiff > lastHeight * (extractionMethod === 'direct-pdf' ? 0.2 : 0.3)) {
-            pageText += '\n';
-          }
-          // Same line - check horizontal spacing
-          else if (xDiff > 0) {  // Only consider positive gaps
-            xGaps.push(xDiff);
-
-            // Table detection disabled for PDFs with character-level encoding
-            // These PDFs have maxGap < 1 unit, making X-coordinate detection unreliable
-            // Claude can see tables in the page images instead
-            //
-            // Original threshold approach (not effective for character-level PDFs):
-            // const threshold = extractionMethod === 'docx-converted-pdf' ? 25 : 40;
-            // if (xDiff > threshold) { pageText += '  |  '; }
-
-            // Just add normal spacing
-            if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
-              pageText += ' ';
+          // Line break detection - different strategies per extraction method
+          else if (extractionMethod === 'direct-pdf') {
+            // For direct PDFs with character-level encoding: ANY Y-change = new line
+            // This catches even tightly-spaced table rows (< 1 unit apart)
+            if (yDiff > 0) {
+              pageText += '\n';
             }
           }
-          // Negative or zero gap - items might overlap or be out of order
-          else if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
-            pageText += ' ';
+          // DOCX-converted PDFs use standard threshold
+          else if (yDiff > lastHeight * 0.3) {
+            pageText += '\n';
+          }
+          // Same line - character-level PDFs encode each character separately
+          // Don't add spaces based on X-coordinates - let PDF.js handle it
+          else {
+            // For character-level PDFs, text items often include spaces naturally
+            // Only add space if the current item starts with space OR there's a large gap
+            // This prevents "L e  C h a t e l i e r" while preserving word spacing
+            if (xDiff > 0) {
+              xGaps.push(xDiff);
+            }
           }
         }
 
