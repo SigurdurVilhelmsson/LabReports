@@ -1,666 +1,419 @@
-# Pandoc Setup and Deployment Guide
+# Pandoc Setup Guide
 
-This document provides detailed instructions for setting up pandoc for document processing across different deployment environments.
+This application requires **pandoc** to process .docx files on the server. This guide covers installation for local development and Linode production deployment.
 
-## Overview
+## Why Pandoc?
 
-The Lab Report Assistant uses **pandoc** (server-side) to convert `.docx` files to markdown with LaTeX equations. This replaces the previous client-side Mammoth.js approach.
+Pandoc is a universal document converter that provides:
+- **Better equation handling** - LaTeX equations preserved natively
+- **Accurate document parsing** - Handles complex Word documents
+- **Server-side processing** - Secure file conversion without exposing client
+- **Robust error handling** - Production-tested reliability
 
-**Benefits:**
-- Better equation handling (LaTeX preserved natively)
-- More accurate document conversion
-- Smaller client-side bundle
-- Claude can read LaTeX equations directly
-
-## Architecture
-
-### Document Processing Flow
-
-```
-User uploads .docx → /api/process-document → Pandoc converts to Markdown+LaTeX →
-Return to client → Send to /api/analyze → Claude analyzes → Display results
-```
-
-### Key Components
-
-1. **Server-side endpoints:**
-   - `/api/process-document` (Vercel)
-   - `/.netlify/functions/process-document` (Netlify)
-
-2. **Client-side processing:**
-   - `src/utils/fileProcessing.ts` - Uploads .docx to server
-   - PDF and images still processed client-side
-
-3. **Dependencies:**
-   - `formidable` - File upload handling (server-side)
-   - `pandoc` - Document conversion (system binary)
-
-## Setup Instructions
+## Installation
 
 ### Local Development
 
 #### macOS
-
 ```bash
-# Install pandoc via Homebrew
 brew install pandoc
-
-# Verify installation
-pandoc --version
-# Should output: pandoc 3.x.x or higher
-
-# Install Node.js dependencies
-npm install
-
-# Start development server
-npm run dev
 ```
 
 #### Linux (Ubuntu/Debian)
-
 ```bash
-# Install pandoc
 sudo apt update
 sudo apt install pandoc
-
-# Verify installation
-pandoc --version
-
-# Install Node.js dependencies
-npm install
-
-# Start development server
-npm run dev
 ```
 
 #### Windows
-
 ```powershell
-# Install pandoc via Chocolatey
+# Using Chocolatey
 choco install pandoc
 
-# Or download installer from:
-# https://github.com/jgm/pandoc/releases
+# Or download installer from https://pandoc.org/installing.html
+```
 
-# Verify installation
+#### Verify Installation
+```bash
 pandoc --version
-
-# Install Node.js dependencies
-npm install
-
-# Start development server
-npm run dev
+# Should show: pandoc 3.x or higher
 ```
-
-### Vercel Deployment (Hobby Account)
-
-Vercel Hobby accounts don't support custom Docker images, but we can bundle a static pandoc binary.
-
-#### Option A: Using pandoc-lambda (Recommended)
-
-This is a pre-built pandoc binary designed for serverless environments.
-
-1. **Install pandoc-lambda:**
-
-```bash
-npm install --save-dev pandoc-lambda
-```
-
-2. **Update the serverless function** (`api/process-document.ts`):
-
-```typescript
-// At the top of the file
-import { path as pandocPath } from 'pandoc-lambda';
-
-// In the processDocxWithPandoc function, change the command to:
-const command = `"${pandocPath}" "${filePath}" --from=docx --to=markdown --wrap=none`;
-```
-
-3. **Deploy to Vercel:**
-
-```bash
-vercel --prod
-```
-
-#### Option B: Bundle Static Binary
-
-Download a static pandoc binary and include it in your repo:
-
-1. **Download static binary:**
-
-```bash
-# For Linux x64 (Vercel runtime)
-wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-linux-amd64.tar.gz
-tar -xzf pandoc-3.1.11-linux-amd64.tar.gz
-mkdir -p bin
-cp pandoc-3.1.11/bin/pandoc bin/pandoc
-chmod +x bin/pandoc
-```
-
-2. **Update `.gitignore`** to include the binary (remove `bin/` if present):
-
-```diff
-- bin/
-+ # Keep bin/ for pandoc binary
-```
-
-3. **Update `api/process-document.ts`:**
-
-```typescript
-// At the top
-import path from 'path';
-
-// In processDocxWithPandoc
-const pandocPath = path.join(process.cwd(), 'bin', 'pandoc');
-const command = `"${pandocPath}" "${filePath}" --from=docx --to=markdown --wrap=none`;
-```
-
-4. **Update `vercel.json`** to include the binary:
-
-```json
-{
-  "functions": {
-    "api/analyze.ts": {
-      "maxDuration": 60
-    },
-    "api/process-document.ts": {
-      "maxDuration": 30,
-      "includeFiles": "bin/pandoc"
-    }
-  }
-}
-```
-
-**Note:** Static binaries can be large (30-50MB). Ensure they fit within Vercel's deployment size limits.
-
-### Netlify Deployment
-
-Netlify supports custom build plugins and commands.
-
-#### Option A: Using Build Plugin (Recommended)
-
-1. **Install Netlify pandoc plugin:**
-
-```bash
-npm install --save-dev netlify-plugin-pandoc
-```
-
-2. **Update `netlify.toml`:**
-
-```toml
-[build]
-  command = "npm run build"
-  publish = "dist"
-  functions = "netlify/functions"
-
-[[plugins]]
-  package = "netlify-plugin-pandoc"
-```
-
-3. **Deploy to Netlify:**
-
-```bash
-netlify deploy --prod
-```
-
-#### Option B: Install During Build
-
-Update `netlify.toml` to install pandoc during the build process:
-
-```toml
-[build]
-  command = """
-    apt-get update && \
-    apt-get install -y pandoc && \
-    npm run build
-  """
-  publish = "dist"
-  functions = "netlify/functions"
-
-[build.environment]
-  NODE_VERSION = "18"
-```
-
-**Note:** This may increase build times.
-
-### Linode Production Deployment (Ubuntu 24.04)
-
-For production deployment on Linode with Ubuntu 24.04 and nginx:
-
-#### 1. Install Pandoc on Server
-
-```bash
-# SSH into your Linode server
-ssh user@your-server-ip
-
-# Update package list
-sudo apt update
-
-# Install pandoc
-sudo apt install -y pandoc
-
-# Verify installation
-pandoc --version
-# Should output: pandoc 2.x.x or higher (Ubuntu 24.04 ships with pandoc 2.19+)
-
-# For latest version (optional):
-wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-1-amd64.deb
-sudo dpkg -i pandoc-3.1.11-1-amd64.deb
-```
-
-#### 2. Install Node.js and Application Dependencies
-
-```bash
-# Install Node.js 18+ (if not already installed)
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Verify installation
-node --version
-npm --version
-
-# Clone your repository
-git clone https://github.com/SigurdurVilhelmsson/LabReports.git
-cd LabReports
-
-# Install dependencies
-npm install
-
-# Build the application
-npm run build
-```
-
-#### 3. Set Up Process Manager (PM2)
-
-```bash
-# Install PM2 globally
-sudo npm install -g pm2
-
-# Create a PM2 ecosystem file
-cat > ecosystem.config.js << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'lab-reports',
-    script: 'npm',
-    args: 'run preview',
-    cwd: '/path/to/LabReports',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-      ANTHROPIC_API_KEY: 'your-api-key-here'
-    }
-  }]
-}
-EOF
-
-# Start the application
-pm2 start ecosystem.config.js
-
-# Save PM2 configuration
-pm2 save
-
-# Set up PM2 to start on boot
-pm2 startup
-# Follow the instructions output by the command
-```
-
-#### 4. Configure Nginx as Reverse Proxy
-
-```bash
-# Create nginx configuration
-sudo nano /etc/nginx/sites-available/lab-reports
-```
-
-Add the following configuration:
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com www.your-domain.com;
-
-    # Increase upload size for document files
-    client_max_body_size 10M;
-
-    # Proxy all requests to Node.js app
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-
-        # Timeout settings for document processing
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-
-    # Serve static files directly
-    location /assets {
-        alias /path/to/LabReports/dist/assets;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-```
-
-Enable the site and restart nginx:
-
-```bash
-# Enable the site
-sudo ln -s /etc/nginx/sites-available/lab-reports /etc/nginx/sites-enabled/
-
-# Test nginx configuration
-sudo nginx -t
-
-# Restart nginx
-sudo systemctl restart nginx
-```
-
-#### 5. Set Up SSL with Let's Encrypt
-
-```bash
-# Install certbot
-sudo apt install -y certbot python3-certbot-nginx
-
-# Obtain SSL certificate
-sudo certbot --nginx -d your-domain.com -d www.your-domain.com
-
-# Certbot will automatically update your nginx configuration
-# Test auto-renewal
-sudo certbot renew --dry-run
-```
-
-#### 6. Set Up Environment Variables
-
-Create a `.env` file for production:
-
-```bash
-cd /path/to/LabReports
-nano .env
-```
-
-Add:
-
-```env
-NODE_ENV=production
-ANTHROPIC_API_KEY=sk-ant-your-actual-api-key
-VITE_APP_MODE=dual
-```
-
-**Important:** Never commit `.env` to git!
-
-#### 7. Deploy Updates
-
-Create a deployment script:
-
-```bash
-nano deploy.sh
-```
-
-Add:
-
-```bash
-#!/bin/bash
-
-# Pull latest changes
-git pull origin main
-
-# Install dependencies (if package.json changed)
-npm install
-
-# Build the application
-npm run build
-
-# Restart the application
-pm2 restart lab-reports
-```
-
-Make it executable:
-
-```bash
-chmod +x deploy.sh
-```
-
-To deploy updates:
-
-```bash
-./deploy.sh
-```
-
-## Testing Pandoc Integration
-
-### Test Locally
-
-1. **Create a test .docx file** with:
-   - Plain text
-   - Formatted text (bold, italic)
-   - Equations (if possible)
-   - Lists and tables
-
-2. **Test the endpoint directly:**
-
-```bash
-# Start the dev server
-npm run dev
-
-# In another terminal, upload a test file
-curl -X POST http://localhost:5173/api/process-document \
-  -F "file=@test.docx" \
-  | jq
-```
-
-3. **Expected output:**
-
-```json
-{
-  "content": "# Test Document\n\nPlain text content...\n\n$$E = mc^2$$\n\n...",
-  "format": "markdown",
-  "equations": ["E = mc^2"]
-}
-```
-
-### Test in Application
-
-1. Start the development server: `npm run dev`
-2. Navigate to Teacher or Student mode
-3. Upload a `.docx` file
-4. Verify:
-   - File uploads successfully
-   - Processing completes without errors
-   - Results include the document content
-   - Equations are preserved in LaTeX format
-
-## Troubleshooting
-
-### Error: "Pandoc is not installed"
-
-**Solution:**
-- Verify pandoc is installed: `pandoc --version`
-- On Vercel: Use pandoc-lambda or bundle static binary
-- On Linode: Install via `apt install pandoc`
-
-### Error: "Failed to process document"
-
-**Possible causes:**
-1. **File too large:** Check `maxFileSize` in `formidable` config
-2. **Corrupted .docx:** Try with a different file
-3. **Pandoc error:** Check server logs for pandoc stderr output
-
-**Debug:**
-```bash
-# Check server logs (Linode)
-pm2 logs lab-reports
-
-# Test pandoc directly
-pandoc test.docx --from=docx --to=markdown --wrap=none
-```
-
-### Error: "Request timeout"
-
-**Solution:**
-- Increase timeout in `vercel.json` (Vercel)
-- Increase timeout in nginx config (Linode)
-- Increase timeout in API call (client-side)
-
-### PDF/Images Still Using Client-Side Processing
-
-**Note:** This is expected! Only `.docx` files are processed server-side with pandoc. PDF and image files are still processed client-side using PDF.js and FileReader API.
-
-## Performance Considerations
-
-### Document Size Limits
-
-- **Vercel:** 4.5MB payload limit (upgrade to Pro for 50MB)
-- **Netlify:** 10MB function payload limit
-- **Linode:** Configurable via nginx `client_max_body_size`
-
-Current setting: 10MB in formidable config
-
-### Processing Time
-
-- **Simple .docx:** ~200-500ms
-- **Complex .docx with images:** ~1-2s
-- **Very large documents:** ~3-5s
-
-Timeout settings:
-- Client: 30s
-- Vercel function: 30s (in vercel.json)
-- Nginx: 60s (in proxy settings)
-
-### Concurrent Requests
-
-- **Vercel Hobby:** 10 concurrent executions
-- **Netlify Free:** 125k function invocations/month
-- **Linode:** Limited by server resources (CPU/RAM)
-
-## Migration from Mammoth.js
-
-### What Changed
-
-**Removed:**
-- ✗ `mammoth` package (client-side .docx parsing)
-- ✗ `html2canvas` package (client-side rendering)
-- ✗ Client-side document processing
-
-**Added:**
-- ✓ `formidable` package (server-side file upload)
-- ✓ Server-side pandoc processing
-- ✓ LaTeX equation preservation
-- ✓ Markdown output format
-
-### Breaking Changes
-
-**None for end users!** The API remains the same:
-- File upload interface unchanged
-- Analysis results format unchanged
-- Teacher/Student modes work identically
-
-**For developers:**
-- `.docx` processing now requires server-side pandoc
-- `FileContent` type remains compatible
-- Development setup requires pandoc installation
-
-### Rollback Plan
-
-If you need to rollback to Mammoth.js:
-
-```bash
-# Checkout previous version
-git checkout <commit-before-pandoc>
-
-# Reinstall old dependencies
-npm install
-
-# Deploy
-```
-
-Or manually:
-
-```bash
-# Reinstall Mammoth.js
-npm install mammoth html2canvas
-
-# Remove formidable
-npm uninstall formidable @types/formidable
-
-# Restore fileProcessing.ts from git history
-git checkout <commit> -- src/utils/fileProcessing.ts
-
-# Remove pandoc endpoints
-rm api/process-document.ts
-rm netlify/functions/process-document.ts
-```
-
-## Security Considerations
-
-### File Upload Security
-
-- **Size limits:** 10MB enforced in formidable config
-- **File type validation:** Only `.docx` files accepted
-- **Temporary files:** Automatically cleaned up after processing
-- **Input sanitization:** Pandoc handles malicious content safely
-
-### API Security
-
-- **CORS:** Strict origin whitelist
-- **API keys:** Server-side only (never exposed to client)
-- **Rate limiting:** Recommended for production (use nginx)
-
-### Production Recommendations
-
-1. **Enable rate limiting** in nginx:
-
-```nginx
-limit_req_zone $binary_remote_addr zone=docprocessing:10m rate=10r/m;
-
-location /api/process-document {
-    limit_req zone=docprocessing burst=5;
-    # ... rest of config
-}
-```
-
-2. **Set up monitoring:**
-
-```bash
-# Monitor pandoc resource usage
-pm2 monit
-
-# Set up alerts for high CPU/memory
-pm2 install pm2-logrotate
-```
-
-3. **Regular updates:**
-
-```bash
-# Update pandoc
-sudo apt update && sudo apt upgrade pandoc
-
-# Update Node.js dependencies
-npm audit fix
-```
-
-## Additional Resources
-
-- [Pandoc Documentation](https://pandoc.org/MANUAL.html)
-- [Vercel Serverless Functions](https://vercel.com/docs/functions)
-- [Netlify Functions](https://docs.netlify.com/functions/overview/)
-- [PM2 Documentation](https://pm2.keymetrics.io/docs/usage/quick-start/)
-- [Nginx Reverse Proxy Guide](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/)
-
-## Support
-
-For issues or questions:
-1. Check this documentation first
-2. Review server logs (`pm2 logs` or Vercel/Netlify dashboard)
-3. Test pandoc directly: `pandoc test.docx --to=markdown`
-4. Open an issue on GitHub with error details
 
 ---
 
-**Last Updated:** 2025-11-19
-**Version:** 3.1.0 (Pandoc migration)
+## Linode Production Setup
+
+### Ubuntu 24.04 (Recommended)
+
+1. **Install pandoc**:
+   ```bash
+   sudo apt update
+   sudo apt install pandoc
+   ```
+
+2. **Verify installation**:
+   ```bash
+   pandoc --version
+   ```
+
+3. **Test document conversion**:
+   ```bash
+   # Create a test document
+   echo "# Test Document" | pandoc -f markdown -t html
+   ```
+
+4. **Restart your backend server**:
+   ```bash
+   pm2 restart labreports-api
+   ```
+
+### Other Linux Distributions
+
+#### Debian
+```bash
+sudo apt update
+sudo apt install pandoc
+```
+
+#### CentOS/RHEL
+```bash
+sudo yum install pandoc
+```
+
+#### Arch Linux
+```bash
+sudo pacman -S pandoc
+```
+
+---
+
+## Backend Integration
+
+The backend server (`server/index.js`) uses pandoc via Node.js `child_process`:
+
+```javascript
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
+
+// Convert .docx to markdown
+const command = `pandoc "${filePath}" --from=docx --to=markdown --wrap=none`;
+const { stdout } = await execAsync(command);
+```
+
+### API Endpoint
+
+The `/api/process-document` endpoint:
+1. Receives uploaded .docx file
+2. Saves temporarily to disk
+3. Calls pandoc to convert to markdown
+4. Extracts LaTeX equations
+5. Returns processed content
+6. Cleans up temporary file
+
+### Timeout Configuration
+
+The backend sets a 30-second timeout for document processing:
+
+```javascript
+app.post('/api/process-document', async (req, res) => {
+  // ... file upload handling
+
+  const command = `pandoc "${filePath}" --from=docx --to=markdown --wrap=none`;
+  const { stdout } = await execAsync(command, { timeout: 30000 }); // 30s
+
+  // ... process results
+});
+```
+
+---
+
+## Troubleshooting
+
+### "Pandoc not found" Error
+
+**Symptom:** Backend logs show "pandoc: command not found"
+
+**Solution:**
+```bash
+# Install pandoc
+sudo apt install pandoc
+
+# Verify it's in PATH
+which pandoc  # Should show: /usr/bin/pandoc
+
+# Restart backend
+pm2 restart labreports-api
+```
+
+### "Permission denied" Error
+
+**Symptom:** Pandoc cannot read/write files
+
+**Solution:**
+```bash
+# Check backend server user
+ps aux | grep node
+
+# Ensure /tmp is writable
+chmod 1777 /tmp
+
+# Restart backend
+pm2 restart labreports-api
+```
+
+### Conversion Timeout
+
+**Symptom:** Large .docx files fail with timeout error
+
+**Solution:**
+
+Increase timeout in `server/index.js`:
+```javascript
+const { stdout } = await execAsync(command, { timeout: 60000 }); // Increase to 60s
+```
+
+Then restart:
+```bash
+pm2 restart labreports-api
+```
+
+### Missing Dependencies
+
+**Symptom:** Pandoc installed but conversion fails
+
+**Solution:**
+```bash
+# Install required libraries
+sudo apt install texlive-latex-base  # For LaTeX support
+sudo apt install librsvg2-bin         # For SVG support
+
+# Restart backend
+pm2 restart labreports-api
+```
+
+### Equation Extraction Issues
+
+**Symptom:** LaTeX equations not extracted correctly
+
+**Check:**
+1. Word document uses Equation Editor (not images)
+2. Equations are properly formatted in Word
+3. Pandoc version is 2.x or higher: `pandoc --version`
+
+**Test conversion manually:**
+```bash
+pandoc your-document.docx --from=docx --to=markdown --wrap=none
+# Check if LaTeX equations appear as $...$ or $$...$$
+```
+
+---
+
+## Testing
+
+### Test Document Processing Locally
+
+1. **Create test .docx with equations** in Word/Google Docs
+
+2. **Test via curl**:
+   ```bash
+   curl -X POST http://localhost:8000/api/process-document \
+     -F "file=@test-report.docx"
+   ```
+
+3. **Check response**:
+   ```json
+   {
+     "content": "# Lab Report\n\nEquation: $E = mc^2$",
+     "format": "markdown",
+     "equations": ["E = mc^2"]
+   }
+   ```
+
+### Test on Production
+
+```bash
+# SSH into server
+ssh user@kvenno.app
+
+# Test pandoc directly
+echo "Test" | pandoc -f markdown -t html
+
+# Test backend endpoint
+curl -X POST http://localhost:8000/api/process-document \
+  -F "file=@/path/to/test.docx"
+
+# Check backend logs
+pm2 logs labreports-api
+```
+
+---
+
+## Performance Considerations
+
+### File Size Limits
+
+- Maximum file size: 10MB (configured in backend)
+- Typical conversion time: 1-3 seconds per document
+- Timeout: 30 seconds (configurable)
+
+### Optimization Tips
+
+1. **Use appropriate timeout** - Large documents need more time
+2. **Clean up temp files** - Backend automatically deletes after processing
+3. **Monitor disk space** - Check `/tmp` has sufficient space
+
+```bash
+# Check disk space
+df -h /tmp
+
+# Clean old temp files if needed
+find /tmp -name "docx-*" -mtime +1 -delete
+```
+
+### Concurrent Processing
+
+The backend handles multiple simultaneous requests:
+- Each request gets its own temporary file
+- Pandoc processes run independently
+- No file conflicts between requests
+
+---
+
+## Advanced Configuration
+
+### Custom Pandoc Options
+
+Edit `server/index.js` to add pandoc options:
+
+```javascript
+// Extract images from .docx
+const command = `pandoc "${filePath}" --from=docx --to=markdown --extract-media="${mediaDir}" --wrap=none`;
+
+// Preserve raw HTML
+const command = `pandoc "${filePath}" --from=docx --to=markdown --wrap=none --preserve-tabs`;
+
+// Better table handling
+const command = `pandoc "${filePath}" --from=docx --to=markdown --wrap=none --columns=1000`;
+```
+
+### Logging
+
+Enable detailed pandoc logging:
+
+```javascript
+const { stdout, stderr } = await execAsync(command);
+if (stderr) {
+  console.error('Pandoc warnings:', stderr);
+}
+console.log('Conversion successful, length:', stdout.length);
+```
+
+---
+
+## System Requirements
+
+### Minimum Requirements
+- **RAM**: 512MB (1GB recommended)
+- **Disk**: 200MB for pandoc + temp files
+- **CPU**: Any modern processor
+
+### Production Requirements
+- **RAM**: 2GB+ (for multiple concurrent conversions)
+- **Disk**: 10GB+ (for logs and temp files)
+- **CPU**: 2+ cores recommended
+
+---
+
+## Security Notes
+
+1. **File Validation**: Backend validates file type before processing
+2. **Temporary Files**: Automatically deleted after processing
+3. **Path Sanitization**: File paths are sanitized to prevent injection
+4. **Timeout Protection**: 30s timeout prevents resource exhaustion
+5. **Size Limits**: 10MB max file size prevents DOS attacks
+
+---
+
+## Monitoring
+
+### Check Pandoc Usage
+
+```bash
+# Monitor pandoc processes
+watch -n 1 'ps aux | grep pandoc'
+
+# Check conversion success rate
+pm2 logs labreports-api | grep "Pandoc processing"
+
+# Monitor temp directory
+watch -n 5 'ls -lh /tmp/docx-*'
+```
+
+### Health Check
+
+Add to your monitoring:
+
+```bash
+#!/bin/bash
+# Check if pandoc is available
+if ! command -v pandoc &> /dev/null; then
+    echo "ERROR: Pandoc not found"
+    exit 1
+fi
+
+# Check version
+VERSION=$(pandoc --version | head -n1)
+echo "Pandoc OK: $VERSION"
+```
+
+---
+
+## Upgrading Pandoc
+
+### Check Current Version
+```bash
+pandoc --version
+```
+
+### Upgrade on Ubuntu/Debian
+```bash
+sudo apt update
+sudo apt upgrade pandoc
+pm2 restart labreports-api
+```
+
+### Install Latest Version (if repo version is old)
+```bash
+# Download latest release from GitHub
+wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-1-amd64.deb
+
+# Install
+sudo dpkg -i pandoc-3.1.11-1-amd64.deb
+
+# Verify
+pandoc --version
+
+# Restart backend
+pm2 restart labreports-api
+```
+
+---
+
+## Resources
+
+- [Pandoc Official Documentation](https://pandoc.org/)
+- [Pandoc User's Guide](https://pandoc.org/MANUAL.html)
+- [Pandoc GitHub Repository](https://github.com/jgm/pandoc)
+- [LaTeX Equation Syntax](https://en.wikibooks.org/wiki/LaTeX/Mathematics)
+
+---
+
+## Support
+
+If you encounter issues:
+
+1. **Check logs**: `pm2 logs labreports-api`
+2. **Test pandoc**: `pandoc --version`
+3. **Review backend code**: `server/index.js`
+4. **Create issue**: https://github.com/SigurdurVilhelmsson/LabReports/issues

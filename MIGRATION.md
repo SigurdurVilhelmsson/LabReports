@@ -23,7 +23,7 @@ This guide helps you migrate from the old single-file version (teacher-report-gr
 
 4. **Deployment Ready**
    - Serverless API functions for secure API key management
-   - Deployment configs for Vercel, Netlify, AWS Amplify
+   - Deployment config for Linode production server
    - Production-ready build pipeline
 
 5. **Better File Support**
@@ -176,7 +176,7 @@ Find equivalent files:
 | File formats | .docx, images | .docx, .pdf, images |
 | Modes | Teacher only | Teacher + Student |
 | Architecture | Single file | Modular |
-| Deployment | Manual | Automated (Vercel/Netlify) |
+| Deployment | Manual | Git-based (Linode) |
 | API security | Client-side key | Serverless functions |
 | PDF support | No | Yes |
 | Equation extraction | Limited | Improved |

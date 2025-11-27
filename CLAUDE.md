@@ -16,7 +16,7 @@ This document provides guidance for AI assistants working with the Lab Report As
 - AI: Claude Sonnet 4 (Anthropic API)
 - File Processing: Pandoc (docx - server-side), PDF.js (pdf), FileReader API (images)
 - Routing: React Router DOM
-- Deployment: Vercel/Netlify with serverless functions, Linode with nginx (production)
+- Deployment: Linode with nginx + Node.js backend server (production)
 
 **Language:** Icelandic (UI and feedback are in Icelandic)
 
@@ -92,12 +92,9 @@ The application has **two distinct modes**:
 
 ```
 LabReports/
-├── api/                              # Vercel serverless functions
-│   ├── analyze.ts                   # API proxy for Claude requests
-│   └── process-document.ts          # Pandoc document processing
-├── netlify/functions/               # Netlify serverless functions
-│   ├── analyze.ts                   # API proxy for Claude requests
-│   └── process-document.ts          # Pandoc document processing
+├── server/                          # Backend Node.js server
+│   ├── index.js                     # Express server with API endpoints
+│   └── README.md                    # Server documentation
 ├── src/
 │   ├── components/                  # React components
 │   │   ├── FileUpload.tsx          # File upload with drag-and-drop
@@ -141,14 +138,12 @@ LabReports/
 ├── MIGRATION.md                    # v2 to v3 migration guide
 ├── README.md                       # User-facing documentation
 ├── index.html                      # HTML entry point
-├── netlify.toml                    # Netlify deployment config
 ├── package.json                    # Dependencies and scripts
 ├── postcss.config.js               # PostCSS configuration
 ├── tailwind.config.js              # Tailwind configuration
 ├── tsconfig.json                   # TypeScript configuration
 ├── tsconfig.node.json              # TypeScript Node configuration
-├── vite.config.ts                  # Vite build configuration
-└── vercel.json                     # Vercel deployment config
+└── vite.config.ts                  # Vite build configuration
 ```
 
 ### Key Files to Understand
@@ -164,7 +159,7 @@ LabReports/
 | `src/utils/fileProcessing.ts` | File parsing logic | When adding file format support |
 | `src/utils/storage.ts` | Session storage logic | When changing storage behavior |
 | `src/App.tsx` | Main app orchestration | When changing app-level behavior |
-| `vercel.json` | Vercel deployment config | When changing function timeouts |
+| `server/index.js` | Backend server | When changing API endpoints or timeouts |
 | `.eslintrc.cjs` | ESLint rules | When modifying code quality rules |
 | `Kvenno_structure.md` | Unified site structure & design | **CRITICAL**: Reference for all UI/UX decisions |
 | `DEPENDENCY_UPDATE_PLAN.md` | Dependency upgrade guide | When planning dependency updates |
@@ -261,7 +256,7 @@ File processing uses a hybrid client/server approach:
 - Processes PDFs and images locally
 - Sends .docx files to server for processing
 
-**Server-side** (`api/process-document.ts`, `netlify/functions/process-document.ts`):
+**Server-side** (`server/index.js`):
 - Converts .docx files using pandoc
 - Extracts markdown with LaTeX equations
 - Returns processed content to client
@@ -287,19 +282,19 @@ File processing uses a hybrid client/server approach:
 
 ### API Integration
 
-The app supports two API modes (configured via `VITE_API_ENDPOINT`):
+The app uses a **backend server** for secure API calls (configured via `VITE_API_ENDPOINT`):
 
 1. **Direct API** (development only):
    - Calls Anthropic API directly from browser
    - Requires `VITE_ANTHROPIC_API_KEY`
    - NOT secure for production
 
-2. **Serverless function** (production):
-   - Calls `/api/analyze` endpoint
-   - API key stored server-side
+2. **Backend server** (production - required):
+   - Calls backend at `https://kvenno.app/api` (port 8000)
+   - API key stored server-side in `server/.env`
    - Secure for production
 
-**Implementation:** `src/utils/api.ts`
+**Implementation:** `src/utils/api.ts` (client) and `server/index.js` (backend)
 
 ### Session Management
 
@@ -521,31 +516,20 @@ NODE_ENV=production
 FRONTEND_URL=https://kvenno.app
 ```
 
-### Deployment Platforms
+### Deployment Platform
 
-**Linode Production (kvenno.app)** - Recommended:
+**Linode Production (kvenno.app)**:
 - Backend server runs on port 8000
 - nginx proxies `/api/` requests to backend
+- Frontend built with Vite and served via nginx
 - See [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security) for complete setup
-- See [DEPLOYMENT.md Section 5](DEPLOYMENT.md#5-linode--traditional-linux-server-production---kvennoapp) for details
+- See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions
 
-**Vercel/Netlify** (alternative):
-- Serverless functions in `api/` or `netlify/functions/`
-- Still requires backend server for production per KVENNO-STRUCTURE.md
-- See `DEPLOYMENT.md` for platform-specific details
-
-**Important Vercel Configuration:**
-The `vercel.json` includes critical settings:
-```json
-{
-  "functions": {
-    "api/analyze.ts": {
-      "maxDuration": 60
-    }
-  }
-}
-```
-This prevents timeouts during AI analysis of complex lab reports.
+**Backend server configuration:**
+- Express.js server with CORS support
+- 85-second timeout for API analysis (90s limit with 5s buffer)
+- Pandoc installed for document processing
+- PM2 for process management
 
 ### Build Process
 
@@ -839,7 +823,7 @@ The project received significant enhancements throughout November 2025:
 - CORS fixes for www.kvenno.app domain
 
 ### Configuration & Quality Updates (Nov 16-18)
-- Vercel function timeout set to 60 seconds (`vercel.json`)
+- Backend server timeout set to 85 seconds (90s with 5s buffer)
 - Enhanced jafnvaegi experiment evaluation criteria (PR #12)
 - Improved Icelandic language precision in prompts
 - Better chemical accuracy validation (Fe³⁺, SCN⁻, etc.)
@@ -855,15 +839,15 @@ The project received significant enhancements throughout November 2025:
 - **Better Equation Handling**: LaTeX equations preserved natively in markdown
 - **Server-side Processing**: New `/api/process-document` endpoint for .docx files
 - **Improved Accuracy**: Better document conversion with pandoc's robust parser
-- **Production Ready**: Full setup guide for Vercel, Netlify, and Linode (PANDOC_SETUP.md)
+- **Production Ready**: Full setup guide for Linode deployment (PANDOC_SETUP.md)
 - **Bundle Size Reduction**: Removed html2canvas and mammoth (client-side only)
 - **Removed Dependencies**: mammoth, html2canvas
-- **Added Dependencies**: formidable (server-side file uploads)
+- **Added Dependencies**: formidable (server-side file uploads), express, cors
 
 ### API Changes
 - Model version: `claude-sonnet-4-20250514` (current)
-- Direct API and serverless function modes fully supported
-- 30-second timeout per file analysis (analyze endpoint)
+- Backend server mode with Express.js (port 8000)
+- 85-second timeout for file analysis (analyze endpoint)
 - 30-second timeout for document processing (process-document endpoint)
 - Automatic JSON extraction from Claude responses
 
@@ -924,14 +908,15 @@ npm audit                   # Check for security issues
 - Drag-and-drop file upload with PDF support for students
 - Automatic equation extraction from documents
 - Enhanced storage with robust error handling
-- Production-ready deployment with serverless functions
+- Production-ready deployment on Linode with Node.js backend
 - Comprehensive documentation for developers and AI assistants
 
 **Architecture**:
 - React 18 + TypeScript + Vite
 - Tailwind CSS for styling
 - Claude Sonnet 4 (`claude-sonnet-4-20250514`)
-- Vercel/Netlify serverless functions
+- Node.js/Express backend server (port 8000)
+- nginx reverse proxy for API and static files
 - Modular codebase with TypeScript strict mode
 
 ### v2.x (Legacy - November 2024)
