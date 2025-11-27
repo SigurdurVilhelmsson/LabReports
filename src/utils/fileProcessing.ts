@@ -338,17 +338,16 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
           else if (xDiff > 0) {  // Only consider positive gaps
             xGaps.push(xDiff);
 
-            // Adaptive threshold based on extraction method
-            // LibreOffice-converted PDFs tend to have tighter spacing than original PDFs
-            const threshold = extractionMethod === 'docx-converted-pdf' ? 25 : 40;
+            // Table detection disabled for PDFs with character-level encoding
+            // These PDFs have maxGap < 1 unit, making X-coordinate detection unreliable
+            // Claude can see tables in the page images instead
+            //
+            // Original threshold approach (not effective for character-level PDFs):
+            // const threshold = extractionMethod === 'docx-converted-pdf' ? 25 : 40;
+            // if (xDiff > threshold) { pageText += '  |  '; }
 
-            if (xDiff > threshold) {
-              // Add multiple spaces or tab to preserve table structure
-              pageText += '  |  ';  // Visual separator for table columns
-              largeGapsDetected++;
-            }
-            // Normal spacing between words
-            else if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
+            // Just add normal spacing
+            if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
               pageText += ' ';
             }
           }
