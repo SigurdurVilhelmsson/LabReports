@@ -89,6 +89,30 @@ export const ExtractionDebug: React.FC<ExtractionDebugProps> = ({ fileContent, f
           </div>
         </div>
 
+        {/* Table Detection */}
+        <div className="col-span-2 p-2 bg-white rounded">
+          <div className="text-xs text-slate-500 mb-1">Table Detection</div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <span className="text-slate-600">Column separators:</span>{' '}
+              <span className="font-semibold">{debug.tableDetection?.columnSeparatorsDetected ?? 0}</span>
+            </div>
+            <div>
+              <span className="text-slate-600">Has tables:</span>{' '}
+              {debug.tableDetection?.hasTableStructure ? (
+                <span className="font-semibold text-green-600">✓ Yes</span>
+              ) : (
+                <span className="font-semibold text-slate-400">✗ No</span>
+              )}
+            </div>
+          </div>
+          {debug.tableDetection?.hasTableStructure && (
+            <div className="mt-2 text-xs text-blue-600 bg-blue-50 p-2 rounded">
+              📊 Table structure detected. Look for " | " separators in text sample below.
+            </div>
+          )}
+        </div>
+
         {/* Text Sample */}
         <div className="col-span-2 p-2 bg-white rounded">
           <div className="text-xs text-slate-500 mb-1">Text Sample (first 500 chars)</div>

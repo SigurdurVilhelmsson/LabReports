@@ -296,6 +296,7 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
     const images: Array<{ data: string; mediaType: string }> = [];
     let fullText = '';
     let totalTextLength = 0;
+    let totalColumnSeparators = 0;  // Track table structure across all pages
 
     // Process each page
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -307,16 +308,22 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
 
       let pageText = '';
       let lastY = -1;
+      let lastX = -1;
+      let lastWidth = 0;
       let lastHeight = 0;
+      let largeGapsDetected = 0;  // Count table column separators
 
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const currentY = item.transform ? item.transform[5] : 0;
+        const currentX = item.transform ? item.transform[4] : 0;
         const currentHeight = item.height || 12;
+        const currentWidth = item.width || 0;
 
         // Detect line breaks based on y-coordinate changes
         if (lastY !== -1) {
           const yDiff = Math.abs(currentY - lastY);
+          const xDiff = currentX - (lastX + lastWidth);
 
           // Large y-difference indicates paragraph break (more than 1.5x line height)
           if (yDiff > lastHeight * 1.5) {
@@ -326,23 +333,38 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
           else if (yDiff > lastHeight * 0.3) {
             pageText += '\n';
           }
-          // Same line - add space if needed
-          else if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
-            pageText += ' ';
+          // Same line - check horizontal spacing
+          else {
+            // Large horizontal gap (likely table column separator or significant spacing)
+            // Using 20 as threshold - typical space is ~3-5, table columns have 20+
+            if (xDiff > 20) {
+              // Add multiple spaces or tab to preserve table structure
+              pageText += '  |  ';  // Visual separator for table columns
+              largeGapsDetected++;
+            }
+            // Normal spacing between words
+            else if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
+              pageText += ' ';
+            }
           }
         }
 
         pageText += item.str;
         lastY = currentY;
+        lastX = currentX;
+        lastWidth = currentWidth;
         lastHeight = currentHeight;
       }
 
       fullText += pageText + '\n\n';
       totalTextLength += pageText.length;
+      totalColumnSeparators += largeGapsDetected;
 
       console.log(`[PDF Processing] Page ${pageNum}/${pdf.numPages}:`, {
         textLength: pageText.length,
         itemCount: textContent.items.length,
+        tableColumnsDetected: largeGapsDetected,
+        hasTableStructure: largeGapsDetected > 0,
       });
 
       // Render page to canvas to capture images and equations
@@ -426,6 +448,10 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
         extractionMethod,
         textSample: trimmedText.substring(0, 500),
         textStructure,
+        tableDetection: {
+          columnSeparatorsDetected: totalColumnSeparators,
+          hasTableStructure: totalColumnSeparators > 0,
+        },
       },
     };
 
@@ -435,6 +461,7 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
       text: `${result.debug?.textLength} chars, ${result.debug?.textLines} lines`,
       images: `${result.debug?.imageCount} images, avg ${((result.debug?.averageImageSize ?? 0) / 1024).toFixed(0)} KB`,
       structure: `${result.debug?.textStructure?.paragraphCount} paragraphs, avg ${result.debug?.textStructure?.averageLineLength} chars/line`,
+      tables: `${result.debug?.tableDetection?.columnSeparatorsDetected} column separators detected`,
       sample: result.debug?.textSample?.substring(0, 100) + '...',
     });
 
