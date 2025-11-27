@@ -338,9 +338,11 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
           else if (xDiff > 0) {  // Only consider positive gaps
             xGaps.push(xDiff);
 
-            // More conservative threshold: 40 instead of 20
-            // Also require gap to be significantly larger than typical spacing
-            if (xDiff > 40) {
+            // Adaptive threshold based on extraction method
+            // LibreOffice-converted PDFs tend to have tighter spacing than original PDFs
+            const threshold = extractionMethod === 'docx-converted-pdf' ? 25 : 40;
+
+            if (xDiff > threshold) {
               // Add multiple spaces or tab to preserve table structure
               pageText += '  |  ';  // Visual separator for table columns
               largeGapsDetected++;
@@ -380,9 +382,14 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
       const adaptiveThreshold = Math.max(40, medianXGap * 3);
       const gapsOverAdaptive = xGaps.filter(g => g > adaptiveThreshold).length;
 
+      // Current threshold used for this extraction method
+      const currentThreshold = extractionMethod === 'docx-converted-pdf' ? 25 : 40;
+
       console.log(`[PDF Processing] Page ${pageNum}/${pdf.numPages}:`, {
         textLength: pageText.length,
         itemCount: textContent.items.length,
+        extractionMethod,
+        thresholdUsed: currentThreshold,
         tableColumnsDetected: largeGapsDetected,
         hasTableStructure: largeGapsDetected > 0,
         xGapStats: {
