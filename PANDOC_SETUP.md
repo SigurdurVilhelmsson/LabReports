@@ -1,14 +1,19 @@
-# Pandoc Setup Guide
+# Pandoc & LibreOffice Setup Guide
 
-This application requires **pandoc** to process .docx files on the server. This guide covers installation for local development and Linode production deployment.
+This application requires **LibreOffice** and **pandoc** to process .docx files on the server. This guide covers installation for local development and Linode production deployment.
 
-## Why Pandoc?
+## Why LibreOffice + Pandoc?
 
-Pandoc is a universal document converter that provides:
-- **Better equation handling** - LaTeX equations preserved natively
-- **Accurate document parsing** - Handles complex Word documents
-- **Server-side processing** - Secure file conversion without exposing client
-- **Robust error handling** - Production-tested reliability
+This application uses a **two-step approach** for optimal .docx processing:
+
+1. **LibreOffice** - Converts DOCX → PDF (perfect layout fidelity)
+2. **Pandoc** - Extracts LaTeX equations from original DOCX (best equation accuracy)
+
+**Benefits:**
+- **Consistent processing** - All files (DOCX and PDF) use same PDF pipeline
+- **Perfect layout** - LibreOffice renders Word documents exactly as intended
+- **Accurate equations** - Pandoc extracts LaTeX natively from .docx files
+- **Server-side security** - No sensitive data exposed to client
 
 ## Installation
 
@@ -16,25 +21,36 @@ Pandoc is a universal document converter that provides:
 
 #### macOS
 ```bash
+# Install LibreOffice
+brew install --cask libreoffice
+
+# Install pandoc
 brew install pandoc
 ```
 
 #### Linux (Ubuntu/Debian)
 ```bash
 sudo apt update
-sudo apt install pandoc
+sudo apt install libreoffice pandoc
 ```
 
 #### Windows
 ```powershell
 # Using Chocolatey
-choco install pandoc
+choco install libreoffice pandoc
 
-# Or download installer from https://pandoc.org/installing.html
+# Or download installers:
+# LibreOffice: https://www.libreoffice.org/download/
+# Pandoc: https://pandoc.org/installing.html
 ```
 
 #### Verify Installation
 ```bash
+# Check LibreOffice
+libreoffice --version
+# Should show: LibreOffice 7.x or higher
+
+# Check pandoc
 pandoc --version
 # Should show: pandoc 3.x or higher
 ```
@@ -45,20 +61,24 @@ pandoc --version
 
 ### Ubuntu 24.04 (Recommended)
 
-1. **Install pandoc**:
+1. **Install LibreOffice and pandoc**:
    ```bash
    sudo apt update
-   sudo apt install pandoc
+   sudo apt install libreoffice libreoffice-writer pandoc
    ```
 
-2. **Verify installation**:
+2. **Verify installations**:
    ```bash
+   libreoffice --version
    pandoc --version
    ```
 
-3. **Test document conversion**:
+3. **Test DOCX → PDF conversion**:
    ```bash
-   # Create a test document
+   # Create a test DOCX (if you have one)
+   libreoffice --headless --convert-to pdf --outdir /tmp test.docx
+
+   # Test pandoc
    echo "# Test Document" | pandoc -f markdown -t html
    ```
 
@@ -89,40 +109,58 @@ sudo pacman -S pandoc
 
 ## Backend Integration
 
-The backend server (`server/index.js`) uses pandoc via Node.js `child_process`:
+The backend server (`server/index.js`) uses both LibreOffice and pandoc via Node.js `child_process`:
 
 ```javascript
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
 
-// Convert .docx to markdown
-const command = `pandoc "${filePath}" --from=docx --to=markdown --wrap=none`;
-const { stdout } = await execAsync(command);
+// Convert DOCX → PDF using LibreOffice
+const command = `libreoffice --headless --convert-to pdf --outdir "${outputDir}" "${docxPath}"`;
+await execAsync(command, { timeout: 30000 });
+
+// Extract equations from original DOCX using pandoc
+const pandocCmd = `pandoc "${filePath}" --from=docx --to=markdown --wrap=none`;
+const { stdout } = await execAsync(pandocCmd);
 ```
 
 ### API Endpoint
 
-The `/api/process-document` endpoint:
-1. Receives uploaded .docx file
-2. Saves temporarily to disk
-3. Calls pandoc to convert to markdown
-4. Extracts LaTeX equations
-5. Returns processed content
-6. Cleans up temporary file
+The `/api/process-document` endpoint uses a **two-step process**:
+
+1. **Convert DOCX → PDF** (LibreOffice)
+   - Receives uploaded .docx file
+   - Saves temporarily to disk
+   - Converts to PDF using LibreOffice --headless mode
+   - Preserves layout, tables, formatting
+
+2. **Extract equations** (Pandoc)
+   - Runs pandoc on original DOCX
+   - Extracts LaTeX equations ($...$, $$...$$)
+   - Returns equations separately for best accuracy
+
+3. **Return to client**
+   - PDF bytes (base64 encoded)
+   - Extracted LaTeX equations
+   - Client processes PDF with existing pipeline
 
 ### Timeout Configuration
 
-The backend sets a 30-second timeout for document processing:
+The backend sets a 30-second timeout for each operation:
 
 ```javascript
 app.post('/api/process-document', async (req, res) => {
   // ... file upload handling
 
-  const command = `pandoc "${filePath}" --from=docx --to=markdown --wrap=none`;
-  const { stdout } = await execAsync(command, { timeout: 30000 }); // 30s
+  // Convert to PDF (30s timeout)
+  const pdfPath = await convertDocxToPdf(docxPath);
 
-  // ... process results
+  // Extract equations (separate operation)
+  const equations = await processDocxWithPandoc(docxPath);
+
+  // Return PDF + equations
+  return res.json({ pdfData, equations });
 });
 ```
 
@@ -130,9 +168,27 @@ app.post('/api/process-document', async (req, res) => {
 
 ## Troubleshooting
 
+### "LibreOffice not found" Error
+
+**Symptom:** Backend logs show "LibreOffice is not installed" or "libreoffice: command not found"
+
+**Solution:**
+```bash
+# Install LibreOffice
+sudo apt update
+sudo apt install libreoffice libreoffice-writer
+
+# Verify it's in PATH
+which libreoffice  # Should show: /usr/bin/libreoffice
+libreoffice --version
+
+# Restart backend
+pm2 restart labreports-api
+```
+
 ### "Pandoc not found" Error
 
-**Symptom:** Backend logs show "pandoc: command not found"
+**Symptom:** Backend logs show "pandoc: command not found" (equation extraction will fail)
 
 **Solution:**
 ```bash
@@ -145,6 +201,8 @@ which pandoc  # Should show: /usr/bin/pandoc
 # Restart backend
 pm2 restart labreports-api
 ```
+
+**Note:** Pandoc is optional - if not available, the server will still convert DOCX → PDF, but won't extract LaTeX equations.
 
 ### "Permission denied" Error
 

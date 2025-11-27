@@ -104,8 +104,30 @@ export const fileToBase64 = (file: File): Promise<string> => {
 };
 
 /**
- * Extract text from a Word document (.docx) using server-side pandoc
- * Sends the file to the server for processing and receives markdown with LaTeX equations
+ * Convert base64 string to Blob
+ */
+const base64ToBlob = (base64: string, mimeType: string): Blob => {
+  const byteCharacters = atob(base64);
+  const byteArrays = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    const slice = byteCharacters.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length);
+
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+
+  return new Blob(byteArrays, { type: mimeType });
+};
+
+/**
+ * Extract text from a Word document (.docx) using server-side conversion
+ * Server converts DOCX → PDF for consistent processing with existing PDF pipeline
  */
 const extractFromDocx = async (file: File): Promise<FileContent> => {
   console.log('[DOCX Processing] Starting Word document processing:', {
@@ -118,7 +140,7 @@ const extractFromDocx = async (file: File): Promise<FileContent> => {
   formData.append('file', file);
 
   try {
-    console.log('[DOCX Processing] Sending to server for pandoc conversion...');
+    console.log('[DOCX Processing] Sending to server for DOCX → PDF conversion...');
 
     // Send to server for processing
     const response = await fetch(`${API_ENDPOINT}/process-document`, {
@@ -139,19 +161,44 @@ const extractFromDocx = async (file: File): Promise<FileContent> => {
     const result = await response.json();
 
     console.log('[DOCX Processing] Document processed successfully:', {
-      textLength: result.content?.length || 0,
+      type: result.type,
       format: result.format,
       equationCount: result.equations?.length || 0,
-      imageCount: result.images?.length || 0,
+      hasPdfData: !!result.pdfData,
     });
 
-    // Return the processed content
-    // The server returns: { content: string, format: 'markdown', equations: string[], images?: Array<{...}> }
+    // Server now returns PDF bytes for consistent processing
+    if (result.pdfData) {
+      console.log('[DOCX Processing] Converting PDF bytes to File object...');
+
+      // Convert base64 PDF to Blob
+      const pdfBlob = base64ToBlob(result.pdfData, 'application/pdf');
+      const pdfFile = new File([pdfBlob], file.name.replace('.docx', '.pdf'), {
+        type: 'application/pdf',
+      });
+
+      console.log('[DOCX Processing] Processing converted PDF:', {
+        pdfSize: `${(pdfFile.size / 1024).toFixed(2)} KB`,
+      });
+
+      // Process using existing PDF pipeline - ensures consistent results
+      const pdfContent = await extractFromPdf(pdfFile);
+
+      // Add equation metadata from server (best accuracy from original DOCX)
+      return {
+        ...pdfContent,
+        type: 'docx', // Keep original type for tracking
+        equations: result.equations, // LaTeX equations from pandoc
+      };
+    }
+
+    // Fallback to old behavior if server doesn't return PDF (shouldn't happen)
+    console.warn('[DOCX Processing] Server did not return PDF data - using legacy response');
     return {
       type: 'docx',
-      data: result.content, // Markdown text with LaTeX equations
+      data: result.content || '',
       mediaType: 'text/markdown',
-      images: result.images, // Pass through extracted images
+      images: result.images,
     };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);

@@ -9,7 +9,8 @@ import cors from 'cors';
 import { IncomingForm } from 'formidable';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { unlink } from 'fs/promises';
+import { unlink, readFile } from 'fs/promises';
+import path from 'path';
 
 const execAsync = promisify(exec);
 const app = express();
@@ -59,7 +60,49 @@ async function isPandocAvailable() {
 }
 
 /**
- * Process .docx file using pandoc
+ * Check if LibreOffice is available
+ */
+async function isLibreOfficeAvailable() {
+  try {
+    await execAsync('libreoffice --version');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Convert .docx to PDF using LibreOffice (headless mode)
+ */
+async function convertDocxToPdf(docxPath) {
+  const outputDir = path.dirname(docxPath);
+  const baseName = path.basename(docxPath, '.docx');
+  const pdfPath = path.join(outputDir, `${baseName}.pdf`);
+
+  console.log('[LibreOffice] Converting DOCX to PDF:', {
+    input: docxPath,
+    output: pdfPath,
+  });
+
+  const command = `libreoffice --headless --convert-to pdf --outdir "${outputDir}" "${docxPath}"`;
+
+  try {
+    const { stdout, stderr } = await execAsync(command, { timeout: 30000 });
+
+    if (stderr && !stderr.includes('Warning')) {
+      console.error('LibreOffice stderr:', stderr);
+    }
+
+    console.log('[LibreOffice] Conversion complete:', pdfPath);
+    return pdfPath;
+  } catch (error) {
+    console.error('LibreOffice conversion error:', error);
+    throw new Error(`Failed to convert DOCX to PDF: ${error.message}`);
+  }
+}
+
+/**
+ * Process .docx file using pandoc (for equation extraction)
  */
 async function processDocxWithPandoc(filePath) {
   const command = `pandoc "${filePath}" --from=docx --to=markdown --wrap=none`;
@@ -122,17 +165,25 @@ function parseForm(req) {
 
 /**
  * API endpoint: Process .docx documents
+ * Converts DOCX to PDF for consistent processing across all file types
  */
 app.post('/api/process-document', async (req, res) => {
-  let filePath = null;
+  let docxPath = null;
+  let pdfPath = null;
 
   try {
-    // Check if pandoc is available
+    // Check if LibreOffice is available
+    const libreOfficeAvailable = await isLibreOfficeAvailable();
+    if (!libreOfficeAvailable) {
+      return res.status(500).json({
+        error: 'LibreOffice is not installed on this server. Please install libreoffice.',
+      });
+    }
+
+    // Check if pandoc is available (for equation extraction)
     const pandocAvailable = await isPandocAvailable();
     if (!pandocAvailable) {
-      return res.status(500).json({
-        error: 'Pandoc is not installed on this server. Please install pandoc.',
-      });
+      console.warn('Pandoc not available - equation extraction will be skipped');
     }
 
     // Parse form data
@@ -143,28 +194,67 @@ app.post('/api/process-document', async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    filePath = file.filepath;
+    docxPath = file.filepath;
     const fileName = file.originalFilename || '';
 
     if (!fileName.toLowerCase().endsWith('.docx')) {
       return res.status(400).json({ error: 'Only .docx files are supported' });
     }
 
-    // Process with pandoc
-    const result = await processDocxWithPandoc(filePath);
+    console.log('[Document Processing] Starting DOCX → PDF conversion:', fileName);
 
-    // Clean up
-    await unlink(filePath);
-    filePath = null;
+    // Extract equations from original DOCX using pandoc (best accuracy)
+    let equations = [];
+    if (pandocAvailable) {
+      try {
+        const pandocResult = await processDocxWithPandoc(docxPath);
+        equations = pandocResult.equations;
+        console.log('[Document Processing] Extracted equations:', equations.length);
+      } catch (error) {
+        console.error('[Document Processing] Equation extraction failed:', error.message);
+        // Continue without equations - not critical
+      }
+    }
 
-    return res.json(result);
+    // Convert DOCX to PDF using LibreOffice
+    pdfPath = await convertDocxToPdf(docxPath);
+
+    // Read PDF file as bytes
+    const pdfBytes = await readFile(pdfPath);
+    const pdfBase64 = pdfBytes.toString('base64');
+
+    console.log('[Document Processing] PDF conversion complete:', {
+      pdfSize: `${(pdfBytes.length / 1024).toFixed(2)} KB`,
+      equations: equations.length,
+    });
+
+    // Clean up temporary files
+    await unlink(docxPath);
+    await unlink(pdfPath);
+    docxPath = null;
+    pdfPath = null;
+
+    // Return PDF bytes for client processing
+    return res.json({
+      pdfData: pdfBase64,
+      equations: equations,
+      type: 'converted-pdf',
+      format: 'pdf',
+    });
   } catch (error) {
     console.error('Document processing error:', error);
 
-    // Clean up file if it exists
-    if (filePath) {
+    // Clean up files if they exist
+    if (docxPath) {
       try {
-        await unlink(filePath);
+        await unlink(docxPath);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+    if (pdfPath) {
+      try {
+        await unlink(pdfPath);
       } catch {
         // Ignore cleanup errors
       }
