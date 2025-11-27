@@ -331,7 +331,8 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
             pageText += '\n\n';
           }
           // Moderate y-difference indicates line break
-          else if (yDiff > lastHeight * 0.3) {
+          // Use more sensitive threshold for direct PDFs (0.2 vs 0.3) to catch tight table rows
+          else if (yDiff > lastHeight * (extractionMethod === 'direct-pdf' ? 0.2 : 0.3)) {
             pageText += '\n';
           }
           // Same line - check horizontal spacing
