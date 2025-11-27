@@ -307,7 +307,7 @@ npm run type-check   # Check TypeScript types
 - **Frontend**: React 18, TypeScript, Vite
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
-- **AI**: Claude Sonnet 4 (Anthropic)
+- **AI**: Claude Sonnet 4.5 (Anthropic)
 - **File Processing**:
   - Pandoc (Word documents - server-side)
   - PDF.js (PDF files - client-side)
