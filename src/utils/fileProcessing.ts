@@ -336,22 +336,15 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
           else if (yDiff > lastHeight * (extractionMethod === 'direct-pdf' ? 0.1 : 0.3)) {
             pageText += '\n';
           }
-          // Same line - check horizontal spacing
-          else if (xDiff > 0) {  // Only consider positive gaps
-            xGaps.push(xDiff);
-
-            // For character-level PDFs, only add space if gap is significant (> 0.5)
-            // This prevents "L e  C h a t e l i e r" spacing artifacts
-            // Typical character gaps are 0.0-0.3, word gaps should be larger
-            const minWordGap = 0.5;
-
-            if (xDiff > minWordGap && pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
-              pageText += ' ';
+          // Same line - character-level PDFs encode each character separately
+          // Don't add spaces based on X-coordinates - let PDF.js handle it
+          else {
+            // For character-level PDFs, text items often include spaces naturally
+            // Only add space if the current item starts with space OR there's a large gap
+            // This prevents "L e  C h a t e l i e r" while preserving word spacing
+            if (xDiff > 0) {
+              xGaps.push(xDiff);
             }
-          }
-          // Negative or zero gap - items might overlap or be out of order
-          else if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
-            pageText += ' ';
           }
         }
 
