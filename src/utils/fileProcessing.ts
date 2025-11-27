@@ -312,6 +312,7 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
       let lastWidth = 0;
       let lastHeight = 0;
       let largeGapsDetected = 0;  // Count table column separators
+      const xGaps: number[] = [];  // Track all X gaps for analysis
 
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -334,10 +335,12 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
             pageText += '\n';
           }
           // Same line - check horizontal spacing
-          else {
-            // Large horizontal gap (likely table column separator or significant spacing)
-            // Using 20 as threshold - typical space is ~3-5, table columns have 20+
-            if (xDiff > 20) {
+          else if (xDiff > 0) {  // Only consider positive gaps
+            xGaps.push(xDiff);
+
+            // More conservative threshold: 40 instead of 20
+            // Also require gap to be significantly larger than typical spacing
+            if (xDiff > 40) {
               // Add multiple spaces or tab to preserve table structure
               pageText += '  |  ';  // Visual separator for table columns
               largeGapsDetected++;
@@ -346,6 +349,10 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
             else if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
               pageText += ' ';
             }
+          }
+          // Negative or zero gap - items might overlap or be out of order
+          else if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
+            pageText += ' ';
           }
         }
 
@@ -360,11 +367,32 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
       totalTextLength += pageText.length;
       totalColumnSeparators += largeGapsDetected;
 
+      // Analyze X-gaps for diagnostics and adaptive threshold
+      const avgXGap = xGaps.length > 0 ? xGaps.reduce((a, b) => a + b, 0) / xGaps.length : 0;
+      const maxXGap = xGaps.length > 0 ? Math.max(...xGaps) : 0;
+
+      // Sort gaps to find median (more robust than average)
+      const sortedGaps = [...xGaps].sort((a, b) => a - b);
+      const medianXGap = sortedGaps.length > 0 ? sortedGaps[Math.floor(sortedGaps.length / 2)] : 0;
+
+      // Adaptive threshold: 3x the median gap (table columns are much wider than normal spacing)
+      // But still use minimum of 40 to avoid false positives
+      const adaptiveThreshold = Math.max(40, medianXGap * 3);
+      const gapsOverAdaptive = xGaps.filter(g => g > adaptiveThreshold).length;
+
       console.log(`[PDF Processing] Page ${pageNum}/${pdf.numPages}:`, {
         textLength: pageText.length,
         itemCount: textContent.items.length,
         tableColumnsDetected: largeGapsDetected,
         hasTableStructure: largeGapsDetected > 0,
+        xGapStats: {
+          avgGap: avgXGap.toFixed(1),
+          medianGap: medianXGap.toFixed(1),
+          maxGap: maxXGap.toFixed(1),
+          totalGaps: xGaps.length,
+          adaptiveThreshold: adaptiveThreshold.toFixed(1),
+          gapsOverAdaptive,
+        },
       });
 
       // Render page to canvas to capture images and equations
