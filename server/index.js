@@ -39,8 +39,10 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Increased limit to 50mb to handle multi-page PDFs with images
+// Each page image (JPEG compressed) is ~200-500KB, so 50mb supports ~10-15 page documents
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
