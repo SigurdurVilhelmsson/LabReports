@@ -84,8 +84,9 @@ interface PDFTextItem {
   dir?: string;
   width?: number;
   height?: number;
-  transform?: number[];
+  transform?: number[]; // [a, b, c, d, x, y] - x and y are positions
   fontName?: string;
+  hasEOL?: boolean; // End of line marker
 }
 
 /**
@@ -279,11 +280,42 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       const page = await pdf.getPage(pageNum);
 
-      // Extract text content
+      // Extract text content with paragraph break preservation
       const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item) => (item as PDFTextItem).str)
-        .join(' ');
+      const items = textContent.items as PDFTextItem[];
+
+      let pageText = '';
+      let lastY = -1;
+      let lastHeight = 0;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const currentY = item.transform ? item.transform[5] : 0;
+        const currentHeight = item.height || 12;
+
+        // Detect line breaks based on y-coordinate changes
+        if (lastY !== -1) {
+          const yDiff = Math.abs(currentY - lastY);
+
+          // Large y-difference indicates paragraph break (more than 1.5x line height)
+          if (yDiff > lastHeight * 1.5) {
+            pageText += '\n\n';
+          }
+          // Moderate y-difference indicates line break
+          else if (yDiff > lastHeight * 0.3) {
+            pageText += '\n';
+          }
+          // Same line - add space if needed
+          else if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
+            pageText += ' ';
+          }
+        }
+
+        pageText += item.str;
+        lastY = currentY;
+        lastHeight = currentHeight;
+      }
+
       fullText += pageText + '\n\n';
       totalTextLength += pageText.length;
 
@@ -293,7 +325,8 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
       });
 
       // Render page to canvas to capture images and equations
-      const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better quality
+      // Reduced scale from 2.0 to 1.5 to prevent 413 errors on multi-page documents
+      const viewport = page.getViewport({ scale: 1.5 });
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
 
@@ -310,13 +343,13 @@ const extractFromPdf = async (file: File): Promise<FileContent> => {
         viewport: viewport,
       }).promise;
 
-      // Convert canvas to base64 image
-      const imageData = canvas.toDataURL('image/png');
+      // Convert canvas to JPEG (smaller file size than PNG, quality 0.85)
+      const imageData = canvas.toDataURL('image/jpeg', 0.85);
       const base64Data = imageData.split(',')[1];
 
       images.push({
         data: base64Data,
-        mediaType: 'image/png',
+        mediaType: 'image/jpeg',
       });
 
       console.log(`[PDF Processing] Page ${pageNum} rendered:`, {
