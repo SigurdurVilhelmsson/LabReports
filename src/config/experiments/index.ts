@@ -1,6 +1,6 @@
 import { ExperimentConfigs } from '@/types';
 import { jafnvaegi } from './jafnvaegi';
-import { syra_basi_gas } from './syra_basi_gas';
+import { hlutleysing_syru } from './hlutleysing_syru';
 
 /**
  * Experiment Configurations
@@ -13,7 +13,7 @@ import { syra_basi_gas } from './syra_basi_gas';
  */
 export const experimentConfigs: ExperimentConfigs = {
   jafnvaegi,
-  syra_basi_gas,
+  hlutleysing_syru,
   // Add new experiments here:
   // surustig,
   // varmagildi,
