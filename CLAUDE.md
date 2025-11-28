@@ -13,7 +13,7 @@ This document provides guidance for AI assistants working with the Lab Report As
 **Tech Stack:**
 - Frontend: React 18 + TypeScript + Vite
 - Styling: Tailwind CSS
-- AI: Claude Sonnet 4 (Anthropic API)
+- AI: Claude Sonnet 4.5 (Anthropic API)
 - File Processing: Pandoc (docx - server-side), PDF.js (pdf), FileReader API (images)
 - Routing: React Router DOM
 - Deployment: Linode with nginx + Node.js backend server (production)
@@ -451,10 +451,10 @@ When making changes, verify:
 
 ### Update Claude Model Version
 
-Edit `src/utils/api.ts`:
+Edit `src/utils/api.ts` and `server/index.js`:
 
 ```typescript
-model: 'claude-sonnet-4-20250514',  // Update this
+model: 'claude-sonnet-4-5-20250929',  // Current model
 ```
 
 ### Change Point Distribution
@@ -845,7 +845,7 @@ The project received significant enhancements throughout November 2025:
 - **Added Dependencies**: formidable (server-side file uploads), express, cors
 
 ### API Changes
-- Model version: `claude-sonnet-4-20250514` (current)
+- Model version: `claude-sonnet-4-5-20250929` (current)
 - Backend server mode with Express.js (port 8000)
 - 85-second timeout for file analysis (analyze endpoint)
 - 30-second timeout for document processing (process-document endpoint)
@@ -914,7 +914,7 @@ npm audit                   # Check for security issues
 **Architecture**:
 - React 18 + TypeScript + Vite
 - Tailwind CSS for styling
-- Claude Sonnet 4 (`claude-sonnet-4-20250514`)
+- Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`)
 - Node.js/Express backend server (port 8000)
 - nginx reverse proxy for API and static files
 - Modular codebase with TypeScript strict mode

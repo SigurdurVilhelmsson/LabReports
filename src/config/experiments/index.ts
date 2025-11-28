@@ -1,5 +1,6 @@
 import { ExperimentConfigs } from '@/types';
 import { jafnvaegi } from './jafnvaegi';
+import { hlutleysing_syru } from './hlutleysing_syru';
 
 /**
  * Experiment Configurations
@@ -12,6 +13,7 @@ import { jafnvaegi } from './jafnvaegi';
  */
 export const experimentConfigs: ExperimentConfigs = {
   jafnvaegi,
+  hlutleysing_syru,
   // Add new experiments here:
   // surustig,
   // varmagildi,
