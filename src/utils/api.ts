@@ -91,8 +91,8 @@ export const analyzeWithClaude = async (
 
   const messageContent = buildMessageContent(content);
 
-  // Student mode needs more tokens for detailed feedback
-  const maxTokens = mode === 'student' ? 4000 : 2000;
+  // Both modes need sufficient tokens for detailed feedback on long reports
+  const maxTokens = 4000;
 
   // ALWAYS prefer backend endpoint for security
   const backendEndpoint = import.meta.env.VITE_API_ENDPOINT;
