@@ -1,0 +1,23 @@
+[Unit]
+Description=Kvenno Backend API Server
+Documentation=https://github.com/SigurdurVilhelmsson/LabReports
+After=network.target
+
+[Service]
+Type=simple
+User=siggi
+WorkingDirectory=/home/siggi/repos/LabReports/server
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kvenno-backend
+
+# Environment variables
+Environment=NODE_ENV=production
+Environment=PORT=8000
+EnvironmentFile=/home/siggi/repos/LabReports/server/.env
+
+[Install]
+WantedBy=multi-user.target
