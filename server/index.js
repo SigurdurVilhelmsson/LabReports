@@ -358,7 +358,7 @@ app.post('/api/analyze', async (req, res) => {
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: mode === 'student' ? 4000 : 2000,
+          max_tokens: 8192,  // Increased to handle complex reports without truncation
           system: systemPrompt,
           messages: [
             {
