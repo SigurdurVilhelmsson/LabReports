@@ -2,6 +2,25 @@
 
 This document explains how to use the extraction debug mode to troubleshoot inconsistencies between DOCX and PDF file processing.
 
+---
+
+## Recent Improvements (November 2025)
+
+The debug mode was instrumental in identifying and fixing major consistency issues:
+
+✅ **Issues Resolved** (see `/DOCX_PDF_CONSISTENCY_SUMMARY.md`):
+- Line break detection improved for character-level PDFs
+- X-coordinate spacing artifacts eliminated
+- Filename handling fixed for multi-dot filenames
+- Token limits increased to 8192
+- JSON parsing enhanced with repair logic
+
+**Result**: DOCX vs PDF scoring variance reduced from 10-15% to 2% (within normal AI variation)
+
+**Current Status**: Debug mode continues to be useful for troubleshooting new issues and verifying extraction quality.
+
+---
+
 ## Problem Statement
 
 When uploading the same lab report as both a `.docx` file and a `.pdf` file, Claude's analysis may give different results (different points, different feedback). This debug mode helps identify why these differences occur.

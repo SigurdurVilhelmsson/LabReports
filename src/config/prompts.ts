@@ -88,6 +88,8 @@ Svaraðu EINGÖNGU með gilt JSON (valid JSON). ATHUGIÐ:
 - Ef texti inniheldur gæsalappir, forðastu að nota tvöfaldar gæsalappir inni í textanum (notaðu bara einfalt orðalag)
 - Passa að öll svigi (curly braces) séu pöruð rétt
 
+[NOTE: These explicit JSON formatting instructions were added Nov 2025 to reduce parsing failures]
+
 JSON sniðmát:
 {
   "sections": {
@@ -132,6 +134,8 @@ Svaraðu EINGÖNGU með gilt JSON (valid JSON). ATHUGIÐ:
 - EKKI nota trailing commas (kommu á eftir síðasta gildi)
 - Ef texti inniheldur gæsalappir, forðastu að nota tvöfaldar gæsalappir inni í textanum (notaðu bara einfalt orðalag)
 - Passa að öll svigi (curly braces) séu pöruð rétt
+
+[NOTE: These explicit JSON formatting instructions were added Nov 2025 to reduce parsing failures]
 
 JSON sniðmát:
 {

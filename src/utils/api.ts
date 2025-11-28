@@ -204,17 +204,23 @@ export const processFile = async (
 
     let jsonText = jsonMatch[0];
 
-    // Try to fix common JSON issues before parsing
+    // JSON Repair Logic (Added Nov 2025)
+    // Claude occasionally generates JSON with trailing commas or other quirks
+    // This repair logic handles common issues before parsing
     try {
-      // Remove trailing commas before } or ]
+      // Remove trailing commas before closing brackets
+      // Example: {"key": "value",} → {"key": "value"}
+      //          {"array": [1, 2,]} → {"array": [1, 2]}
       jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
 
-      // Parse the JSON
+      // Parse the repaired JSON
       const parsed = JSON.parse(jsonText);
 
       return parsed;
     } catch (parseError) {
-      // If parsing fails, log the problematic JSON for debugging
+      // Enhanced error logging for debugging JSON issues
+      // Logs: original response, extracted JSON, and parse error details
+      // Useful for identifying new JSON formatting issues from Claude
       console.error('JSON parsing failed. Response text:', resultText.substring(0, 500));
       console.error('Extracted JSON:', jsonText.substring(0, 500));
       console.error('Parse error:', parseError);

@@ -424,6 +424,104 @@ curl -X POST http://localhost:3001/api/analyze \
 └─────────────┘
 ```
 
+## Configuration
+
+### Token Limits
+
+The backend uses `max_tokens: 8192` for Claude API calls (both teacher and student modes). This was increased from 2000 to prevent response truncation for complex reports.
+
+**Location**: `server/index.js:361`
+
+```javascript
+max_tokens: 8192,  // Increased to handle complex reports without truncation
+```
+
+**Why 8192?**
+- Handles detailed feedback for long reports (8+ pages)
+- Prevents JSON truncation mid-response
+- Supports multiple sections with reasoning
+- Accommodates both teacher and student mode requirements
+
+**Environment Variable** (Optional):
+You can make this configurable by adding to `.env`:
+
+```bash
+MAX_TOKENS=8192
+```
+
+Then in code:
+```javascript
+max_tokens: parseInt(process.env.MAX_TOKENS || '8192', 10),
+```
+
+### Debug Logging
+
+The backend includes enhanced logging for troubleshooting API responses:
+
+**Location**: `server/index.js:385-394`
+
+```javascript
+console.log('[Analysis] Response received:', {
+  stopReason: data.stop_reason,
+  textLength: textContent.length,
+  textPreview: textContent.substring(0, 200),
+  textEnd: textContent.substring(textContent.length - 200),
+  usage: data.usage
+});
+```
+
+**What's Logged**:
+- `stopReason`: Why Claude stopped generating (e.g., "end_turn", "max_tokens")
+- `textLength`: Character count of response
+- `textPreview`: First 200 characters
+- `textEnd`: Last 200 characters (helpful for truncation detection)
+- `usage`: Token usage statistics (input_tokens, output_tokens)
+
+**When to Check Logs**:
+- Responses seem incomplete
+- JSON parsing errors occur
+- Want to monitor token usage
+- Debugging timeout issues
+
+**View Logs**:
+```bash
+sudo journalctl -u kvenno-backend -n 100
+```
+
+**Filter for Analysis Logs**:
+```bash
+sudo journalctl -u kvenno-backend | grep "\[Analysis\]"
+```
+
+### Timeouts
+
+**Analyze Endpoint**: 85 seconds (90s limit with 5s buffer)
+- Generous timeout for processing 8+ reports simultaneously
+- Anthropic API typically responds in 30-60 seconds per report
+- Adjust if needed in `server/index.js:340`
+
+**Process Document Endpoint**: 30 seconds
+- Sufficient for .docx → PDF conversion via LibreOffice
+- Includes pandoc equation extraction
+- Adjust if needed in `server/index.js:218`
+
+### nginx Buffering
+
+**Important**: For large API responses (8192 token responses), nginx must have proper buffering:
+
+```nginx
+# In /etc/nginx/sites-available/kvenno.conf
+location /api/ {
+    proxy_buffering on;  # MUST be "on" for large responses
+    proxy_buffer_size 16k;
+    proxy_buffers 8 16k;
+    proxy_busy_buffers_size 32k;
+    proxy_pass http://localhost:8000;
+}
+```
+
+Without proper buffering, responses may be truncated mid-JSON.
+
 ## Support
 
 For issues, check:
