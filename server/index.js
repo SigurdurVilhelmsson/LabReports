@@ -381,6 +381,17 @@ app.post('/api/analyze', async (req, res) => {
       }
 
       const data = await response.json();
+
+      // Log response details for debugging truncation issues
+      const textContent = data.content?.find(c => c.type === 'text')?.text || '';
+      console.log('[Analysis] Response received:', {
+        stopReason: data.stop_reason,
+        textLength: textContent.length,
+        textPreview: textContent.substring(0, 200),
+        textEnd: textContent.substring(textContent.length - 200),
+        usage: data.usage
+      });
+
       return res.json(data);
     } catch (fetchError) {
       clearTimeout(timeoutId);
