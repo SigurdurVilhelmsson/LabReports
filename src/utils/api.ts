@@ -92,7 +92,8 @@ export const analyzeWithClaude = async (
   const messageContent = buildMessageContent(content);
 
   // Both modes need sufficient tokens for detailed feedback on long reports
-  const maxTokens = 4000;
+  // Increased to 8192 to handle complex reports without truncation
+  const maxTokens = 8192;
 
   // ALWAYS prefer backend endpoint for security
   const backendEndpoint = import.meta.env.VITE_API_ENDPOINT;
