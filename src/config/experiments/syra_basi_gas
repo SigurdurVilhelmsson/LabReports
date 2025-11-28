@@ -72,7 +72,7 @@ import { ExperimentConfig } from '@/types';
 export const hlutleysing_syru: ExperimentConfig = {
   id: 'hlutleysing_syru',
   title: 'Hlutleysing sýru með gasmyndun',
-  year: 2, // Assuming 2nd year based on content complexity
+  year: 3, // Assuming 3rd year based on content complexity
   worksheet: {
     reaction: 'CH₃COOH(aq) + HCO₃⁻(aq) → CH₃COO⁻(aq) + H₂O(l) + CO₂(g)',
     materials: [
