@@ -1,5 +1,6 @@
 import { ExperimentConfigs } from '@/types';
 import { jafnvaegi } from './jafnvaegi';
+import { syra_basi_gas } from './syra_basi_gas';
 
 /**
  * Experiment Configurations
