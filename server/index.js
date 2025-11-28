@@ -242,6 +242,16 @@ app.post('/api/process-document', async (req, res) => {
       return res.status(400).json({ error: 'Only .docx files are supported' });
     }
 
+    // Formidable may save file without .docx extension (e.g., with .25 from filename)
+    // Rename to ensure proper .docx extension for LibreOffice
+    if (!docxPath.endsWith('.docx')) {
+      const { rename } = await import('fs/promises');
+      const newDocxPath = `${docxPath}.docx`;
+      await rename(docxPath, newDocxPath);
+      docxPath = newDocxPath;
+      console.log('[Document Processing] Renamed uploaded file to:', docxPath);
+    }
+
     console.log('[Document Processing] Starting DOCX → PDF conversion:', fileName);
 
     // Extract equations from original DOCX using pandoc (best accuracy)
