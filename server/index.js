@@ -357,8 +357,8 @@ app.post('/api/analyze', async (req, res) => {
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20250929',
-          max_tokens: mode === 'student' ? 4000 : 2000,
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 8192,  // Increased to handle complex reports without truncation
           system: systemPrompt,
           messages: [
             {
