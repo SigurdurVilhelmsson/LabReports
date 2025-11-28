@@ -82,7 +82,13 @@ ${criteria.needsImprovement ? `- ${(s.maxPoints || 0) * 0.6} - ${(s.maxPoints ||
 ${s.specialNote ? `ATHUGIÐ: ${s.specialNote}` : ''}`;
 }).join('\n')}
 
-Svaraðu EINGÖNGU með JSON:
+Svaraðu EINGÖNGU með gilt JSON (valid JSON). ATHUGIÐ:
+- Notaðu tvöfaldar gæsalappir (") í kringum öll strengjagildi
+- EKKI nota trailing commas (kommu á eftir síðasta gildi)
+- Ef texti inniheldur gæsalappir, forðastu að nota tvöfaldar gæsalappir inni í textanum (notaðu bara einfalt orðalag)
+- Passa að öll svigi (curly braces) séu pöruð rétt
+
+JSON sniðmát:
 {
   "sections": {
 ${experiment.sections.map(s => `    "${s.id}": {
@@ -121,7 +127,13 @@ ${criteria.needsImprovement ? `- ${(s.maxPoints || 0) * 0.6} - ${(s.maxPoints ||
 ${s.specialNote ? `ATHUGIÐ: ${s.specialNote}` : ''}`;
 }).join('\n')}
 
-Svaraðu EINGÖNGU með JSON:
+Svaraðu EINGÖNGU með gilt JSON (valid JSON). ATHUGIÐ:
+- Notaðu tvöfaldar gæsalappir (") í kringum öll strengjagildi
+- EKKI nota trailing commas (kommu á eftir síðasta gildi)
+- Ef texti inniheldur gæsalappir, forðastu að nota tvöfaldar gæsalappir inni í textanum (notaðu bara einfalt orðalag)
+- Passa að öll svigi (curly braces) séu pöruð rétt
+
+JSON sniðmát:
 {
   "heildareinkunn": "X/${totalMaxPoints}",
   "totalPoints": númer,

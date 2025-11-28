@@ -201,7 +201,29 @@ export const processFile = async (
       throw new Error('Gat ekki túlkað svar frá AI');
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    let jsonText = jsonMatch[0];
+
+    // Try to fix common JSON issues before parsing
+    try {
+      // Remove trailing commas before } or ]
+      jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
+
+      // Parse the JSON
+      const parsed = JSON.parse(jsonText);
+
+      return parsed;
+    } catch (parseError) {
+      // If parsing fails, log the problematic JSON for debugging
+      console.error('JSON parsing failed. Response text:', resultText.substring(0, 500));
+      console.error('Extracted JSON:', jsonText.substring(0, 500));
+      console.error('Parse error:', parseError);
+
+      throw new Error(`Gat ekki túlkað JSON svar: ${parseError instanceof Error ? parseError.message : 'Óþekkt villa'}`);
+    }
+  };
+
+  const processWithResult = async () => {
+    const parsed = await processPromise();
 
     if (mode === 'teacher') {
       return {
@@ -218,5 +240,5 @@ export const processFile = async (
     }
   };
 
-  return await Promise.race([processPromise(), timeoutPromise]) as AnalysisResult | StudentFeedback;
+  return await Promise.race([processWithResult(), timeoutPromise]) as AnalysisResult | StudentFeedback;
 };
