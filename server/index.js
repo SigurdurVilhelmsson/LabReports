@@ -358,7 +358,10 @@ app.post('/api/analyze', async (req, res) => {
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 8192,  // Increased to handle complex reports without truncation
+          // Increased from 2000 → 8192 to prevent response truncation (Nov 2025)
+          // Complex reports (8+ pages) with detailed feedback require more output tokens
+          // Applies to both teacher and student modes
+          max_tokens: 8192,
           system: systemPrompt,
           messages: [
             {
@@ -382,14 +385,17 @@ app.post('/api/analyze', async (req, res) => {
 
       const data = await response.json();
 
-      // Log response details for debugging truncation issues
+      // Enhanced debug logging for troubleshooting response issues
+      // Helps identify: truncation, timeout problems, token usage patterns
+      // To view logs: sudo journalctl -u kvenno-backend -n 100
+      // To filter: sudo journalctl -u kvenno-backend | grep "\[Analysis\]"
       const textContent = data.content?.find(c => c.type === 'text')?.text || '';
       console.log('[Analysis] Response received:', {
-        stopReason: data.stop_reason,
-        textLength: textContent.length,
-        textPreview: textContent.substring(0, 200),
-        textEnd: textContent.substring(textContent.length - 200),
-        usage: data.usage
+        stopReason: data.stop_reason,      // Why generation stopped ("end_turn" = complete, "max_tokens" = hit limit)
+        textLength: textContent.length,    // Total response length in characters
+        textPreview: textContent.substring(0, 200),     // First 200 chars for quick inspection
+        textEnd: textContent.substring(textContent.length - 200),  // Last 200 chars (useful for truncation detection)
+        usage: data.usage                  // Token usage stats (input_tokens, output_tokens)
       });
 
       return res.json(data);

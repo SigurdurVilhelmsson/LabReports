@@ -803,6 +803,47 @@ See [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security)
 
 The project received significant enhancements throughout November 2025:
 
+### API Response & JSON Parsing Improvements (Nov 27-28)
+- **Token Limit Increase**: Raised max_tokens from 2000 → 8192 in both frontend and backend (PR #62)
+  - Prevents response truncation for complex reports
+  - Synchronized across all modes (teacher and student)
+  - Backend: `server/index.js:361` changed to `max_tokens: 8192`
+  - Frontend: `src/utils/api.ts:96` changed to `maxTokens = 8192`
+- **JSON Repair Logic**: Added automatic trailing comma removal before parsing (PR #62)
+  - Handles Claude's occasional JSON formatting quirks
+  - Prevents parsing failures from trailing commas
+  - Logs problematic JSON for debugging
+  - Location: `src/utils/api.ts:209-222`
+- **Debug Logging**: Enhanced backend logging for troubleshooting
+  - Logs stop reason, text length, usage stats
+  - Conditional on `NODE_ENV` (production vs development)
+  - Helps diagnose truncation and timeout issues
+  - Location: `server/index.js:385-394`
+- **JSON Formatting Instructions**: Added explicit formatting rules to prompts
+  - Instructs Claude to avoid trailing commas
+  - Specifies proper quote escaping
+  - Ensures valid JSON responses
+  - Location: `src/config/prompts.ts:85-91, 130-136`
+
+### DOCX/PDF Consistency Fixes (Nov 27-28)
+- **Filename Handling**: Fixed Formidable extension handling for files with multiple dots (PR #62)
+  - Example: `report.sept.25.docx` now processes correctly
+  - Ensures `.docx` extension before LibreOffice conversion
+  - Location: `server/index.js:245-253`
+- **Line Break Detection**: Enhanced PDF text extraction for character-level encodings (PR #54)
+  - Direct PDFs use ANY Y-change for line breaks
+  - DOCX-converted PDFs use standard threshold
+  - Improved readability of extracted text
+- **X-Coordinate Spacing**: Disabled for character-level PDFs (PR #53)
+  - Eliminated "L e Cha tel ier" spacing artifacts
+  - Cleaner text extraction
+- **LibreOffice Fallback**: Added PDF search for filename variations (PR #55)
+  - Handles LibreOffice's different output filename patterns
+  - More robust conversion pipeline
+- **Scoring Consistency**: Achieved 2% variance between DOCX and PDF uploads
+  - Within normal AI variation (previously 10-15%)
+  - See `DOCX_PDF_CONSISTENCY_SUMMARY.md` for details
+
 ### File Upload Enhancements (Nov 16-18)
 - **Drag and Drop**: Full drag-and-drop support for file uploads (`FileUpload.tsx`, PR #18)
 - **PDF Support for Students**: Students can now upload PDF files (previously teacher-only, PR #19)

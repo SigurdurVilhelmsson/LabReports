@@ -23,11 +23,27 @@ For complete site structure and design guidelines, see **[Kvenno_structure.md](.
 
 ## What's New (November 2025)
 
-This project has recently received significant enhancements:
+### v3.2.0 - Documentation & Reliability (Nov 28)
+- **Token Limit Increase** - Raised from 2000 → 8192 tokens to handle complex reports
+- **JSON Repair Logic** - Automatic fixing of Claude's occasional JSON formatting quirks
+- **Enhanced Debug Logging** - Better troubleshooting with detailed response analysis
+- **Documentation Cleanup** - Consolidated and organized 21+ documentation files
+- **nginx Buffering Guide** - Critical configuration for large API responses
+- **Future Improvements Roadmap** - Detailed optimization suggestions for v3.3.0+
+- **Comprehensive CHANGELOG** - Complete version history and upgrade guides
 
-- **Pandoc Integration (Nov 19)** - Replaced client-side Mammoth.js with server-side pandoc for better .docx processing
+### v3.1.1 - DOCX/PDF Consistency (Nov 27-28)
+- **Scoring Consistency** - Reduced variance from 10-15% → 2% between DOCX and PDF uploads
+- **Filename Handling** - Fixed processing for files with multiple dots (e.g., `report.25.docx`)
+- **Line Break Detection** - Enhanced PDF text extraction for character-level encodings
+- **LibreOffice Fallback** - Robust PDF search for filename variations
+
+### v3.1.0 - Pandoc Integration (Nov 19)
+- **Pandoc Integration** - Replaced client-side Mammoth.js with server-side pandoc for better .docx processing
 - **Better Equation Handling** - LaTeX equations now preserved natively in markdown format
 - **Improved Document Conversion** - More accurate .docx parsing with pandoc's robust engine
+
+### v3.0.0 - Major Release (Nov 16-18)
 - **Drag & Drop File Upload** - Intuitive file upload with drag-and-drop support
 - **PDF Support for Students** - Students can now upload PDF files (previously teacher-only)
 - **Points-Based Grading** - Teacher mode shows detailed point breakdown and reasoning

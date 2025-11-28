@@ -196,6 +196,57 @@ For traditional Linux servers (Ubuntu, Debian, etc.) with nginx. Provides full c
    sudo certbot --nginx -d kvenno.app -d www.kvenno.app
    ```
 
+### Important Configuration Notes
+
+#### Token Limits
+
+The backend is configured with `max_tokens: 8192` for Claude API calls to handle complex reports without truncation.
+
+**Why this matters:**
+- Long reports (8+ pages) with detailed feedback require more output tokens
+- Previously used 2000 tokens, which caused truncation mid-JSON
+- 8192 provides adequate headroom for both teacher and student modes
+
+**Where configured**: `server/index.js:361`
+
+**Optional**: Make it configurable via environment variable:
+```bash
+# In server/.env
+MAX_TOKENS=8192
+```
+
+See `server/README.md` for details on configuration options.
+
+#### nginx Proxy Buffering
+
+**CRITICAL**: nginx MUST have proper buffering enabled for large API responses (8192 token responses).
+
+Add to your nginx configuration (`/etc/nginx/sites-available/kvenno.app`):
+
+```nginx
+location /api/ {
+    proxy_buffering on;               # MUST be "on" (not "off"!)
+    proxy_buffer_size 16k;           # Header buffer
+    proxy_buffers 8 16k;             # Response buffers
+    proxy_busy_buffers_size 32k;     # Busy buffer limit
+
+    proxy_pass http://localhost:8000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+}
+```
+
+**Without proper buffering**: Responses will be truncated mid-JSON, causing parsing errors.
+
+**After updating nginx config**:
+```bash
+sudo nginx -t               # Test configuration
+sudo systemctl reload nginx # Apply changes
+   ```
+
 ### Architecture:
 
 ```
