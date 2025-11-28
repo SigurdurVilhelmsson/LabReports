@@ -12,6 +12,7 @@ import { jafnvaegi } from './jafnvaegi';
  */
 export const experimentConfigs: ExperimentConfigs = {
   jafnvaegi,
+  syra_basi_gas,
   // Add new experiments here:
   // surustig,
   // varmagildi,
