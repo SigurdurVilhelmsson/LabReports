@@ -454,7 +454,7 @@ When making changes, verify:
 Edit `src/utils/api.ts` and `server/index.js`:
 
 ```typescript
-model: 'claude-sonnet-4-5-20250929',  // Current model
+model: 'claude-opus-4-5-20251101',  // Current model
 ```
 
 ### Change Point Distribution
@@ -886,7 +886,7 @@ The project received significant enhancements throughout November 2025:
 - **Added Dependencies**: formidable (server-side file uploads), express, cors
 
 ### API Changes
-- Model version: `claude-sonnet-4-5-20250929` (current)
+- Model version: `claude-opus-4-5-20251101` (current)
 - Backend server mode with Express.js (port 8000)
 - 85-second timeout for file analysis (analyze endpoint)
 - 30-second timeout for document processing (process-document endpoint)
@@ -955,7 +955,7 @@ npm audit                   # Check for security issues
 **Architecture**:
 - React 18 + TypeScript + Vite
 - Tailwind CSS for styling
-- Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`)
+- Claude Opus 4.5 (`claude-opus-4-5-20251101`)
 - Node.js/Express backend server (port 8000)
 - nginx reverse proxy for API and static files
 - Modular codebase with TypeScript strict mode
