@@ -357,7 +357,7 @@ app.post('/api/analyze', async (req, res) => {
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-opus-4-5-20251101',
           // Increased from 2000 → 8192 to prevent response truncation (Nov 2025)
           // Complex reports (8+ pages) with detailed feedback require more output tokens
           // Applies to both teacher and student modes
