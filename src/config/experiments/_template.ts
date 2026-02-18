@@ -129,4 +129,12 @@ export const experimentId: ExperimentConfig = {
 
   // Grading scale (usually ['10', '8', '5', '0'])
   gradeScale: ['10', '8', '5', '0'],
+
+  // Experiment-specific evaluation instructions for the AI (optional)
+  // These are injected into the system prompt after the experiment title.
+  // Use for chemistry facts, accuracy rules, and checklists specific to this experiment.
+  // evaluationNotes: [
+  //   'Chemistry facts specific to this experiment',
+  //   'Checklist for section evaluation',
+  // ],
 };

@@ -269,4 +269,24 @@ export const jafnvaegi: ExperimentConfig = {
     },
   ],
   gradeScale: ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1', '0'],
+  evaluationNotes: [
+    `EFNAFRÆÐILEG NÁKVÆMNI - MJÖG MIKILVÆGT:
+• Fe(NO₃)₃ inniheldur Fe³⁺ jónir (ekki Fe²⁺) og NO₃⁻ jónir (ekki NO⁻)
+• Fe(NO₃)₃ lausn er GUL eða LJÓSGUL (ekki blá!)
+• KSCN inniheldur K⁺ og SCN⁻ jónir (EKKI ScN⁻ - það er alvarleg villa!)
+• FeSCN²⁺ er dökkrauð/rústauð á lit
+• AgNO₃ inniheldur Ag⁺ og NO₃⁻ jónir`,
+    `Ef nemandi segir "lausnin lýstist" - ekki gera athugasemd við það nema nemandi hafi skrifað rangt (t.d. "lausnin dökknaði" þegar hún átti að lýsast).`,
+    `RÖKFRÆÐILEG ATHUGUN á Le Chatelier:
+Nota SPURNINGAR til að leiða nemanda til að hugsa rétt.`,
+    `JÖFNUR:
+• Athugar þú hvort allar jöfnur og formúlur í fræðikafla séu NÚMERAÐAR (1), (2), (3)
+• Vertu NÁKVÆM um hvaða jöfnu þú ert að tala um`,
+    `TÉKKLISTI:
+Fræðikafli: Skilgreining á efnajafnvægi, Le Chatelier með tengingu við áhrifaþætti, númeraðar jöfnur
+Tæki og efni: Nemandi VERÐUR að telja upp öll tæki og efni - ekki nóg að vísa í vinnuseðil
+Framkvæmd: Ef nemandi vísar í vinnuseðil er það GOTT
+Niðurstöður: Útreikningar fyrir allar þrjár lausnir (KSCN, Fe(NO₃)₃, AgNO₃)
+Lokaorð: Tengja við fræði`,
+  ],
 };

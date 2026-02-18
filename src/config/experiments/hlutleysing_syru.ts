@@ -273,4 +273,17 @@ export const hlutleysing_syru: ExperimentConfig = {
     },
   ],
   gradeScale: ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1', '0'],
+  evaluationNotes: [
+    `EFNAFRÆÐILEG NÁKVÆMNI - MIKILVÆGT:
+• CH₃COOH er veik sýra (ediksýra), HCO₃⁻ er basi
+• Na⁺ er áhorfsjón (spectator ion) og tekur ekki þátt í hvarfinu
+• H₂CO₃ er óstöðugt milliefni sem brotnar niður í H₂O og CO₂
+• Brønsted-Lowry: sýra gefur próton (H⁺), basi tekur við próton`,
+    `TÉKKLISTI:
+Fræðikafli: Brønsted-Lowry skilgreining, tilsvarandi sýru-basa pör, pH/pOH tengsl, PV=nRT, áhorfsjónir, nýtni
+Tæki og efni: Nemandi VERÐUR að telja upp öll tæki og efni
+Framkvæmd: Ef nemandi vísar í vinnuseðil er það GOTT
+Niðurstöður: Allir útreikningar (massi NaHCO₃, rúmmál blöðru, mólfjöldi CO₂, nýtni, [H⁺]/[OH⁻])
+Lokaorð: Tengja við sýru-basa fræði OG gaslögmál, umræða um óvissu`,
+  ],
 };

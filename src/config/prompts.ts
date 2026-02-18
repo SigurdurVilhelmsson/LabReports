@@ -1,6 +1,29 @@
 import { ExperimentConfig } from '@/types';
 
+// Shared JSON formatting instructions to prevent parsing failures
+const JSON_FORMAT_INSTRUCTIONS = `Svaraðu EINGÖNGU með gilt JSON (valid JSON). ATHUGIÐ:
+- Notaðu tvöfaldar gæsalappir (") í kringum öll strengjagildi
+- EKKI nota trailing commas (kommu á eftir síðasta gildi)
+- Ef texti inniheldur gæsalappir, forðastu að nota tvöfaldar gæsalappir inni í textanum (notaðu bara einfalt orðalag)
+- Passa að öll svigi (curly braces) séu pöruð rétt`;
+
+// Build per-section grading scale - shared by both teacher and student modes
+const buildGradingScale = (experiment: ExperimentConfig): string => {
+  return `MATSKVARÐI PER KAFLI:
+${experiment.sections.map(s => {
+  const criteria = s.criteria;
+  return `
+${s.name} (0-${s.maxPoints} stig):
+- ${s.maxPoints} stig: ${criteria.good}
+${criteria.needsImprovement ? `- ${(s.maxPoints || 0) * 0.6} - ${(s.maxPoints || 0) * 0.8} stig: ${criteria.needsImprovement}` : ''}
+- 0-${(s.maxPoints || 0) * 0.5} stig: ${criteria.unsatisfactory}
+${s.specialNote ? `ATHUGIÐ: ${s.specialNote}` : ''}`;
+}).join('\n')}`;
+};
+
 // Shared core evaluation rules - used by BOTH teacher and student modes
+// NOTE: This function must remain experiment-agnostic. Experiment-specific
+// chemistry facts and checklists belong in ExperimentConfig.evaluationNotes.
 const buildCoreEvaluationRules = (experiment: ExperimentConfig): string => {
   const totalMaxPoints = experiment.sections.reduce((sum, s) => sum + (s.maxPoints || 0), 0);
 
@@ -37,58 +60,23 @@ Fyrir númeraða lista í athugasemdum, notaðu þetta snið:
 
 Tilraun: ${experiment.title}
 ${experiment.worksheet ? `Efnahvarf: ${experiment.worksheet.reaction}` : ''}
-
-EFNAFRÆÐILEG NÁKVÆMNI - MJÖG MIKILVÆGT:
-• Fe(NO₃)₃ inniheldur Fe³⁺ jónir (ekki Fe²⁺) og NO₃⁻ jónir (ekki NO⁻)
-• Fe(NO₃)₃ lausn er GUL eða LJÓSGUL (ekki blá!)
-• KSCN inniheldur K⁺ og SCN⁻ jónir (EKKI ScN⁻ - það er alvarleg villa!)
-• FeSCN²⁺ er dökkrauð/rústauð á lit
-• AgNO₃ inniheldur Ag⁺ og NO₃⁻ jónir
-
-KRÍTÍSKT: Gerir þú EINGÖNGU athugasemdir við villur sem eru RAUNVERULEGA í textanum. ALDREI gera ráð fyrir villum sem ekki eru til staðar. Ef nemandi segir "lausnin lýstist" - ekki gera athugasemd við það nema nemandi hafi skrifað rangt (t.d. "lausnin dökknaði" þegar hún átti að lýsast). Lestu textann MJÖG vandlega áður en þú gerir athugasemdir.
-
-RÖKFRÆÐILEG ATHUGUN á Le Chatelier:
-Nota SPURNINGAR til að leiða nemanda til að hugsa rétt.
-
-JÖFNUR:
-• Athugar þú hvort allar jöfnur og formúlur í fræðikafla séu NÚMERAÐAR (1), (2), (3)
-• Vertu NÁKVÆM um hvaða jöfnu þú ert að tala um
-
-TÉKKLISTI:
-Fræðikafli: Skilgreining á efnajafnvægi, Le Chatelier með tengingu við áhrifaþætti, númeraðar jöfnur
-Tæki og efni: Nemandi VERÐUR að telja upp öll tæki og efni - ekki nóg að vísa í vinnuseðil
-Framkvæmd: Ef nemandi vísar í vinnuseðil er það GOTT
-Niðurstöður: Útreikningar fyrir allar þrjár lausnir (KSCN, Fe(NO₃)₃, AgNO₃)
-Lokaorð: Tengja við fræði`;
+${experiment.evaluationNotes?.length ? '\n' + experiment.evaluationNotes.join('\n\n') : ''}
+KRÍTÍSKT: Gerir þú EINGÖNGU athugasemdir við villur sem eru RAUNVERULEGA í textanum. ALDREI gera ráð fyrir villum sem ekki eru til staðar. Lestu textann MJÖG vandlega áður en þú gerir athugasemdir.`;
 };
 
 // Teacher mode: Grading system prompt with detailed evaluation
 export const buildTeacherSystemPrompt = (experiment: ExperimentConfig): string => {
   const coreRules = buildCoreEvaluationRules(experiment);
+  const gradingScale = buildGradingScale(experiment);
   const totalMaxPoints = experiment.sections.reduce((sum, s) => sum + (s.maxPoints || 0), 0);
 
   return `Þú ert efnafræðikennari sem metur skýrslur nemenda. Notaðu nákvæma efnafræðilega þekkingu og gefðu skýrar, uppbyggilegar athugasemdir.
 
 ${coreRules}
 
-MATSKVARÐI PER KAFLI:
-${experiment.sections.map(s => {
-  const criteria = s.criteria;
-  return `
-${s.name} (0-${s.maxPoints} stig):
-- ${s.maxPoints} stig: ${criteria.good}
-${criteria.needsImprovement ? `- ${(s.maxPoints || 0) * 0.6} - ${(s.maxPoints || 0) * 0.8} stig: ${criteria.needsImprovement}` : ''}
-- 0-${(s.maxPoints || 0) * 0.5} stig: ${criteria.unsatisfactory}
-${s.specialNote ? `ATHUGIÐ: ${s.specialNote}` : ''}`;
-}).join('\n')}
+${gradingScale}
 
-Svaraðu EINGÖNGU með gilt JSON (valid JSON). ATHUGIÐ:
-- Notaðu tvöfaldar gæsalappir (") í kringum öll strengjagildi
-- EKKI nota trailing commas (kommu á eftir síðasta gildi)
-- Ef texti inniheldur gæsalappir, forðastu að nota tvöfaldar gæsalappir inni í textanum (notaðu bara einfalt orðalag)
-- Passa að öll svigi (curly braces) séu pöruð rétt
-
-[NOTE: These explicit JSON formatting instructions were added Nov 2025 to reduce parsing failures]
+${JSON_FORMAT_INSTRUCTIONS}
 
 JSON sniðmát:
 {
@@ -112,30 +100,16 @@ ${experiment.sections.map(s => `    "${s.id}": {
 // Student mode: Detailed assistance with encouraging feedback
 export const buildStudentSystemPrompt = (experiment: ExperimentConfig): string => {
   const coreRules = buildCoreEvaluationRules(experiment);
+  const gradingScale = buildGradingScale(experiment);
   const totalMaxPoints = experiment.sections.reduce((sum, s) => sum + (s.maxPoints || 0), 0);
 
   return `Þú ert efnafræðikennari sem aðstoðar nemanda við að bæta skýrslu sína. Þú mátt ALDREI skrifa textann fyrir nemandann. Þú átt að gefa uppbyggilega, hvetjandi endurgjöf sem hjálpar nemandanum að læra.
 
 ${coreRules}
 
-MATSKVARÐI PER KAFLI:
-${experiment.sections.map(s => {
-  const criteria = s.criteria;
-  return `
-${s.name} (0-${s.maxPoints} stig):
-- ${s.maxPoints} stig: ${criteria.good}
-${criteria.needsImprovement ? `- ${(s.maxPoints || 0) * 0.6} - ${(s.maxPoints || 0) * 0.8} stig: ${criteria.needsImprovement}` : ''}
-- 0-${(s.maxPoints || 0) * 0.5} stig: ${criteria.unsatisfactory}
-${s.specialNote ? `ATHUGIÐ: ${s.specialNote}` : ''}`;
-}).join('\n')}
+${gradingScale}
 
-Svaraðu EINGÖNGU með gilt JSON (valid JSON). ATHUGIÐ:
-- Notaðu tvöfaldar gæsalappir (") í kringum öll strengjagildi
-- EKKI nota trailing commas (kommu á eftir síðasta gildi)
-- Ef texti inniheldur gæsalappir, forðastu að nota tvöfaldar gæsalappir inni í textanum (notaðu bara einfalt orðalag)
-- Passa að öll svigi (curly braces) séu pöruð rétt
-
-[NOTE: These explicit JSON formatting instructions were added Nov 2025 to reduce parsing failures]
+${JSON_FORMAT_INSTRUCTIONS}
 
 JSON sniðmát:
 {
