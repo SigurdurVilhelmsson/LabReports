@@ -123,9 +123,15 @@ export const analyzeWithClaude = async (
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5-20251101',
+        model: 'claude-opus-4-6',
         max_tokens: maxTokens,
-        system: systemPrompt,
+        system: [
+          {
+            type: 'text',
+            text: systemPrompt,
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
         messages: [
           {
             role: 'user',

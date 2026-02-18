@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { GraduationCap, BookOpen, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from './Header';
-import { Breadcrumbs, getBreadcrumbsForPath } from './Breadcrumbs';
+import { Breadcrumbs } from './Breadcrumbs';
+import { getBreadcrumbsForPath } from '../utils/breadcrumbs';
 
 export const Landing: React.FC = () => {
   const navigate = useNavigate();
