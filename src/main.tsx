@@ -8,6 +8,7 @@ import { AuthGuard } from './components/AuthGuard';
 import { AuthCallback } from './components/AuthCallback';
 import { Landing } from './components/Landing';
 import { TeacherPage } from './pages/TeacherPage';
+import { Teacher2Page } from './pages/Teacher2Page';
 import { StudentPage } from './pages/StudentPage';
 import './index.css';
 
@@ -62,6 +63,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/teacher/*" element={<TeacherPage />} />
+          <Route path="/teacher-2ar/*" element={<Teacher2Page />} />
           <Route path="/student/*" element={<StudentPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

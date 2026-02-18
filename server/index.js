@@ -427,6 +427,101 @@ app.post('/api/analyze', async (req, res) => {
   }
 });
 
+/**
+ * API endpoint: 2nd year simplified checklist analysis
+ * Receives system prompt and user prompt (with optional draft comparison),
+ * sends to Claude, and returns checklist results.
+ */
+app.post('/api/analyze-2ar', async (req, res) => {
+  try {
+    const { systemPrompt, userPrompt } = req.body;
+
+    if (!systemPrompt || !userPrompt) {
+      return res.status(400).json({ error: 'Missing required fields: systemPrompt, userPrompt' });
+    }
+
+    if (typeof systemPrompt !== 'string' || systemPrompt.length > 50000) {
+      return res.status(400).json({ error: 'Invalid systemPrompt' });
+    }
+
+    if (typeof userPrompt !== 'string' || userPrompt.length > 200000) {
+      return res.status(400).json({ error: 'Invalid userPrompt' });
+    }
+
+    const apiKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error('CLAUDE_API_KEY not configured');
+      return res.status(500).json({ error: 'API key not configured' });
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 85000);
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-opus-4-6',
+          max_tokens: 8192,
+          system: [
+            {
+              type: 'text',
+              text: systemPrompt,
+              cache_control: { type: 'ephemeral' },
+            },
+          ],
+          messages: [
+            {
+              role: 'user',
+              content: userPrompt,
+            },
+          ],
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Anthropic API error (2ar):', error);
+        return res.status(response.status).json({
+          error: error.error?.message || 'API request failed',
+        });
+      }
+
+      const data = await response.json();
+
+      const textContent = data.content?.find(c => c.type === 'text')?.text || '';
+      console.log('[Analysis-2ar] Response received:', {
+        stopReason: data.stop_reason,
+        textLength: textContent.length,
+        usage: data.usage,
+      });
+
+      return res.json(data);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+
+      if (fetchError.name === 'AbortError') {
+        console.error('Request timeout (2ar)');
+        return res.status(504).json({
+          error: 'Request timeout - greining tók of langan tíma',
+        });
+      }
+      throw fetchError;
+    }
+  } catch (error) {
+    console.error('Server error (2ar):', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
