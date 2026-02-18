@@ -26,7 +26,8 @@ import { TeacherResults } from './components/TeacherResults';
 import { StudentFeedback as StudentFeedbackComponent } from './components/StudentFeedback';
 import { SessionHistory } from './components/SessionHistory';
 import { Header } from './components/Header';
-import { Breadcrumbs, getBreadcrumbsForPath } from './components/Breadcrumbs';
+import { Breadcrumbs } from './components/Breadcrumbs';
+import { getBreadcrumbsForPath } from './utils/breadcrumbs';
 
 type View = 'grader' | 'history';
 

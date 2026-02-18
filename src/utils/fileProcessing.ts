@@ -311,7 +311,7 @@ const extractFromPdf = async (file: File, extractionMethod: 'direct-pdf' | 'docx
       let lastX = -1;
       let lastWidth = 0;
       let lastHeight = 0;
-      let largeGapsDetected = 0;  // Count table column separators
+      const largeGapsDetected = 0;  // Count table column separators
       const xGaps: number[] = [];  // Track all X gaps for analysis
 
       for (let i = 0; i < items.length; i++) {

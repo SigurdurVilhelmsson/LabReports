@@ -1,7 +1,8 @@
 import React from 'react';
 import { CheckCircle, XCircle, Lightbulb, TrendingUp, Target, AlertCircle } from 'lucide-react';
 import { StudentFeedback as StudentFeedbackType, ExperimentSection } from '@/types';
-import { ExtractionDebug, isExtractionDebugEnabled } from './ExtractionDebug';
+import { ExtractionDebug } from './ExtractionDebug';
+import { isExtractionDebugEnabled } from '../utils/extractionDebug';
 
 interface StudentFeedbackProps {
   feedback: StudentFeedbackType[];

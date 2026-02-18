@@ -7,7 +7,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 interface AnalyzeRequest {
-  content: any;
+  content: string | Array<{ type: string; [key: string]: unknown }>;
   systemPrompt: string;
   mode: 'teacher' | 'student';
 }
@@ -105,10 +105,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const data = await response.json();
       return res.status(200).json(data);
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
       clearTimeout(timeoutId);
 
-      if (fetchError.name === 'AbortError') {
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
         console.error('Request timeout');
         return res.status(504).json({ error: 'Request timeout - greining tók of langan tíma' });
       }

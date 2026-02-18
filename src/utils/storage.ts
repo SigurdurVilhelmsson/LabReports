@@ -68,20 +68,23 @@ export const saveSession = async (session: GradingSession): Promise<void> => {
 
   try {
     localStorage.setItem(`${SESSION_PREFIX}${session.id}`, JSON.stringify(session));
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error saving session:', error);
 
     // Check for quota exceeded error
-    if (
-      error.name === 'QuotaExceededError' ||
-      error.code === 22 || // Old browsers
-      error.code === 1014 // Firefox
-    ) {
-      throw new Error('Minni fullt - reyndu að eyða gömlum greiningum til að losa pláss');
+    if (error instanceof DOMException) {
+      if (
+        error.name === 'QuotaExceededError' ||
+        error.code === 22 || // Old browsers
+        error.code === 1014 // Firefox
+      ) {
+        throw new Error('Minni fullt - reyndu að eyða gömlum greiningum til að losa pláss');
+      }
     }
 
     // Re-throw with more context
-    throw new Error(`Villa við að vista: ${error.message || 'Óþekkt villa'}`);
+    const message = error instanceof Error ? error.message : 'Óþekkt villa';
+    throw new Error(`Villa við að vista: ${message}`);
   }
 };
 

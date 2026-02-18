@@ -120,7 +120,7 @@ export function StudentPage() {
           name: `${currentExperiment.title} - ${new Date().toLocaleDateString('is-IS')}`,
           experiment: currentExperiment.id,
           timestamp: new Date().toISOString(),
-          results: [result] as any,
+          results: [result] as StudentFeedback[],
           fileCount: 1,
           mode: 'student',
         };

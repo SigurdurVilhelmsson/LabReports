@@ -6,12 +6,12 @@
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 
 interface AnalyzeRequest {
-  content: any;
+  content: string | Array<{ type: string; [key: string]: unknown }>;
   systemPrompt: string;
   mode: 'teacher' | 'student';
 }
 
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   // CORS headers with domain whitelist for security
   const allowedOrigins = [
     'https://lab-reports-assistant.vercel.app',
@@ -136,10 +136,10 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         headers: corsHeaders,
         body: JSON.stringify(data),
       };
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
       clearTimeout(timeoutId);
 
-      if (fetchError.name === 'AbortError') {
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
         console.error('Request timeout');
         return {
           statusCode: 504,
