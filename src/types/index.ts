@@ -130,6 +130,65 @@ export interface FileContent {
   };
 }
 
+// 2nd year simplified checklist types
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  autoCheck: boolean;
+  manualRequired?: boolean;
+}
+
+export interface ChecklistSection {
+  name: string;
+  weight: string;
+  items: ChecklistItem[];
+  penalty?: string;
+}
+
+export interface BaselineComparisonConfig {
+  enabled: boolean;
+  requiredConcepts: string[];
+  requiredFormulas: string[];
+}
+
+export interface ExperimentConfig2 {
+  id: string;
+  title: string;
+  year: number;
+  baselineComparison: BaselineComparisonConfig;
+  checklist: Record<string, ChecklistSection>;
+  alwaysManualCheck: string[];
+}
+
+export interface ChecklistResult {
+  id: string;
+  label: string;
+  present: boolean | 'needs_manual_check';
+  note?: string;
+}
+
+export interface BaselineComparisonResult {
+  conceptsMatch: boolean;
+  formulasMatch: boolean;
+  languageRelated: boolean;
+  overallVerdict: 'ok' | 'warning' | 'mismatch';
+  notes?: string;
+  conceptsFound: string[];
+  conceptsMissing: string[];
+  formulasFound: string[];
+  formulasMissing: string[];
+}
+
+export interface Analysis2Result {
+  studentName?: string;
+  draftProvided: boolean;
+  baselineComparison?: BaselineComparisonResult;
+  checklist: Record<string, ChecklistResult[]>;
+  manualChecksRequired: string[];
+  summaryIcelandic: string;
+  error?: string;
+}
+
 // Toast notification
 export interface Toast {
   show: boolean;

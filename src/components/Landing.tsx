@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GraduationCap, BookOpen, ArrowLeft } from 'lucide-react';
+import { GraduationCap, BookOpen, ArrowLeft, ClipboardCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from './Header';
 import { Breadcrumbs } from './Breadcrumbs';
@@ -57,8 +57,8 @@ export const Landing: React.FC = () => {
             </div>
           )}
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Teacher Mode */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Teacher Mode (3rd year) */}
             <button
               onClick={() => navigate('/teacher')}
               className="group bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 border-2 border-kvenno-orange rounded-lg p-8 transition-all hover:shadow-lg"
@@ -76,6 +76,28 @@ export const Landing: React.FC = () => {
                   <li>• Flytja út niðurstöður í CSV</li>
                   <li>• Vista greiningarlotur</li>
                   <li>• Skoða fyrri greiningar</li>
+                </ul>
+              </div>
+            </button>
+
+            {/* Teacher Mode - 2nd year checklist */}
+            <button
+              onClick={() => navigate('/teacher-2ar')}
+              className="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-2 border-blue-500 rounded-lg p-8 transition-all hover:shadow-lg"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="bg-blue-500 text-white p-4 rounded-full mb-4 group-hover:scale-110 transition-transform">
+                  <ClipboardCheck size={48} />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">2. ár - Gátlisti</h2>
+                <p className="text-slate-700 mb-4">
+                  Einfaldað gátlistamat fyrir 2. ár
+                </p>
+                <ul className="text-sm text-slate-600 space-y-1 text-left">
+                  <li>• Til staðar / vantar athugun</li>
+                  <li>• Samanburður við drög</li>
+                  <li>• Kennari gefur stig handvirkt</li>
+                  <li>• Flytja út CSV</li>
                 </ul>
               </div>
             </button>
