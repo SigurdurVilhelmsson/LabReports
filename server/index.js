@@ -357,12 +357,21 @@ app.post('/api/analyze', async (req, res) => {
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-opus-4-5-20251101',
+          model: 'claude-opus-4-6',
           // Increased from 2000 → 8192 to prevent response truncation (Nov 2025)
           // Complex reports (8+ pages) with detailed feedback require more output tokens
           // Applies to both teacher and student modes
           max_tokens: 8192,
-          system: systemPrompt,
+          // System prompt sent as content block with cache_control for prompt caching.
+          // The system prompt (~4-5K tokens) is identical across reports in a batch,
+          // so caching reduces input cost from $5/MTok to $0.50/MTok on cache hits.
+          system: [
+            {
+              type: 'text',
+              text: systemPrompt,
+              cache_control: { type: 'ephemeral' },
+            },
+          ],
           messages: [
             {
               role: 'user',
@@ -395,7 +404,9 @@ app.post('/api/analyze', async (req, res) => {
         textLength: textContent.length,    // Total response length in characters
         textPreview: textContent.substring(0, 200),     // First 200 chars for quick inspection
         textEnd: textContent.substring(textContent.length - 200),  // Last 200 chars (useful for truncation detection)
-        usage: data.usage                  // Token usage stats (input_tokens, output_tokens)
+        usage: data.usage,                 // Token usage stats (input_tokens, output_tokens)
+        cacheCreated: data.usage?.cache_creation_input_tokens || 0,   // Tokens written to cache (first request)
+        cacheHit: data.usage?.cache_read_input_tokens || 0,           // Tokens read from cache (subsequent requests)
       });
 
       return res.json(data);
