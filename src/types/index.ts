@@ -32,6 +32,7 @@ export interface ExperimentConfig {
   worksheet?: Worksheet;
   sections: ExperimentSection[];
   gradeScale: string[];
+  evaluationNotes?: string[]; // Experiment-specific evaluation instructions for the AI
 }
 
 export interface ExperimentConfigs {
