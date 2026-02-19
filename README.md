@@ -19,11 +19,22 @@ This app is deployed as part of the **kvenno.app** multi-tool platform:
   - Year hubs: `kvenno.app/2-ar/` or `kvenno.app/3-ar/` → Tool selection
   - This app: Teacher/student mode selection
 
-For complete site structure and design guidelines, see **[Kvenno_structure.md](./Kvenno_structure.md)**.
+For complete site structure and design guidelines, see **[KVENNO-STRUCTURE.md](./KVENNO-STRUCTURE.md)**.
 
-## What's New (November 2025)
+## What's New
 
-### v3.2.0 - Documentation & Reliability (Nov 28)
+### v3.3.0 - 2nd Year Simplified Checklist System (Feb 2026)
+- **New Grading Mode**: Simplified binary checklist system for 2nd year students
+- **Checklist-Based Analysis**: AI performs present/missing checks only — teachers assign points manually
+- **Draft Comparison**: Optional draft upload (Fræðikafli from Inna) for baseline comparison
+- **New Experiment**: "Orka í efnahvörfum (∆H)" — 2nd year enthalpy experiment with 24 checklist items
+- **Dual Upload Flow**: Upload optional draft + final report(s) for analysis
+- **Checklist CSV Export**: Export results with checkmark/cross per checklist item
+- **New Route**: `/teacher-2ar` for the 2nd year teacher interface
+- **Landing Page Updated**: Three-column layout with new "2. ár - Gátlisti" card
+- **New Backend Endpoint**: `/api/analyze-2ar` for checklist analysis
+
+### v3.2.0 - Documentation & Reliability (Nov 2025)
 - **Token Limit Increase** - Raised from 2000 → 8192 tokens to handle complex reports
 - **JSON Repair Logic** - Automatic fixing of Claude's occasional JSON formatting quirks
 - **Enhanced Debug Logging** - Better troubleshooting with detailed response analysis
@@ -53,7 +64,7 @@ For complete site structure and design guidelines, see **[Kvenno_structure.md](.
 
 ## Features
 
-### 🎓 Teacher Mode
+### 🎓 Teacher Mode (3rd Year - Points-Based)
 - **Automated Grading**: Upload multiple lab reports (.docx, .pdf, images) and get instant AI-powered analysis
 - **Points-Based Evaluation**: Each report section is evaluated separately with detailed point breakdown
 - **Structured Feedback**: Purpose, Theory, Materials, Procedure, Results, Conclusion, and Signature sections
@@ -62,6 +73,15 @@ For complete site structure and design guidelines, see **[Kvenno_structure.md](.
 - **Batch Processing**: Analyze multiple reports simultaneously
 - **CSV Export**: Export results with full point breakdown for record-keeping
 - **Session Management**: Save and load grading sessions
+
+### 📋 Teacher Mode (2nd Year - Checklist)
+- **Binary Checklist**: AI checks if items are present or missing — no point assignment
+- **Draft Comparison**: Upload optional Fræðikafli draft (from Inna) to compare against final report
+- **24 Checklist Items**: Across 6 sections (Uppsetning, Framkvæmd, Niðurstöður 1 & 2, Umræður, Frágangur)
+- **Manual Check Flags**: Items requiring teacher review (formatting, calculation accuracy) are flagged
+- **Baseline Analysis**: Detects if final report builds on draft or is unrelated
+- **CSV Export**: One row per student, checkmark/cross per item
+- **Teacher Controls Points**: AI informs, teacher decides — reducing AI grading errors
 
 ### 📚 Student Mode
 - **Writing Assistance**: Get constructive feedback on lab reports
@@ -160,7 +180,7 @@ For complete site structure and design guidelines, see **[Kvenno_structure.md](.
 
 ## Usage
 
-### For Teachers
+### For Teachers (3rd Year - Points-Based)
 
 1. **Select Mode**: Click "Kennari" (Teacher) button
 2. **Choose Experiment**: Select the lab experiment from dropdown
@@ -168,6 +188,17 @@ For complete site structure and design guidelines, see **[Kvenno_structure.md](.
 4. **Process**: Click "Greina skýrslur" (Analyze Reports)
 5. **Review Results**: See detailed analysis for each report
 6. **Export**: Download results as CSV or save session for later
+
+### For Teachers (2nd Year - Checklist)
+
+1. **Select Mode**: Click "2. ár - Gátlisti" button on landing page
+2. **Choose Experiment**: Select the 2nd year experiment (e.g., "Orka í efnahvörfum")
+3. **Upload Draft** (optional): Upload draft Fræðikafli from Inna for baseline comparison
+4. **Upload Final Reports**: Upload one or more student final reports
+5. **Process**: Click "Greina skýrslur" to run checklist analysis
+6. **Review Results**: Expand each student to see present/missing items and baseline comparison
+7. **Export**: Download CSV with checkmark/cross per item
+8. **Assign Points**: Use the checklist results to manually assign points
 
 ### For Students
 
@@ -187,6 +218,7 @@ LabReports/
 │   └── README.md                    # Server documentation
 ├── src/
 │   ├── components/                  # React components
+│   │   ├── ChecklistResults.tsx    # 2nd year checklist results display
 │   │   ├── FileUpload.tsx          # File upload with drag-and-drop
 │   │   ├── Landing.tsx             # Landing page component
 │   │   ├── Modal.tsx               # SaveDialog, ConfirmDialog components
@@ -198,19 +230,24 @@ LabReports/
 │   │   └── WorksheetView.tsx       # Worksheet viewer
 │   ├── config/
 │   │   ├── experiments/            # Experiment definitions (MODULAR)
-│   │   │   ├── index.ts           # Exports all experiments
-│   │   │   ├── jafnvaegi.ts       # Equilibrium experiment
+│   │   │   ├── index.ts           # Exports all experiments (3rd + 2nd year)
+│   │   │   ├── jafnvaegi.ts       # Equilibrium experiment (3rd year)
+│   │   │   ├── orka_2ar.ts        # Enthalpy experiment (2nd year checklist)
 │   │   │   ├── _template.ts       # Template for new experiments
 │   │   │   └── README.md          # Experiment creation guide
-│   │   └── prompts.ts             # System prompts for Claude
+│   │   ├── prompts.ts             # System prompts for Claude (3rd year)
+│   │   └── prompts2.ts            # Simplified prompts (2nd year checklist)
 │   ├── pages/
 │   │   ├── StudentPage.tsx        # Student mode page
-│   │   └── TeacherPage.tsx        # Teacher mode page
+│   │   ├── Teacher2Page.tsx       # 2nd year teacher page (checklist)
+│   │   └── TeacherPage.tsx        # 3rd year teacher page (points-based)
 │   ├── types/                       # TypeScript type definitions
-│   │   └── index.ts                # All type definitions
+│   │   └── index.ts                # All type definitions (incl. 2nd year types)
 │   ├── utils/                       # Utility functions
-│   │   ├── api.ts                  # Claude API communication
-│   │   ├── export.ts               # CSV export functionality
+│   │   ├── api.ts                  # Claude API communication (3rd year)
+│   │   ├── api2.ts                 # Claude API communication (2nd year)
+│   │   ├── export.ts               # CSV export (3rd year)
+│   │   ├── export2.ts              # CSV export (2nd year checklist)
 │   │   ├── fileProcessing.ts       # File parsing (docx, pdf, images)
 │   │   └── storage.ts              # Browser localStorage management
 │   ├── App.tsx                      # Main application component
@@ -323,7 +360,7 @@ npm run type-check   # Check TypeScript types
 - **Frontend**: React 18, TypeScript, Vite
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
-- **AI**: Claude Sonnet 4.5 (Anthropic)
+- **AI**: Claude Opus 4.6 (Anthropic)
 - **File Processing**:
   - Pandoc (Word documents - server-side)
   - PDF.js (PDF files - client-side)
@@ -340,7 +377,7 @@ This app is **shared** across multiple year levels and deployed to multiple path
 - **2nd year**: `/2-ar/lab-reports/`
 - **3rd year**: `/3-ar/lab-reports/`
 
-Each deployment requires separate builds with different `basename` configurations. See **[Kvenno_structure.md](./Kvenno_structure.md)** for complete deployment structure.
+Each deployment requires separate builds with different `basename` configurations. See **[KVENNO-STRUCTURE.md](./KVENNO-STRUCTURE.md)** for complete deployment structure.
 
 ### Platform Support
 
@@ -367,7 +404,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for:
 1. Set up a backend server (Node.js Express) to proxy Claude API calls
 2. Store `CLAUDE_API_KEY` in backend `.env` (server-side only)
 3. Set `VITE_API_ENDPOINT=https://kvenno.app/api` in frontend
-4. Use backend endpoints `/api/analyze` and `/api/process-document`
+4. Use backend endpoints `/api/analyze`, `/api/analyze-2ar`, and `/api/process-document`
 
 ### Why This Matters
 
@@ -444,14 +481,14 @@ This project includes comprehensive documentation for different audiences:
 | Document | Purpose | Audience |
 |----------|---------|----------|
 | **README.md** (this file) | User guide, quick start, general usage | End users, new developers |
-| **Kvenno_structure.md** | Unified site structure, design system, navigation | **ALL developers** - Critical reference ⭐ |
+| **KVENNO-STRUCTURE.md** | Unified site structure, design system, navigation | **ALL developers** - Critical reference ⭐ |
 | **CLAUDE.md** | AI assistant guide, architecture details, code conventions | AI assistants, maintainers |
 | **DEPLOYMENT.md** | Platform-specific deployment instructions | DevOps, deployment |
 | **MIGRATION.md** | v2 to v3 upgrade guide | Existing users migrating |
 | **DEPENDENCY_UPDATE_PLAN.md** | Strategy for updating dependencies | Developers updating packages |
 | **src/config/experiments/README.md** | Guide for creating experiments | Content creators |
 
-**Important**: Before making any UI/design changes, consult **Kvenno_structure.md** for unified design system requirements (colors, buttons, navigation, etc.).
+**Important**: Before making any UI/design changes, consult **KVENNO-STRUCTURE.md** for unified design system requirements (colors, buttons, navigation, etc.).
 
 ### Legacy Files
 
@@ -481,9 +518,9 @@ If you're upgrading from the v2 single-file version, see **MIGRATION.md** for:
 
 ## Version & Status
 
-- **Current Version**: 3.0.0
+- **Current Version**: 3.3.0
 - **Status**: Actively maintained
-- **Last Updated**: November 2025
+- **Last Updated**: February 2026
 - **License**: Provided as-is for educational purposes
 
 See [MIGRATION.md](./MIGRATION.md) for information about upgrading from v2.x.
@@ -493,7 +530,7 @@ See [MIGRATION.md](./MIGRATION.md) for information about upgrading from v2.x.
 - Built with [Claude](https://www.anthropic.com/claude) by Anthropic
 - UI components from [Lucide React](https://lucide.dev/)
 - PDF processing with [PDF.js](https://mozilla.github.io/pdf.js/)
-- Word document parsing with [Mammoth.js](https://github.com/mwilliamson/mammoth.js)
+- Word document processing with [Pandoc](https://pandoc.org/) (server-side)
 
 ## Support
 

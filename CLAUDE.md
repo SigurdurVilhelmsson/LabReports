@@ -8,12 +8,12 @@ This document provides guidance for AI assistants working with the Lab Report As
 
 **Lab Report Assistant** is an AI-powered web application for chemistry teachers and students in Iceland to grade and improve lab reports. It uses Claude AI (Anthropic) to provide structured evaluation and feedback on chemistry lab reports.
 
-**Current Version**: v3.0.0 (Actively maintained)
+**Current Version**: v3.3.0 (Actively maintained)
 
 **Tech Stack:**
 - Frontend: React 18 + TypeScript + Vite
 - Styling: Tailwind CSS
-- AI: Claude Sonnet 4.5 (Anthropic API)
+- AI: Claude Opus 4.6 (Anthropic API)
 - File Processing: Pandoc (docx - server-side), PDF.js (pdf), FileReader API (images)
 - Routing: React Router DOM
 - Deployment: Linode with nginx + Node.js backend server (production)
@@ -22,7 +22,7 @@ This document provides guidance for AI assistants working with the Lab Report As
 
 ### Multi-Repository Architecture
 
-This application is part of a larger **Kvenno Chemistry Tools** suite with a multi-repository, year-based architecture. For complete site structure details, see `Kvenno_structure.md`.
+This application is part of a larger **Kvenno Chemistry Tools** suite with a multi-repository, year-based architecture. For complete site structure details, see `KVENNO-STRUCTURE.md`.
 
 **Repository Structure:**
 ```
@@ -70,7 +70,7 @@ Repositories:
 - Breadcrumb navigation required: `Heim > [Year] > Lab Reports`
 
 **Design System:**
-See `Kvenno_structure.md` for complete design guidelines including:
+See `KVENNO-STRUCTURE.md` for complete design guidelines including:
 - Brand color: `#f36b22` (primary orange)
 - Header requirements (site logo, Admin, Info buttons)
 - Button/tile styling (8px border radius, 2px border)
@@ -84,9 +84,12 @@ See `DEPLOYMENT.md` for detailed git workflow and deployment procedures.
 
 ### Core Concepts
 
-The application has **two distinct modes**:
-1. **Teacher Mode** - Quick grading with points-based evaluation
-2. **Student Mode** - Detailed feedback with encouragement and suggestions
+The application has **three distinct modes**:
+1. **Teacher Mode (3rd Year)** - Points-based evaluation with detailed criteria (route: `/teacher`)
+2. **Teacher Mode (2nd Year)** - Simplified checklist with binary present/missing checks (route: `/teacher-2ar`)
+3. **Student Mode** - Detailed feedback with encouragement and suggestions (route: `/student`)
+
+The 2nd year system uses a fundamentally different approach: AI only checks if items are **present or missing** (binary), and the teacher assigns points manually. This reduces AI grading errors for less structured 2nd year reports.
 
 ### Directory Structure
 
@@ -97,8 +100,9 @@ LabReports/
 │   └── README.md                    # Server documentation
 ├── src/
 │   ├── components/                  # React components
+│   │   ├── ChecklistResults.tsx    # 2nd year checklist results display
 │   │   ├── FileUpload.tsx          # File upload with drag-and-drop
-│   │   ├── Landing.tsx             # Landing page component
+│   │   ├── Landing.tsx             # Landing page (3-column: Teacher, 2.ár, Student)
 │   │   ├── Modal.tsx               # SaveDialog, ConfirmDialog components
 │   │   ├── SessionHistory.tsx      # Session management UI
 │   │   ├── StudentFeedback.tsx     # Student feedback display
@@ -108,19 +112,24 @@ LabReports/
 │   │   └── WorksheetView.tsx       # Worksheet viewer
 │   ├── config/
 │   │   ├── experiments/            # Experiment definitions (MODULAR)
-│   │   │   ├── index.ts           # Exports all experiments
-│   │   │   ├── jafnvaegi.ts       # Example: equilibrium experiment
+│   │   │   ├── index.ts           # Exports all experiments (3rd + 2nd year)
+│   │   │   ├── jafnvaegi.ts       # Equilibrium experiment (3rd year)
+│   │   │   ├── orka_2ar.ts        # Enthalpy experiment (2nd year checklist)
 │   │   │   ├── _template.ts       # Template for new experiments
 │   │   │   └── README.md          # Experiment creation guide
-│   │   └── prompts.ts             # System prompts for Claude
+│   │   ├── prompts.ts             # System prompts for Claude (3rd year)
+│   │   └── prompts2.ts            # Simplified prompts (2nd year checklist)
 │   ├── pages/
 │   │   ├── StudentPage.tsx        # Student mode page
-│   │   └── TeacherPage.tsx        # Teacher mode page
+│   │   ├── Teacher2Page.tsx       # 2nd year teacher page (checklist mode)
+│   │   └── TeacherPage.tsx        # 3rd year teacher page (points-based)
 │   ├── types/
 │   │   └── index.ts               # All TypeScript type definitions
 │   ├── utils/
-│   │   ├── api.ts                 # Claude API communication
-│   │   ├── export.ts              # CSV export functionality
+│   │   ├── api.ts                 # Claude API communication (3rd year)
+│   │   ├── api2.ts                # Claude API communication (2nd year checklist)
+│   │   ├── export.ts              # CSV export functionality (3rd year)
+│   │   ├── export2.ts             # CSV export (2nd year checklist format)
 │   │   ├── fileProcessing.ts      # File parsing (docx, pdf, images)
 │   │   └── storage.ts             # Browser localStorage management
 │   ├── App.tsx                     # Main application component
@@ -150,18 +159,21 @@ LabReports/
 
 | File | Purpose | When to Modify |
 |------|---------|---------------|
-| `src/types/index.ts` | All TypeScript types | When adding new data structures |
-| `src/config/prompts.ts` | Claude system prompts | When changing evaluation logic |
-| `src/config/experiments/index.ts` | Experiment registry | When adding new experiments |
+| `src/types/index.ts` | All TypeScript types (incl. 2nd year) | When adding new data structures |
+| `src/config/prompts.ts` | Claude system prompts (3rd year) | When changing 3rd year evaluation logic |
+| `src/config/prompts2.ts` | Claude system prompts (2nd year checklist) | When changing 2nd year checklist logic |
+| `src/config/experiments/index.ts` | Experiment registry (3rd + 2nd year) | When adding new experiments |
+| `src/config/experiments/orka_2ar.ts` | 2nd year enthalpy experiment config | When modifying 2nd year checklist items |
 | `src/config/experiments/_template.ts` | Experiment template | Reference when creating experiments |
 | `src/config/experiments/README.md` | Experiment guide | Reference for experiment structure |
-| `src/utils/api.ts` | Claude API integration | When changing AI behavior |
+| `src/utils/api.ts` | Claude API integration (3rd year) | When changing 3rd year AI behavior |
+| `src/utils/api2.ts` | Claude API integration (2nd year) | When changing 2nd year AI behavior |
 | `src/utils/fileProcessing.ts` | File parsing logic | When adding file format support |
 | `src/utils/storage.ts` | Session storage logic | When changing storage behavior |
 | `src/App.tsx` | Main app orchestration | When changing app-level behavior |
 | `server/index.js` | Backend server | When changing API endpoints or timeouts |
 | `.eslintrc.cjs` | ESLint rules | When modifying code quality rules |
-| `Kvenno_structure.md` | Unified site structure & design | **CRITICAL**: Reference for all UI/UX decisions |
+| `KVENNO-STRUCTURE.md` | Unified site structure & design | **CRITICAL**: Reference for all UI/UX decisions |
 | `DEPENDENCY_UPDATE_PLAN.md` | Dependency upgrade guide | When planning dependency updates |
 | `MIGRATION.md` | Migration guide | Reference for v2→v3 migration |
 
@@ -222,18 +234,45 @@ Follow these steps carefully (also see `src/config/experiments/README.md`):
    - Ensure Icelandic text is grammatically correct
    - Test with various report quality levels
 
+### Adding a New 2nd Year Experiment (Checklist)
+
+For 2nd year experiments using the simplified checklist approach:
+
+1. **Create experiment file** using `ExperimentConfig2` type:
+   ```typescript
+   import { ExperimentConfig2 } from '@/types';
+   export const myExperiment: ExperimentConfig2 = {
+     id: 'my-experiment-2ar',
+     title: 'Experiment Title',
+     year: 2,
+     baselineComparison: { enabled: true, requiredConcepts: [...], requiredFormulas: [...] },
+     checklist: { sectionKey: { name: '...', weight: '...', items: [...] } },
+     alwaysManualCheck: ['Items that always need teacher review'],
+   };
+   ```
+
+2. **Register** in `experimentConfigs2` in `src/config/experiments/index.ts`
+
+3. **Update prompts** if needed in `src/config/prompts2.ts` (chemical facts section)
+
+4. **Update `ChecklistResults.tsx`** section name mapping if new section keys are used
+
 ### Modifying Evaluation Logic
 
-The evaluation logic is centralized in `src/config/prompts.ts`:
-
+**3rd year (points-based):** Centralized in `src/config/prompts.ts`:
 - **Core rules** (shared): `buildCoreEvaluationRules()`
 - **Teacher prompts**: `buildTeacherSystemPrompt()`
 - **Student prompts**: `buildStudentSystemPrompt()`
 
+**2nd year (checklist):** Centralized in `src/config/prompts2.ts`:
+- **System prompt**: `build2ndYearSystemPrompt()` - Generates checklist from experiment config
+- **User prompt**: `build2ndYearUserPrompt()` - Formats draft + final content
+
 **Important guidelines:**
 - The prompts are in **Icelandic** with specific chemistry terminology
 - Maintain the structured JSON response format
-- Keep point calculations aligned with `maxPoints` in experiments
+- For 3rd year: Keep point calculations aligned with `maxPoints` in experiments
+- For 2nd year: Keep checklist items as binary (present/missing) only
 - Preserve the encouraging tone for student mode
 - Be precise about chemical formulas and reactions
 
@@ -454,7 +493,7 @@ When making changes, verify:
 Edit `src/utils/api.ts` and `server/index.js`:
 
 ```typescript
-model: 'claude-opus-4-5-20251101',  // Current model
+model: 'claude-opus-4-6',  // Current model
 ```
 
 ### Change Point Distribution
@@ -717,7 +756,7 @@ This project includes several documentation files. Here's when to consult each:
 |----------|---------|----------|
 | **README.md** | User-facing guide, quick start, usage | End users, new developers |
 | **CLAUDE.md** (this file) | AI assistant guide, architecture, conventions | AI assistants, maintainers |
-| **Kvenno_structure.md** | Unified site structure, design system, navigation | **ALL developers** - Critical reference |
+| **KVENNO-STRUCTURE.md** | Unified site structure, design system, navigation | **ALL developers** - Critical reference |
 | **DEPLOYMENT.md** | Platform-specific deployment guides | DevOps, deployment |
 | **MIGRATION.md** | v2→v3 upgrade guide | Existing users migrating |
 | **DEPENDENCY_UPDATE_PLAN.md** | Dependency upgrade strategy | Developers updating packages |
@@ -725,8 +764,8 @@ This project includes several documentation files. Here's when to consult each:
 
 ### Quick Decision Tree
 
-- **"What's the site structure?"** → `Kvenno_structure.md` ⭐ **START HERE**
-- **"What colors/design should I use?"** → `Kvenno_structure.md`
+- **"What's the site structure?"** → `KVENNO-STRUCTURE.md` ⭐ **START HERE**
+- **"What colors/design should I use?"** → `KVENNO-STRUCTURE.md`
 - **"How do I implement authentication?"** → `KVENNO-STRUCTURE.md` Section 2 (Azure AD)
 - **"How do I deploy this?"** → `DEPLOYMENT.md`
 - **"How do I add a new experiment?"** → `src/config/experiments/README.md`
@@ -756,12 +795,14 @@ This project includes several documentation files. Here's when to consult each:
 ### Important Files
 
 ```
-src/types/index.ts              # All types
-src/config/prompts.ts           # AI evaluation logic
-src/config/experiments/         # Experiment definitions
-src/utils/api.ts                # Claude API integration
-src/App.tsx                     # Main app component
-server/index.js                 # Backend server (port 8000)
+src/types/index.ts              # All types (incl. 2nd year checklist types)
+src/config/prompts.ts           # AI evaluation logic (3rd year)
+src/config/prompts2.ts          # AI checklist logic (2nd year)
+src/config/experiments/         # Experiment definitions (3rd + 2nd year)
+src/utils/api.ts                # Claude API integration (3rd year)
+src/utils/api2.ts               # Claude API integration (2nd year)
+src/main.tsx                    # Application entry point & routing
+server/index.js                 # Backend server (port 8000, /api/analyze + /api/analyze-2ar)
 KVENNO-STRUCTURE.md             # CRITICAL: Site structure & security requirements
 ```
 
@@ -799,7 +840,21 @@ FRONTEND_URL           # CORS allowed origin
 
 See [KVENNO-STRUCTURE.md Section 3](KVENNO-STRUCTURE.md#3-backend-api--security) for complete configuration.
 
-## Recent Improvements (November 2025)
+## Recent Improvements
+
+### 2nd Year Simplified Checklist System (February 2026)
+- **New Grading Paradigm**: Binary checklist (present/missing) instead of AI-assigned points
+- **New Experiment**: `orka_2ar.ts` - "Orka í efnahvörfum (∆H)" with 24 checklist items across 6 sections
+- **Draft Comparison**: Optional baseline comparison of draft Fræðikafli against final report
+- **New Types**: `ExperimentConfig2`, `Analysis2Result`, `ChecklistResult`, `BaselineComparisonResult`
+- **New Components**: `ChecklistResults.tsx` with status icons, counts, and section breakdowns
+- **New Page**: `Teacher2Page.tsx` with dual upload flow (draft + final reports)
+- **New API**: `api2.ts` + `/api/analyze-2ar` backend endpoint for checklist analysis
+- **New Export**: `export2.ts` for CSV with checkmark/cross per checklist item
+- **Updated Landing**: Three-column layout with "2. ár - Gátlisti" card (blue theme)
+- **Updated Routing**: `/teacher-2ar` route in `main.tsx`
+
+### Previous Improvements (November 2025)
 
 The project received significant enhancements throughout November 2025:
 
@@ -886,7 +941,7 @@ The project received significant enhancements throughout November 2025:
 - **Added Dependencies**: formidable (server-side file uploads), express, cors
 
 ### API Changes
-- Model version: `claude-opus-4-5-20251101` (current)
+- Model version: `claude-opus-4-6` (current)
 - Backend server mode with Express.js (port 8000)
 - 85-second timeout for file analysis (analyze endpoint)
 - 30-second timeout for document processing (process-document endpoint)
@@ -938,14 +993,16 @@ npm audit                   # Check for security issues
 
 ## Version History
 
-### v3.0.0 (Current - November 2025)
+### v3.3.0 (Current - February 2026)
 
 **Status**: Actively maintained
 **Repository**: [SigurdurVilhelmsson/LabReports](https://github.com/SigurdurVilhelmsson/LabReports)
 
 **Major Features**:
 - Modular experiment architecture (`src/config/experiments/`)
-- Points-based grading system with detailed criteria
+- Points-based grading system with detailed criteria (3rd year)
+- Simplified checklist system with binary checks (2nd year)
+- Draft comparison / baseline analysis (2nd year)
 - Drag-and-drop file upload with PDF support for students
 - Automatic equation extraction from documents
 - Enhanced storage with robust error handling
@@ -955,10 +1012,15 @@ npm audit                   # Check for security issues
 **Architecture**:
 - React 18 + TypeScript + Vite
 - Tailwind CSS for styling
-- Claude Opus 4.5 (`claude-opus-4-5-20251101`)
+- Claude Opus 4.6 (`claude-opus-4-6`)
 - Node.js/Express backend server (port 8000)
+- Backend endpoints: `/api/analyze`, `/api/analyze-2ar`, `/api/process-document`
 - nginx reverse proxy for API and static files
 - Modular codebase with TypeScript strict mode
+
+### v3.0.0 (November 2025)
+
+**Status**: Superseded by v3.3.0
 
 ### v2.x (Legacy - November 2024)
 
@@ -978,7 +1040,7 @@ npm audit                   # Check for security issues
 
 ---
 
-**Last Updated:** 2025-11-20
+**Last Updated:** 2026-02-19
 
 ## Recent Migrations
 
@@ -986,7 +1048,7 @@ npm audit                   # Check for security issues
 
 **Status**: ✅ **Completed**
 
-The app has been fully migrated to the **Kvenno unified design system** as specified in `Kvenno_structure.md`.
+The app has been fully migrated to the **Kvenno unified design system** as specified in `KVENNO-STRUCTURE.md`.
 
 **Completed Changes**:
 - ✅ Primary color changed from `indigo-600` to `#f36b22` (Kvennaskólinn orange)
