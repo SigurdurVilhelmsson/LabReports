@@ -247,11 +247,29 @@ sudo nginx -t               # Test configuration
 sudo systemctl reload nginx # Apply changes
    ```
 
+### API Endpoints
+
+The backend server exposes the following endpoints:
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/health` | GET | Health check |
+| `/api/analyze` | POST | 3rd year points-based analysis (teacher & student modes) |
+| `/api/analyze-2ar` | POST | 2nd year checklist analysis (binary present/missing checks) |
+| `/api/process-document` | POST | DOCX to PDF conversion via LibreOffice + equation extraction via Pandoc |
+
+**`/api/analyze-2ar`** is a new endpoint (v3.3.0) for the simplified 2nd year checklist system. It accepts `systemPrompt` and `userPrompt` fields (text-only, no file content blocks) and returns structured JSON with checklist results and optional baseline comparison.
+
 ### Architecture:
 
 ```
 Browser → nginx (80/443) → Express.js (8000) → Anthropic API
           ↓ Static files (dist/)
+
+Endpoints:
+  /api/analyze      → 3rd year points-based grading
+  /api/analyze-2ar  → 2nd year checklist analysis
+  /api/process-document → DOCX conversion
 ```
 
 ### Advantages:
@@ -323,6 +341,8 @@ See **[server/README.md](server/README.md)** for complete troubleshooting guide.
    npm install  # Only if package.json changed
    sudo systemctl restart kvenno-backend
    ```
+
+   **Note (v3.3.0+)**: If deploying the 2nd year checklist feature for the first time, a backend restart is **required** since `server/index.js` includes the new `/api/analyze-2ar` endpoint.
 
 5. **Verify deployment:**
    ```bash
