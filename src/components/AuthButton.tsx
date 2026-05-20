@@ -20,18 +20,37 @@
  */
 
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
-import { LogIn, LogOut, User } from 'lucide-react';
-import { loginRequest } from '../config/authConfig';
+import { AlertTriangle, LogIn, LogOut, User } from 'lucide-react';
+import { isAuthConfigured, loginRequest } from '../config/authConfig';
 
 export const AuthButton = () => {
   const { instance, accounts } = useMsal();
   const isAuthenticated = useIsAuthenticated();
 
   const handleLogin = () => {
+    if (!isAuthConfigured) {
+      console.error(
+        'Cannot start login: Azure AD client_id/tenant_id missing from build. ' +
+        'Rebuild with VITE_AZURE_CLIENT_ID and VITE_AZURE_TENANT_ID set.'
+      );
+      return;
+    }
     instance.loginRedirect(loginRequest).catch((error) => {
       console.error('Innskráningarvilla:', error);
     });
   };
+
+  if (!isAuthConfigured) {
+    return (
+      <div
+        title="VITE_AZURE_CLIENT_ID og VITE_AZURE_TENANT_ID vantar í byggingunni. Endurbyggðu appið með réttum umhverfisbreytum."
+        className="flex items-center gap-2 px-4 py-2 border-2 border-amber-500 text-amber-700 bg-amber-50 rounded-lg font-medium cursor-not-allowed"
+      >
+        <AlertTriangle size={18} />
+        Innskráning óvirk (uppsetning vantar)
+      </div>
+    );
+  }
 
   const handleLogout = () => {
     instance.logoutRedirect({

@@ -19,10 +19,27 @@ import { Configuration, LogLevel } from '@azure/msal-browser';
 const clientId = import.meta.env.VITE_AZURE_CLIENT_ID;
 const tenantId = import.meta.env.VITE_AZURE_TENANT_ID;
 
-if (!clientId || !tenantId) {
-  console.warn(
-    '⚠️ Azure AD credentials not configured. ' +
-    'Set VITE_AZURE_CLIENT_ID and VITE_AZURE_TENANT_ID in .env file. ' +
+/**
+ * Whether Azure AD is configured for this build.
+ *
+ * Vite embeds VITE_* variables at BUILD TIME. If the deployment server
+ * built the app without VITE_AZURE_CLIENT_ID / VITE_AZURE_TENANT_ID set,
+ * MSAL would otherwise send an empty client_id to Azure, producing the
+ * cryptic AADSTS900144 error. Consumers should check this flag and
+ * disable login UI / show a configuration error instead of attempting
+ * to redirect.
+ */
+export const isAuthConfigured: boolean = Boolean(clientId && tenantId);
+
+export const authConfigError: string | null = isAuthConfigured
+  ? null
+  : 'Azure AD er ekki uppsett. VITE_AZURE_CLIENT_ID og VITE_AZURE_TENANT_ID þurfa að vera sett þegar appið er byggt.';
+
+if (!isAuthConfigured) {
+  console.error(
+    '❌ Azure AD credentials missing at build time. ' +
+    'Set VITE_AZURE_CLIENT_ID and VITE_AZURE_TENANT_ID in the build environment ' +
+    '(these are baked in by Vite at build time, not read at runtime). ' +
     'See KVENNO-STRUCTURE.md Section 2 for setup instructions.'
   );
 }
