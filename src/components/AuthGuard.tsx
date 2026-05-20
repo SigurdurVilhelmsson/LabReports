@@ -2,7 +2,7 @@
 import { ReactNode, useEffect } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
-import { loginRequest } from '../config/authConfig';
+import { authConfigError, isAuthConfigured, loginRequest } from '../config/authConfig';
 import { saveReturnUrl } from '../utils/authHelpers';
 
 interface AuthGuardProps {
@@ -41,6 +41,11 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
     // Skip login trigger if auth is bypassed
     if (BYPASS_AUTH) return;
 
+    // Skip login trigger if Azure AD is not configured for this build.
+    // Otherwise MSAL would POST an empty client_id to Azure and the user
+    // would land on the AADSTS900144 error page.
+    if (!isAuthConfigured) return;
+
     // Only trigger login if:
     // 1. User is not authenticated
     // 2. No authentication operation is in progress
@@ -61,6 +66,27 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
   if (BYPASS_AUTH) {
     console.warn('⚠️ AUTHENTICATION BYPASSED - FOR TESTING ONLY');
     return <>{children}</>;
+  }
+
+  // If Azure AD isn't configured, show an actionable error instead of
+  // spinning forever or bouncing the user to a cryptic Azure error page.
+  if (!isAuthConfigured) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full mx-4 border-2 border-amber-500">
+          <h2 className="text-xl font-bold text-slate-900 mb-3">
+            Innskráning ekki uppsett
+          </h2>
+          <p className="text-slate-700 mb-4">{authConfigError}</p>
+          <p className="text-sm text-slate-600">
+            Setjið <code className="bg-slate-100 px-1 rounded">VITE_AZURE_CLIENT_ID</code> og{' '}
+            <code className="bg-slate-100 px-1 rounded">VITE_AZURE_TENANT_ID</code> í umhverfisbreytur
+            á dreifingarþjóni og endurbyggið appið (<code className="bg-slate-100 px-1 rounded">npm run build</code>).
+            Sjá KVENNO-STRUCTURE.md kafla 2.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // Show loading state while checking authentication or during login
